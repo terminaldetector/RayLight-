@@ -16,7 +16,7 @@ D6_Session.Resistance = {
 }
 
 local profile = CreateConVar("d6_profile", "auto", FCVAR_ARCHIVE + FCVAR_REPLICATED,
-    "DRMD profile: auto, campaign, arena")
+    "Abaddon profile: auto, campaign, arena")
 
 function D6_Session.Resolve(map, gamemode, configured)
     configured = string.lower(configured or "auto")

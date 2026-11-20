@@ -183,7 +183,7 @@ for _, v in ipairs(D6_GetRoleNames()) do
         end
         local pos = tr.HitPos + tr.HitNormal*offset
         SpawnD6Role(vname, pos, ply)
-        ply:PrintMessage(HUD_PRINTTALK, "[DRMD] " .. (vname=="arc_elite" and "Элитный дуговой штурмовик"
+        ply:PrintMessage(HUD_PRINTTALK, "[Abaddon] " .. (vname=="arc_elite" and "Элитный дуговой штурмовик"
             or D6_Session.Resistance[vname] or vname))
     end)
 end

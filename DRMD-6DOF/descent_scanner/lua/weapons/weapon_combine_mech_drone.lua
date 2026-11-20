@@ -13,7 +13,7 @@ AddCSLuaFile()
 -- ═══════════════════════════════════════════════════════════
 
 SWEP.PrintName      = "Тяжёлый дрон «Центурион»"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Instructions   = "ЛКМ: парная очередь   ПКМ: ракета   R: грав-захват"
 SWEP.Category       = "Descent: ВПК Альянса"
 SWEP.Slot           = 4

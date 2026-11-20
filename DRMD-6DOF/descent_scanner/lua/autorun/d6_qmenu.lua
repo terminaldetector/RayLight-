@@ -1,9 +1,9 @@
 -- =========================================================
--- d6_qmenu.lua — DRMD 6DOF во встроенном меню Garry's Mod
+-- d6_qmenu.lua — Half-Life: Abaddon во встроенном меню Garry's Mod
 --
 --   Перенос всех меню мода (ранее: консольные команды и
 --   кастомное TAB-меню d6_menu.lua) во встроенный Tool Menu
---   спавн-меню GMod: Q → вкладка «DRMD 6DOF».
+--   спавн-меню GMod: Q → вкладка «Half-Life: Abaddon».
 --
 --   Категории:
 --     • Полёт      — переключатели режима + параметры полёта
@@ -36,7 +36,7 @@ end
 -- ── Регистрация вкладки и категорий ──────────────────────
 
 hook.Add("AddToolMenuTabs", "D6_QMenu", function()
-    spawnmenu.AddToolTab(TAB, TAB, "icon16/controller.png")
+    spawnmenu.AddToolTab(TAB, "Half-Life: Abaddon", "icon16/controller.png")
 end)
 
 hook.Add("AddToolMenuCategories", "D6_QMenu", function()
@@ -221,7 +221,7 @@ hook.Add("PopulateToolMenu", "D6_QMenu", function()
 
         panel:Help("")
         CmdButton(panel, "✖ Убить всех NPC", "d6_kill_npcs")
-        panel:ControlHelp("Удаляет всех npc_* и дронов DRMD с карты")
+        panel:ControlHelp("Удаляет всех npc_* и дронов Abaddon с карты")
     end)
 
     -- ═════════════════════════════════════════════════════
@@ -233,7 +233,7 @@ hook.Add("PopulateToolMenu", "D6_QMenu", function()
         panel:ClearControls()
 
         panel:Help("Оружие")
-        CmdButton(panel, "Выдать все оружия DRMD",         "d6_give_weapons")
+        CmdButton(panel, "Выдать весь арсенал Abaddon",         "d6_give_weapons")
         CmdButton(panel, "Следующее оружие",               "d6_weapon_next")
         CmdButton(panel, "Выдать внешние (Workshop)",      "d6_weapons_give_all")
         CmdButton(panel, "Список зарегистрированных (чат)","d6_weapons_list")
@@ -291,4 +291,4 @@ hook.Add("PopulateToolMenu", "D6_QMenu", function()
 
 end)
 
-print("[D6] d6_qmenu.lua загружен (Q → DRMD 6DOF)")
+print("[D6] d6_qmenu.lua загружен (Q → Half-Life: Abaddon)")

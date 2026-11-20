@@ -148,7 +148,7 @@ if SERVER then
     concommand.Add("d6_give_weapons", function(ply)
         if not D6_Session.IsArena() or not D6_Session.CanEditWorld(ply) then return end
         local count = giveLoadout(ply)
-        ply:PrintMessage(HUD_PRINTTALK, "[DRMD] Выдано систем: " .. count)
+        ply:PrintMessage(HUD_PRINTTALK, "[Abaddon] Выдано систем: " .. count)
     end)
 
     concommand.Add("d6_weapon_next", function(ply)

@@ -1,7 +1,7 @@
 AddCSLuaFile()
 
 SWEP.PrintName = "Гиперлуч"
-SWEP.Category = "DRMD 6DOF"
+SWEP.Category = "Half-Life: Abaddon"
 SWEP.Spawnable = true
 SWEP.Base = "weapon_base"
 SWEP.HoldType = "physgun"

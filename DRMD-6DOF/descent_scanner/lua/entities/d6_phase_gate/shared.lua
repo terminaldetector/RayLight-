@@ -1,6 +1,6 @@
 ENT.Type = "anim"
 ENT.Base = "base_anim"
-ENT.PrintName = "DRMD Phase Gate"
+ENT.PrintName = "Abaddon Phase Gate"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 

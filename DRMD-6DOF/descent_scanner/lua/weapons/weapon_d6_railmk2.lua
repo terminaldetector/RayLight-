@@ -10,7 +10,7 @@
 AddCSLuaFile()
 
 SWEP.PrintName      = "РЕЛЬСА МК2"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Category       = "Descent"
 SWEP.Slot           = 4
 SWEP.SlotPos        = 1

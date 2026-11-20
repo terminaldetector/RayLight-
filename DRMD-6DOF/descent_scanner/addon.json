@@ -1,6 +1,6 @@
 {
-    "title":       "Descent 6DOF",
-    "description": "Six-degree scanner combat with five mounts, inertia, adhesion field, optical beam, portals and arena waves.",
+    "title":       "Half-Life: Abaddon",
+    "description": "An abandoned Combine scanner fights across City 17 and a failing reactor. Six-degree flight, modular weapons and roguelike runs.",
     "type":        "weapon",
     "tags":        ["fun", "realism"],
     "ignore": []

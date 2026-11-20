@@ -1,7 +1,7 @@
 -- =========================================================
 -- d6_npc_workshop_ui.lua — DRMD NPC Workshop (GUI, CLIENT)
 --
---   Q → вкладка «DRMD Workshop» → категория «NPC Constructor»:
+--   Q → вкладка «Abaddon · Мастерская» → категория «NPC Constructor»:
 --     Профиль и пресеты / Модель / Полётная физика / AI и бой /
 --     Рой / Вооружение / Навигация
 --
@@ -177,7 +177,7 @@ hook.Add("PopulateToolMenu", "D6_NPCWS_UI", function()
 
     -- ═════ 1. ПРОФИЛЬ И ПРЕСЕТЫ ═════
     AddPanel("d6_npc_profile", "Профиль и пресеты", function(panel)
-        panel:Help("Конструктор противников DRMD. Профиль = модель + "
+        panel:Help("Конструктор противников Abaddon. Профиль = модель + "
             .. "полёт + AI-роль + бой + рой + оружие + навигация.")
 
         local nameEntry = panel:TextEntry("Имя профиля")
@@ -318,7 +318,7 @@ hook.Add("PopulateToolMenu", "D6_NPCWS_UI", function()
 
     -- ═════ 3. ПОЛЁТНАЯ ФИЗИКА ═════
     AddPanel("d6_npc_phys", "Полётная физика", function(panel)
-        panel:Help("12 параметров DRMD Flight Controller (d6_modules).")
+        panel:Help("12 параметров контроллера полёта Abaddon (d6_modules).")
         AddSliders(panel, SCHEMA.phys, function() return WP.phys end)
     end)
 
@@ -391,7 +391,7 @@ hook.Add("PopulateToolMenu", "D6_NPCWS_UI", function()
 
     -- ═════ 6. ВООРУЖЕНИЕ ═════
     AddPanel("d6_npc_weapons", "Вооружение", function(panel)
-        panel:Help("Слоты модулей DRMD (реестр D6_Modules; стрельба — "
+        panel:Help("Слоты модулей Abaddon (реестр D6_Modules; стрельба — "
             .. "через D6_Wep из Weapon Workshop).")
 
         local MODULES = {
@@ -485,4 +485,4 @@ hook.Add("PopulateToolMenu", "D6_NPCWS_UI", function()
 
 end)
 
-print("[D6] d6_npc_workshop_ui.lua загружен (Q → DRMD Workshop → NPC Constructor)")
+print("[D6] d6_npc_workshop_ui.lua загружен (Q → Abaddon · Мастерская → NPC Constructor)")

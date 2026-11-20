@@ -13,7 +13,7 @@
 AddCSLuaFile()
 
 SWEP.PrintName      = "ГРАВИ-МИНА"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Category       = "Descent"
 SWEP.Slot           = 5
 SWEP.SlotPos        = 1

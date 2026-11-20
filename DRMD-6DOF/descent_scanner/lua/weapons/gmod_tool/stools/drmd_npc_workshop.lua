@@ -5,14 +5,14 @@
 --   npc-toolset/npccontrol, логика — целиком DRMD):
 --     ЛКМ    — заспавнить текущий профиль в точке прицела
 --     ПКМ    — снять профиль с прицельного DRMD-дрона
---              и отправить в редактор (Q → DRMD Workshop)
+--              и отправить в редактор (Q → Abaddon · Мастерская)
 --     Reload — удалить прицельного DRMD-дрона
 --
 --   Профили хранятся на сервере (DATA/drmd_npcs/, JSON),
 --   спавн — через D6_SpawnNPCProfile → D6_BuildDrone.
 -- =========================================================
 
-TOOL.Category = "DRMD Tools"
+TOOL.Category = "Abaddon"
 TOOL.Name     = "NPC Workshop"
 
 TOOL.ClientConVar["profile"] = "my_drone"
@@ -25,10 +25,10 @@ TOOL.Information = {
 
 if CLIENT then
     language.Add("tool.drmd_npc_workshop.name", "NPC Workshop — конструктор противников")
-    language.Add("tool.drmd_npc_workshop.desc", "Спавн и снятие профилей DRMD-дронов")
+    language.Add("tool.drmd_npc_workshop.desc", "Спавн и снятие профилей дронов Abaddon")
     language.Add("tool.drmd_npc_workshop.left", "Заспавнить выбранный профиль")
     language.Add("tool.drmd_npc_workshop.right", "Снять профиль с дрона в редактор")
-    language.Add("tool.drmd_npc_workshop.reload", "Удалить DRMD-дрона")
+    language.Add("tool.drmd_npc_workshop.reload", "Удалить дрон Abaddon")
 end
 
 local function IsD6Drone(ent)
@@ -44,7 +44,7 @@ function TOOL:LeftClick(trace)
     if not (D6_NPCWorkshop and D6_NPCWorkshop.Profiles[name]) then
         ply:PrintMessage(HUD_PRINTTALK,
             "[D6 NPC] Профиль «" .. tostring(name) .. "» не найден. "
-            .. "Сохрани его: Q → DRMD Workshop → NPC Constructor.")
+            .. "Сохрани его: Q → Abaddon · Мастерская → NPC Constructor.")
         return false
     end
 
@@ -80,7 +80,7 @@ function TOOL:RightClick(trace)
     net.Send(ply)
 
     ply:PrintMessage(HUD_PRINTTALK,
-        "[D6 NPC] Профиль снят с дрона → редактор (Q → DRMD Workshop).")
+        "[D6 NPC] Профиль снят с дрона → редактор (Q → Abaddon · Мастерская).")
     return true
 end
 
@@ -93,8 +93,8 @@ function TOOL:Reload(trace)
 end
 
 function TOOL.BuildCPanel(panel)
-    panel:Help("Конструктор противников DRMD. Полный редактор — "
-        .. "Q → DRMD Workshop → NPC Constructor.")
+    panel:Help("Конструктор противников Abaddon. Полный редактор — "
+        .. "Q → Abaddon · Мастерская → NPC Constructor.")
 
     -- Селектор профиля (паттерн пресет-комбо из npc-toolset)
     local combo = panel:ComboBox("Профиль", "drmd_npc_workshop_profile")

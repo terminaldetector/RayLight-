@@ -560,7 +560,7 @@ if CLIENT then
         if istable(tbl) and D6_NPCWS_LoadWorking then
             D6_NPCWS_LoadWorking(tbl)
             chat.AddText(Color(80, 255, 80),
-                "[D6 NPC] Профиль дрона загружен в редактор (Q → DRMD Workshop).")
+                "[D6 NPC] Профиль дрона загружен в редактор (Q → Abaddon · Мастерская).")
         end
     end)
 

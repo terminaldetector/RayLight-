@@ -179,7 +179,7 @@ if SERVER then
         elseif D6_Session.IsArena() and D6_Mission.AllowsFlight() then
             D6_Activate(ply)
         else
-            ply:ChatPrint("[DRMD] Управление полётом доступно в профиле арены.")
+            ply:ChatPrint("[Abaddon] Управление полётом доступно в профиле арены.")
         end
     end)
 

@@ -11,7 +11,7 @@ function C.ActiveMap()
 end
 
 if CLIENT then return end
-local enabled = CreateConVar("d6_campaign_preview", "0", FCVAR_ARCHIVE, "Allow explicit DRMD exhibits on the first three Half-Life 2 maps",0,1)
+local enabled = CreateConVar("d6_campaign_preview", "0", FCVAR_ARCHIVE, "Allow explicit Abaddon exhibits on the first three Half-Life 2 maps",0,1)
 local active = {}
 
 local function clear(ply)
@@ -58,13 +58,13 @@ local function show(ply)
     if not D6_Session.CanEditWorld(ply) or not ply:Alive() then return end
     local section = C.ActiveMap()
     if not (enabled:GetBool() and D6_Session.Profile() == "campaign" and section) then
-        ply:ChatPrint("[DRMD] Для стенда доступны d1_trainstation_01–03 и d6_campaign_preview 1.")
+        ply:ChatPrint("[Abaddon] Для стенда доступны d1_trainstation_01–03 и d6_campaign_preview 1.")
         return
     end
     if CurTime() < (ply.D6_NextCampaignExhibit or 0) then return end
     ply.D6_NextCampaignExhibit = CurTime()+1
     local slots = C.Layout(ply,section)
-    if #slots == 0 then ply:ChatPrint("[DRMD] Для стенда нужен свободный участок перед игроком."); return end
+    if #slots == 0 then ply:ChatPrint("[Abaddon] Для стенда нужен свободный участок перед игроком."); return end
     local exhibits = {}
     for _, slot in ipairs(slots) do
         local model = ents.Create("d6_exhibit")
@@ -83,7 +83,7 @@ local function show(ply)
     clear(ply)
     active[ply] = exhibits
     timer.Simple(45,function() if active[ply] == exhibits then clear(ply) end end)
-    ply:ChatPrint("[DRMD] Бестиарий · "..section.name.." · 45 с")
+    ply:ChatPrint("[Abaddon] Бестиарий · "..section.name.." · 45 с")
 end
 
 concommand.Add("d6_campaign_exhibit",show)

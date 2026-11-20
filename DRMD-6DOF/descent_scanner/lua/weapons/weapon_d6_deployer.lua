@@ -4,9 +4,9 @@
 -- Развёртыватель дронов: ЛКМ = одиночный враг, ПКМ = отряд
 -- =========================================================
 SWEP.PrintName      = "D6: Развёртыватель дронов"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Instructions   = "ЛКМ: одиночный враг  ПКМ: полный отряд  колесо: тип"
-SWEP.Category       = "Descent 6DOF / Оружие"
+SWEP.Category       = "Half-Life: Abaddon / Оружие"
 SWEP.Spawnable      = true
 SWEP.AdminSpawnable = true
 SWEP.Base           = "weapon_base"

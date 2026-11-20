@@ -7,7 +7,7 @@ local openFrame
 function H.PaintHeader(w, h, scale, arena)
     U.Panel(0, 0, w, h, C.bg)
     U.Box(22*scale, 19*scale, 3*scale, 15*scale, C.aqua)
-    U.Text("DRMD  /  КОНФИГУРАЦИЯ СКАНЕРА", "small", 35*scale, 18*scale, C.aqua)
+    U.Text("ABADDON  /  КОНФИГУРАЦИЯ СКАНЕРА", "small", 35*scale, 18*scale, C.aqua)
     U.Text("Оружейный отсек", "title", 20*scale, 37*scale)
     U.Text(arena and "Профиль арены" or "Профиль кампании Half-Life 2", "small", 22*scale, 87*scale, C.muted)
     U.Line(22*scale, 113*scale, w-22*scale, 113*scale, C.edge)

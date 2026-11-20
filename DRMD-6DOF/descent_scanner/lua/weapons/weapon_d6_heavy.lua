@@ -8,7 +8,7 @@
 AddCSLuaFile()
 
 SWEP.PrintName       = "ТЯЖЁЛЫЙ"
-SWEP.Author          = "Descent 6DOF"
+SWEP.Author          = "Half-Life: Abaddon"
 SWEP.Category        = "Descent"
 SWEP.Slot            = 2
 SWEP.SlotPos         = 2

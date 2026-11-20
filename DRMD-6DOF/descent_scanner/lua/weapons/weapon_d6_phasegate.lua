@@ -2,7 +2,7 @@ if SERVER then AddCSLuaFile() end
 
 SWEP.Base = "weapon_base"
 SWEP.PrintName = "Фазовая пушка"
-SWEP.Category = "Descent 6DOF"
+SWEP.Category = "Half-Life: Abaddon"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.Slot = 4

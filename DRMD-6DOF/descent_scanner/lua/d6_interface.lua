@@ -142,7 +142,7 @@ function U.PaintHUD(w, h, state)
     local left, right, dock = margin, w-margin-rightW, (w-dockW)*0.5
 
     U.Box(margin, 30*scale, 3*scale, 34*scale, C.aqua)
-    U.Text("DRMD  /  ПОЛЁТ", "label", margin+12*scale, 27*scale, C.text)
+    U.Text("ABADDON  /  ПОЛЁТ", "label", margin+12*scale, 27*scale, C.text)
     U.Text(state.map, "small", margin+12*scale, 47*scale, C.muted)
     U.Text(state.assist and "СТАБИЛИЗАЦИЯ" or "ИНЕРЦИОННЫЙ ПОЛЁТ", "tiny",
         w-margin, 30*scale, state.assist and C.aqua or C.orange, TEXT_ALIGN_RIGHT)

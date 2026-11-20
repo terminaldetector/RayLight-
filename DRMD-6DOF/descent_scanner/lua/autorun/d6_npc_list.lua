@@ -4,7 +4,7 @@ if CLIENT then
         list.Set("NPC", key, {
             Name      = name,
             Class     = key,
-            Category  = category or "Descent 6DOF",
+            Category  = category or "Half-Life: Abaddon",
             Model     = model,
             Weapons   = {},
             KeyValues = {},
@@ -13,72 +13,72 @@ if CLIENT then
     end
 
     RegNPC("d6_npc_mine",   "D6: Воздушная мина",    "npc_cscanner",
-        "models/props_combine/combine_mine01.mdl",  "Descent 6DOF / Дроны")
+        "models/props_combine/combine_mine01.mdl",  "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_mg",     "D6: Пулемётный сканер", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_rpg",    "D6: РПГ-сканер",        "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_grav",   "D6: Грави-мастер",      "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_laser",  "D6: Лазерный сканер",   "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_heavy",  "D6: Тяжёлый сканер",    "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_seeker", "D6: Ракетный сикер",    "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Дроны")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Дроны")
 
     RegNPC("d6_npc_worm",      "D6: Альянсский червь",    "npc_headcrab",
-        "models/headcrab.mdl",                      "Descent 6DOF / Бестиарий")
+        "models/headcrab.mdl",                      "Half-Life: Abaddon / Бестиарий")
 
     RegNPC("d6_npc_manhack",   "D6: Манхок-камикадзе",   "npc_manhack",
-        "models/manhack.mdl",                       "Descent 6DOF / Бестиарий")
+        "models/manhack.mdl",                       "Half-Life: Abaddon / Бестиарий")
 
     RegNPC("d6_npc_squad",     "D6: Боевой отряд (все)", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Группы")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Группы")
 
     RegNPC("d6_npc_bestiary",  "D6: Весь бестиарий",     "npc_headcrab",
-        "models/headcrab.mdl",                      "Descent 6DOF / Группы")
+        "models/headcrab.mdl",                      "Half-Life: Abaddon / Группы")
 
     -- Wave 2
     RegNPC("d6_npc_rocket_elite_homing", "D6: Ракетная элита (самонаведение)", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Волна 2")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Волна 2")
 
     RegNPC("d6_npc_rocket_elite_aa", "D6: Ракетная элита (зенитная)", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Волна 2")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Волна 2")
 
     RegNPC("d6_npc_rocket_strider", "D6: Ракетный страйдер", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Волна 2")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Волна 2")
 
     RegNPC("d6_npc_plasma_strider", "D6: Плазменный страйдер", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Волна 2")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Волна 2")
 
     RegNPC("d6_npc_wave2",  "D6: Волна 2 (все элиты)", "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Волна 2")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Волна 2")
 
     -- Role variants
     RegNPC("d6_npc_assault",     "D6: Штурмовик",         "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Роли")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Роли")
 
     RegNPC("d6_npc_interceptor", "D6: Перехватчик",       "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Роли")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Роли")
 
     RegNPC("d6_npc_artillery",   "D6: Артиллерия",        "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Роли")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Роли")
 
     RegNPC("d6_npc_support",     "D6: Саппорт",           "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Роли")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Роли")
 
     RegNPC("d6_npc_heavy_elite", "D6: Тяжёлая элита",     "npc_cscanner",
-        "models/combine_scanner.mdl",               "Descent 6DOF / Роли")
+        "models/combine_scanner.mdl",               "Half-Life: Abaddon / Роли")
 
     for role, name in pairs(D6_Session.Resistance) do
-        RegNPC("d6_npc_" .. role, name, "npc_cscanner", "models/combine_scanner.mdl", "DRMD / Сопротивление")
+        RegNPC("d6_npc_" .. role, name, "npc_cscanner", "models/combine_scanner.mdl", "Half-Life: Abaddon / Сопротивление")
     end
 
 end

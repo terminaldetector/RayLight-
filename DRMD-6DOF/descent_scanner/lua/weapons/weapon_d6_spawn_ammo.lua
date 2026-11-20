@@ -1,6 +1,6 @@
 -- =========================================================
 -- weapon_d6_spawn_ammo.lua
--- Q-меню GMod → Weapons → "Descent 6DOF / Враги"
+-- Q-меню GMod → Weapons → "Half-Life: Abaddon / Враги"
 --
 -- ПРИНЦИП ФЛЕШЕТЫ:
 --   ЛКМ → TraceHull к точке прицела → ents.Create(npc_class)
@@ -9,9 +9,9 @@
 --   NPC получают полный AI из d6_ai.lua / d6_frags.lua
 -- =========================================================
 SWEP.PrintName      = "D6: Пикап боеприпасов"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Instructions   = "ЛКМ: поставить пикап   ПКМ: сразу 3 пикапа"
-SWEP.Category       = "Descent 6DOF / Предметы"
+SWEP.Category       = "Half-Life: Abaddon / Предметы"
 SWEP.Spawnable      = true
 SWEP.AdminSpawnable = true
 SWEP.Base           = "weapon_base"

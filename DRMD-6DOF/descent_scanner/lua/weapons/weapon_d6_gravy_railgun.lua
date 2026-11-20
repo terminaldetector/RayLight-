@@ -18,7 +18,7 @@
 if SERVER then AddCSLuaFile() end
 
 SWEP.PrintName       = "Грави-Рельса"
-SWEP.Author          = "Descent 6DOF"
+SWEP.Author          = "Half-Life: Abaddon"
 SWEP.Instructions    = "ЛКМ — захват/рельса   ПКМ — пылесос/дробовик"
 SWEP.Category        = "Descent"
 SWEP.Slot            = 4

@@ -1,7 +1,7 @@
 -- =========================================================
--- d6_weaponworkshop.lua — DRMD Weapon Workshop (Q-меню)
+-- d6_weaponworkshop.lua — Abaddon Weapon Workshop (Q-меню)
 --
---   Q → DRMD Workshop → Редактор оружия:
+--   Q → Abaddon · Мастерская → Редактор оружия:
 --     Внешний вид      — визуальный редактор weapon_d6_*
 --                        (по-файловый список + SCK-кластеры)
 --     SCK Конструктор  — сохранённые пресеты SCK + экспорт
@@ -11,7 +11,7 @@
 --                        weapon_d6_railmk2 (через D6_GravCfg) +
 --                        быстрое сохранение пресета-«оружия»
 --
---   Q → DRMD Workshop → NPC Constructor — регистрируется
+--   Q → Abaddon · Мастерская → NPC Constructor — регистрируется
 --   отдельно в d6_npc_workshop_ui.lua (не трогаем).
 --
 --   CLIENT-ONLY. Нет SCK — раздел «SCK Конструктор» показывает
@@ -123,7 +123,7 @@ end
 -- ── Регистрация вкладки/категории ──────────────────────────
 
 hook.Add("AddToolMenuTabs", "D6_WeaponWorkshop", function()
-    spawnmenu.AddToolTab("DRMD Workshop", "DRMD Workshop", "icon16/bomb.png")
+    spawnmenu.AddToolTab("DRMD Workshop", "Abaddon · Мастерская", "icon16/bomb.png")
 end)
 
 hook.Add("AddToolMenuCategories", "D6_WeaponWorkshop", function()
@@ -344,7 +344,7 @@ hook.Add("PopulateToolMenu", "D6_WeaponWorkshop", function()
                 chat.AddText(Color(255, 60, 60), "[D6 Workshop] Нет пресетов для экспорта.")
                 return
             end
-            MsgN("\n-- DRMD Weapon Workshop: Batch Export --")
+            MsgN("\n-- Abaddon Weapon Workshop: Batch Export --")
             for _, fname in ipairs(expFiles) do
                 local name    = fname:gsub("%.txt$", "")
                 local gdata   = file.Read("swep_construction_kit/" .. fname, "DATA")
@@ -577,7 +577,7 @@ end)
 -- ── Панель Browse → Other (обзор пресетов и архетипов) ───
 
 hook.Add("PopulateContent", "D6_WeaponWorkshop_Content", function(pnlContent, tree, node)
-    local d6node = tree:AddNode("DRMD Weapon Workshop", "icon16/bomb.png")
+    local d6node = tree:AddNode("Abaddon Weapon Workshop", "icon16/bomb.png")
     d6node.DoClick = function()
         pnlContent:Clear(true)
 
@@ -603,7 +603,7 @@ hook.Add("PopulateContent", "D6_WeaponWorkshop_Content", function(pnlContent, tr
             lbl:Dock(TOP)
         end
 
-        AddHeader("DRMD 6DOF — Редактор оружия")
+        AddHeader("Half-Life: Abaddon — Редактор оружия")
 
         if not SCKPresent() then
             AddLine("SWEP Construction Kit не установлен.")
@@ -616,7 +616,7 @@ hook.Add("PopulateContent", "D6_WeaponWorkshop_Content", function(pnlContent, tr
                     AddLine("• " .. fn:gsub("%.txt$", ""))
                 end
             else
-                AddLine("(нет — Q → DRMD Workshop → SCK Конструктор)")
+                AddLine("(нет — Q → Abaddon · Мастерская → SCK Конструктор)")
             end
 
             AddHeader("Шаблоны кластеров (архетипы)")
@@ -633,7 +633,7 @@ hook.Add("PopulateContent", "D6_WeaponWorkshop_Content", function(pnlContent, tr
                 end
             end
             if not hasAny then
-                AddLine("(нет — Q → DRMD Workshop → Внешний вид оружия)")
+                AddLine("(нет — Q → Abaddon · Мастерская → Внешний вид оружия)")
             end
         end
     end

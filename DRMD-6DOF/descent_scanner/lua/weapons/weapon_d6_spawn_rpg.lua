@@ -1,6 +1,6 @@
 -- =========================================================
 -- weapon_d6_spawn_rpg.lua
--- Q-меню GMod → Weapons → "Descent 6DOF / Враги"
+-- Q-меню GMod → Weapons → "Half-Life: Abaddon / Враги"
 --
 -- ПРИНЦИП ФЛЕШЕТЫ:
 --   ЛКМ → TraceHull к точке прицела → ents.Create(npc_class)
@@ -9,9 +9,9 @@
 --   NPC получают полный AI из d6_ai.lua / d6_frags.lua
 -- =========================================================
 SWEP.PrintName      = "D6: РПГ-сканер"
-SWEP.Author         = "Descent 6DOF"
+SWEP.Author         = "Half-Life: Abaddon"
 SWEP.Instructions   = "ЛКМ: заспавнить   ПКМ: сразу 2"
-SWEP.Category       = "Descent 6DOF / Враги"
+SWEP.Category       = "Half-Life: Abaddon / Враги"
 SWEP.Spawnable      = true
 SWEP.AdminSpawnable = true
 SWEP.Base           = "weapon_base"
