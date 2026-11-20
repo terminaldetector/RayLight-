@@ -91,6 +91,7 @@ local function cleanup(ply, state, message)
     local run=runs[ply]
     if not run then return end
     runs[ply]=nil
+    if run.reactor then D6_Reactor.EndRogue(ply) end
     for _,ent in ipairs(run.enemies) do if IsValid(ent) then ent:Remove() end end
     if IsValid(ply) and IsValid(ply.D6_VaultReserve) then ply.D6_VaultReserve:Remove() end
     if not IsValid(ply) then return end
@@ -132,18 +133,52 @@ local function enemyAt(ply, variant, pos)
     return SpawnEnemyDrone(ply,"npc_cscanner",variant,pos)
 end
 
+local function shaftSpawn(ply, variant, offset)
+    for attempt=0,7 do
+        local slot=(offset+attempt)%8+1
+        local mark=ents.FindByName("d6_rogue_reactor_wave_"..slot)[1]
+        if not IsValid(mark) then continue end
+        local pos=mark:GetPos()
+        if not safe(pos,pos) or pos:DistToSqr(ply:GetPos())<140^2 then continue end
+        local enemy=enemyAt(ply,variant,pos)
+        if IsValid(enemy) then return enemy end
+    end
+end
+
+local function reactorFinale(ply, run)
+    run.enemies={}
+    run.offers=nil
+    local started=D6_Reactor.StartRogue(ply,run.seed,function(won)
+        if runs[ply]~=run then return end
+        cleanup(ply,won and "won" or "lost",won and "Реактор уничтожен · эвакуация завершена" or "Распад · забег завершён")
+    end)
+    if not started then cleanup(ply,"lost","Реактор недоступен · проверьте карту");return end
+    for _,variant in ipairs({"support",draw(run,2)==1 and "mg" or "interceptor"}) do
+        local enemy=shaftSpawn(ply,variant,draw(run,8)-1)
+        if IsValid(enemy) then run.enemies[#run.enemies+1]=enemy end
+    end
+    label(ply,run,"reactor",string.format("Забег %d · Реактор / выход",run.seed))
+end
+
 local function wave(ply, run)
     run.wave=run.wave+1
+    if run.reactor and run.wave==R.MaxWaves then reactorFinale(ply,run);return end
     local chosen={}
     if run.wave==R.MaxWaves then chosen[1]=draw(run,2)==1 and "heavy_elite" or "rocket_strider"
-    elseif run.wave==4 then chosen[1]="arc_elite"
+    elseif run.wave==4 then chosen[1]=run.reactor and "artillery" or "arc_elite"
     elseif run.wave>=3 then chosen[1]="grav" end
     for _=1,math.min(2+run.wave,6) do chosen[#chosen+1]=roles[draw(run,#roles)] end
     run.enemies={}
     run.offers=nil
     local origin=ply:WorldSpaceCenter()
     local base=ply:EyeAngles().y
+    local shaftOffset=run.reactor and draw(run,8)-1 or 0
     for i,variant in ipairs(chosen) do
+        if run.reactor then
+            local enemy=shaftSpawn(ply,variant,shaftOffset+i-1)
+            if IsValid(enemy) then run.enemies[#run.enemies+1]=enemy end
+            continue
+        end
         local npc
         for attempt=0,3 do
             local phi=math.rad(base)+(i-1)*math.pi*2/#chosen+attempt*.63
@@ -162,9 +197,18 @@ end
 function R.Start(ply, seed)
     if not IsValid(ply) or not ply:Alive() or not ply.D6On or not D6_Session.IsArena() or D6_Mission.IsEpisode()
         or runs[ply] or D6_Trial.IsActive(ply) then return false end
+    local reactor=game.GetMap()==D6_Reactor.RogueMap
+    if reactor and (next(runs) or D6_Reactor.Busy()) then return false end
+    if reactor then
+        local mark=ents.FindByName("d6_rogue_reactor_entry")[1]
+        if not IsValid(mark) then return false end
+        ply:SetPos(mark:GetPos())
+        ply:SetEyeAngles(mark:GetAngles())
+        ply.D6Vel=Vector()
+    end
     seed=math.Clamp(math.floor(tonumber(seed) or math.random(10000,999999)),1,2147483646)
     local params=ply.D6_Params or {}
-    local run={seed=seed,rng=seed,wave=0,enemies={},modules={},old={hp=ply:GetMaxHealth(),energy=D6_Energy.GetMax(ply),
+    local run={seed=seed,rng=seed,wave=0,enemies={},modules={},reactor=reactor,old={hp=ply:GetMaxHealth(),energy=D6_Energy.GetMax(ply),
         shield=ply:GetNWFloat("D6_ShieldMax",100),accel=params.accel,speed=params.maxSpeed}}
     runs[ply]=run
     wave(ply,run)
@@ -235,6 +279,7 @@ end
 timer.Create("D6_RogueProgress",.28,0,function()
     for ply,run in pairs(runs) do
         if not IsValid(ply) or not ply:Alive() or not ply.D6On then cleanup(ply,"lost","Забег прерван");continue end
+        if run.reactor and run.wave==R.MaxWaves then continue end
         if run.offers then continue end
         local alive=false
         for _,enemy in ipairs(run.enemies) do if IsValid(enemy) and enemy:Health()>0 then alive=true;break end end
@@ -250,6 +295,11 @@ end)
 concommand.Add("d6_rogue_stop",function(ply) if IsValid(ply) then cleanup(ply,"stopped","Забег остановлен") end end)
 hook.Add("PlayerDeath","D6_RogueLose",function(ply) cleanup(ply,"lost","Корпус потерян · забег завершён") end)
 hook.Add("PlayerDisconnected","D6_RogueLeave",function(ply) cleanup(ply,"lost","") end)
+hook.Add("PostCleanupMap","D6_RogueReactorReset",function()
+    if game.GetMap()~=D6_Reactor.RogueMap then return end
+    D6_Reactor.Prepare(true)
+    for ply in pairs(runs) do cleanup(ply,"stopped","Карта перезапущена") end
+end)
 cvars.AddChangeCallback("d6_profile",function()
     if not D6_Session.IsArena() then for ply in pairs(runs) do cleanup(ply,"stopped","") end end
 end,"D6_RogueProfile")

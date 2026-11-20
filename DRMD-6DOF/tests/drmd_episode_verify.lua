@@ -1,4 +1,4 @@
-if not SERVER or not (D6_Mission.IsEpisode() or game.GetMap()==D6_Supplies.Vault) then return end
+if not SERVER or not (D6_Mission.IsEpisode() or game.GetMap()==D6_Supplies.Vault or game.GetMap()==D6_Reactor.RogueMap) then return end
 local function check(id,title,okay,detail)
     MsgN(string.format("[DRMD MAP QA] %s | %02d · %s%s",okay and "PASS" or "FAIL",id,title,detail and (" | "..tostring(detail)) or ""))
 end
@@ -70,20 +70,97 @@ local function city(bot)
     end)
 end
 
+local function reactorCore()
+    for _,node in ipairs(ents.FindByClass("d6_reactor_node")) do
+        if node:GetNodeKind()==0 then return node end
+    end
+end
+
+local function coolant(bot)
+    local active={}
+    for i=1,3 do
+        local node=bot:GetNW2Entity("D6_ReactorNode"..i)
+        if IsValid(node) then active[#active+1]=node end
+    end
+    return active
+end
+
+local function takePosition(bot, target, close)
+    local point=target:WorldSpaceCenter()
+    local extent=Vector(19,19,25)
+    local approaches=close and {Vector(0,-180,-28),Vector(180,0,-28)} or
+        {Vector(-492,0,35),Vector(0,-482,78),Vector(0,460,65),Vector(520,0,125),
+        Vector(-265,-230,105),Vector(0,0,465),Vector(0,0,-385)}
+    for _,offset in ipairs(approaches) do
+        local pos=point+offset
+        local tr=util.TraceHull({start=pos,endpos=pos,mins=-extent,maxs=extent,mask=MASK_SOLID_BRUSHONLY})
+        if tr.StartSolid or not util.IsInWorld(pos) then continue end
+        local sight=util.TraceLine({start=pos,endpos=point,mask=MASK_SOLID_BRUSHONLY})
+        if sight.Hit and sight.Entity~=target then continue end
+        move(bot,pos)
+        return true
+    end
+    return false
+end
+
 local function escape(bot)
-    local core,door=named("d6_reactor_core"),named("d6_escape_door")
+    local core,door=reactorCore(),named("d6_escape_door")
     local closed=IsValid(door) and door:GetPos().z or 0
-    if IsValid(core) then core:TakeDamage(700,bot,bot) end
-    timer.Simple(1.88,function()
-        check(79,"lethal core damage activates the native OnBreak collapse relay",
-            bot:GetNW2Int("D6_EpisodeStage")==4 and bot:GetNW2Float("D6_EpisodeDeadline") > CurTime()+47)
-        check(80,"collapse opens the evacuation door and places live airborne mines",
-            IsValid(door) and door:GetPos().z>closed+100 and #ents.FindByClass("d6_ordnance")>=7)
-        move(bot,Vector(6310,0,240))
-        timer.Simple(.46,function()
-            check(81,"reaching the native exit cancels the failure clock",bot:GetNW2Int("D6_EpisodeStage")==5
-                and bot:GetNW2Float("D6_EpisodeDeadline")==0)
-            MsgN("[DRMD MAP QA] COMPLETE REACTOR")
+    local nodes=coolant(bot)
+    local ready=IsValid(core) and #nodes==3 and bot:GetNW2Int("D6_ReactorPhase")==D6_Reactor.Cooling
+    if not ready then check(102,"three live coolant assemblies in the story reactor",false);return end
+    local hp=core:Health()
+    core:TakeDamage(5000,bot,bot)
+    check(102,"three live coolant assemblies protect the dormant core",core:Health()==hp and #nodes==3)
+    local positioned=takePosition(bot,core)
+    untilTime("reactorGuard",5.6,function()
+        local hazard=core.D6_ReactorState.hazards
+        return hazard and hazard.fired>0
+    end,function(fired)
+        check(103,"the reactor telegraphs and launches live attacks while cooled",positioned and fired)
+        local first=nodes[1]
+        local initial=first:Health()
+        local weapon=bot:GetWeapon("weapon_d6_mg")
+        if takePosition(bot,first) and IsValid(weapon) then
+            local aim=(first:GetPos()-bot:GetShootPos()):Angle()
+            bot:SetEyeAngles(aim)
+            bot.D6AngSynced=aim
+            bot:SetNWFloat("D6_Energy",100)
+            weapon:PrimaryAttack()
+        end
+        timer.Simple(.44,function()
+            check(104,"an ordinary scanner projectile damages a coolant assembly",first:Health()<initial,first:Health())
+            for _,node in ipairs(nodes) do node:TakeDamage(500,bot,bot) end
+            core:TakeDamage(5000,bot,bot)
+            check(105,"coolant loss starts heating before the core opens",bot:GetNW2Int("D6_ReactorCoolantDown")==3
+                and core:Health()==hp and core:GetCharge()>=.74 and bot:GetNW2Float("D6_ReactorDeadline")==0)
+            takePosition(bot,core)
+            untilTime("critical",6,function()
+                return core:GetReactorPhase()==D6_Reactor.Critical
+            end,function(critical)
+                check(106,"critical mass exposes the core and publishes a full heat gauge",critical and core:GetCharge()==1)
+                if not critical then return end
+                untilTime("criticalBurst",5.2,function()
+                    local hazard=core.D6_ReactorState.hazards
+                    return hazard and hazard.phase==D6_Reactor.Critical and hazard.lastAttack==2 and hazard.fired>0
+                        and hazard.pending and #hazard.pending.shots[1]==9 and next(hazard.shots)~=nil
+                end,function(burst)
+                    check(107,"a critical ring fires nine real plasma slots with three omitted directions",burst)
+                    core:TakeDamage(700,bot,bot)
+                    timer.Simple(3.4,function()
+                        check(79,"lethal core damage activates the native OnBreak collapse relay",
+                            bot:GetNW2Int("D6_EpisodeStage")==4 and bot:GetNW2Float("D6_EpisodeDeadline") > CurTime()+47)
+                        check(80,"collapse opens the evacuation door and places live airborne mines",
+                            IsValid(door) and door:GetPos().z>closed+100 and #ents.FindByClass("d6_ordnance")>=7)
+                        move(bot,Vector(6310,0,240))
+                        timer.Simple(.46,function()
+                            check(81,"reaching the native exit cancels both failure clocks",bot:GetNW2Int("D6_EpisodeStage")==5
+                                and bot:GetNW2Float("D6_EpisodeDeadline")==0 and bot:GetNW2Float("D6_ReactorDeadline")==0)
+                            MsgN("[DRMD MAP QA] COMPLETE REACTOR")
+                        end)
+                    end)
+                end)
+            end)
         end)
     end)
 end
@@ -102,19 +179,22 @@ local function overload(bot,boss)
     check(90,"destroying both regulators disengages the shield",exposed)
     if not exposed then defeatArc(bot,boss); return end
     boss.D6_AI=nil
+    boss.D6_Modules.primaryL=nil
     boss:GetPhysicsObject():EnableMotion(false)
+    local anchor=named("d6_arc_boss")
+    if IsValid(anchor) then boss:SetPos(anchor:GetPos()) end
     boss:SetAngles(Angle(0,180,0))
-    move(bot,boss:GetPos()-Vector(510,0,4))
+    local positioned=takePosition(bot,boss)
     boss:SetHealth(math.floor(boss:GetMaxHealth()*.38))
     timer.Simple(.25,function()
         local phase=bot:GetNW2Int("D6_BossPhase")==3
-        D6_Patterns.ArcElite(boss,bot)
+        local fired=positioned and D6_Patterns.ArcElite(boss,bot)
         timer.Simple(1.46,function()
             local rounds=0
             for _,shot in ipairs(ents.FindByClass("d6_projectile")) do
                 if shot:GetOwner()==boss and shot:GetNWString("D6_ProjectileArt")=="shot_arcpulse" then rounds=rounds+1 end
             end
-            check(91,"overheat fires three staggered rings of actual projectiles with gaps",phase and rounds>=15,rounds)
+            check(91,"overheat fires three staggered rings of actual projectiles with gaps",phase and fired and rounds>=15,rounds)
             defeatArc(bot,boss)
         end)
     end)
@@ -138,11 +218,10 @@ local function guard(bot)
         local weapon=bot:GetWeapon("weapon_d6_mg")
         if IsValid(regulator) and IsValid(weapon) then
             local point=regulator:WorldSpaceCenter()
-            local approach=point-Vector(180,0,28)
             for i=1,14 do
                 timer.Simple(i*.15,function()
                     if not IsValid(regulator) or not IsValid(weapon) then return end
-                    move(bot,approach)
+                    if not takePosition(bot,regulator,true) then return end
                     local aim=(point-bot:GetShootPos()):Angle()
                     bot:SetEyeAngles(aim)
                     bot.D6AngSynced=aim
@@ -202,6 +281,10 @@ local function reactor(bot)
                 check(86,"the heavyweight actually dashes along a tilted 6DOF vector",
                     burst and burst.velocity:Length()>1250 and math.abs(burst.velocity.z)>8,
                     burst and tostring(burst.velocity))
+                if IsValid(boss) then
+                    boss.D6_AI=nil
+                    boss:GetPhysicsObject():EnableMotion(false)
+                end
                 untilTime("quake",7,function()
                     return bot:GetNW2String("D6_EpisodeOrder"):find("Ударная волна",1,true)
                 end,function(warning)
@@ -211,11 +294,13 @@ local function reactor(bot)
                     if IsValid(boss) then
                         local origin=boss:GetPos()
                         local centerOffset=bot:WorldSpaceCenter()-bot:GetPos()
-                        for _, offset in ipairs({Vector(-306,0,52),Vector(0,-298,52),
-                            Vector(0,300,60),Vector(306,0,75),Vector(0,0,291)}) do
+                        for _, offset in ipairs({Vector(-279,0,52),Vector(0,-275,52),
+                            Vector(0,280,60),Vector(280,0,75),Vector(0,0,267)}) do
                             local point=origin+offset
                             local trace=util.TraceLine({start=origin,endpos=point,mask=MASK_SOLID_BRUSHONLY})
-                            if trace.Hit or not util.IsInWorld(point) then continue end
+                            local extent=Vector(18,18,27)
+                            local space=util.TraceHull({start=point,endpos=point,mins=-extent,maxs=extent,mask=MASK_SOLID_BRUSHONLY})
+                            if trace.Hit or space.StartSolid or not util.IsInWorld(point) then continue end
                             clear=point
                             move(bot,point-centerOffset)
                             break
@@ -269,6 +354,115 @@ local function vault(bot)
     end)
 end
 
+local function rogueReactor(bot)
+    local function wipeWave()
+        for _,actor in ipairs(D6_Actors.GetAll()) do
+            if IsValid(actor) and actor.D6_Variant then actor:Remove() end
+        end
+    end
+    local function advanceWave(left, done)
+        if left==0 then done(); return end
+        wipeWave()
+        untilTime("shaftDraft",1.6,function()
+            return bot:GetNW2String("D6_RogueState")=="draft"
+        end,function(draft)
+            if not draft or not D6_Rogue.Pick(bot,1) then
+                check(109,"the four authored combat waves reach a seeded reactor finale",false)
+                return
+            end
+            timer.Simple(.18,function() advanceWave(left-1,done) end)
+        end)
+    end
+    local function route(done)
+        local began=D6_Rogue.Start(bot,38271)
+        if not began then check(108,"dedicated 6DOF map starts the seeded run",false);return end
+        advanceWave(4,done)
+    end
+    local function indexes()
+        local keys={}
+        for i=1,3 do if IsValid(bot:GetNW2Entity("D6_ReactorNode"..i)) then keys[#keys+1]=i end end
+        return table.concat(keys,",")
+    end
+    local function overloadShaft(core, verify, callback)
+        for _,node in ipairs(coolant(bot)) do node:TakeDamage(300,bot,bot) end
+        untilTime("rogueCritical",5.6,function()
+            return IsValid(core) and core:GetReactorPhase()==D6_Reactor.Critical
+        end,function(critical)
+            if verify then
+                check(111,"rogue coolant cut raises the core to critical before the countdown",critical
+                    and core:GetCharge()==1 and bot:GetNW2Float("D6_ReactorDeadline")==0)
+            end
+            if not critical then return end
+            core:TakeDamage(600,bot,bot)
+            callback()
+        end)
+    end
+    local gate=named("d6_reactor_escape_gate")
+    local goal=named("d6_reactor_escape_goal")
+    local mapReady=IsValid(gate) and IsValid(goal) and IsValid(reactorCore()) and bot.D6On
+    local closed=mapReady and gate:GetPos().z or 0
+    check(108,"dedicated BSP has a dormant core, a physical gate and a separate exit",mapReady)
+    if not mapReady then return end
+    route(function()
+        local core=reactorCore()
+        local roster=indexes()
+        check(109,"four seeded waves and drafts lead to two live coolant nodes instead of a fifth troop wave",
+            IsValid(core) and #coolant(bot)==2 and bot:GetNW2String("D6_RogueState")=="reactor")
+        if not IsValid(core) then return end
+        takePosition(bot,core)
+        local foreign=player.CreateNextBot("Non-participant")
+        timer.Simple(.38,function()
+            if IsValid(foreign) then
+                local node=coolant(bot)[1]
+                local hull=IsValid(node) and node:Health()
+                if IsValid(node) then node:TakeDamage(500,foreign,foreign) end
+                check(110,"a second pilot cannot damage another player's coolant or start an overlapping run",
+                    IsValid(node) and node:Health()==hull and not D6_Rogue.Start(foreign,38271))
+                foreign:Kick()
+            end
+            overloadShaft(core,true,function()
+                timer.Simple(2.7,function()
+                    local deadline=bot:GetNW2Float("D6_ReactorDeadline")
+                    check(112,"critical core breach opens the real door and starts a 40-second escape",
+                        deadline>CurTime()+34 and deadline<CurTime()+40 and gate:GetPos().z>closed+120)
+                    move(bot,goal:GetPos()-Vector(0,0,30))
+                    untilTime("rogueWin",1.5,function()
+                        return bot:GetNW2String("D6_RogueState")=="won"
+                    end,function(won)
+                        check(113,"victory requires reaching the exit and clears reactor state",
+                            won and bot:GetNW2Float("D6_ReactorDeadline")==0 and not D6_Rogue.IsActive(bot))
+                        timer.Simple(2.5,function()
+                            route(function()
+                                local again=reactorCore()
+                                check(114,"same seed restores the same pair of coolant targets in a fresh run",roster==indexes())
+                                if not IsValid(again) then return end
+                                overloadShaft(again,false,function()
+                                    again.D6_ReactorState.deadline=CurTime()+.16
+                                    untilTime("rogueLose",1.4,function()
+                                        return bot:GetNW2String("D6_RogueState")=="lost"
+                                    end,function(lost)
+                                        check(115,"missing the exit loses and resets the run",lost and not D6_Rogue.IsActive(bot)
+                                            and bot:GetNW2Int("D6_ReactorPhase")==0)
+                                        local restarted=D6_Rogue.Start(bot,38271)
+                                        game.CleanUpMap()
+                                        timer.Simple(.38,function()
+                                            check(116,"map cleanup stops an active run and restores one dormant core",
+                                                restarted and not D6_Rogue.IsActive(bot)
+                                                and #ents.FindByClass("d6_reactor_node")==1 and IsValid(reactorCore())
+                                                and reactorCore():GetReactorPhase()==0)
+                                            MsgN("[DRMD MAP QA] COMPLETE ROGUE REACTOR")
+                                        end)
+                                    end)
+                                end)
+                            end)
+                        end)
+                    end)
+                end)
+            end)
+        end)
+    end)
+end
+
 hook.Add("InitPostEntity","DRMDEpisodeQA",function()
     timer.Simple(.8,function()
         local bot=player.CreateNextBot("Abaddon Episode Pilot")
@@ -278,6 +472,7 @@ hook.Add("InitPostEntity","DRMDEpisodeQA",function()
             local map=game.GetMap()
             if map==D6_Mission.City then city(bot)
             elseif map==D6_Mission.Reactor then reactor(bot)
+            elseif map==D6_Reactor.RogueMap then rogueReactor(bot)
             else vault(bot) end
         end)
     end)

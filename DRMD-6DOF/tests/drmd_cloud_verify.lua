@@ -475,7 +475,8 @@ local function verifyCampaign(bot)
             for _, file in ipairs({"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_render.lua",
                 "d6_interface.lua", "d6_hangar.lua", "d6_client.lua", "d6_rogue.lua", "autorun/d6_whiplash.lua",
                 "weapons/weapon_d6_hyperbeam.lua", "entities/d6_phase_gate/cl_init.lua",
-                "entities/d6_projectile/cl_init.lua"}) do
+                "entities/d6_projectile/cl_init.lua", "d6_reactor_visual.lua", "d6_reactor_hazards.lua",
+                "entities/d6_reactor_node/cl_init.lua"}) do
                 if type(CompileFile(file)) ~= "function" then parsed = false end
             end
             check("27 · native GLua compiler accepts client HUD, models and effects", parsed)

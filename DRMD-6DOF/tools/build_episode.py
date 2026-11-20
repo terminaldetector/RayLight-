@@ -1,10 +1,10 @@
-"""Build the editable DRMD episode maps. Requires srctools, no game assets are copied."""
+"""Build the editable Abaddon maps with srctools."""
 import argparse
 import json
 from pathlib import Path
 
 from srctools import Vec
-from srctools.vmf import Output, VMF
+from srctools.vmf import Output, Side, Solid, UVAxis, VMF
 
 CONCRETE = 'concrete/concretewall001a'
 FLOOR = 'concrete/concretefloor001a'
@@ -13,6 +13,12 @@ BRICK = 'brick/brickwall001a'
 TRIGGER = 'tools/toolstrigger'
 SKY = 'tools/toolsskybox'
 NODRAW = 'tools/toolsnodraw'
+REACTOR_PLATE = 'metal/metalcombine002'
+REACTOR_BEAM = 'metal/metalcombine001'
+REACTOR_CAGE = 'metal/metalwall_combinecore03a'
+COOL_STRIP = 'lights/blue001'
+ALARM_STRIP = 'lights/hazzardred001a'
+SCRIPTED_DOOR = 32 | 512  # Toggle, NPCs cannot open. No player-use or touch flag.
 
 
 class Map:
@@ -53,6 +59,19 @@ class Map:
 
     def endpoint(self, name, pos):
         return self.ent('info_target',pos,name)
+
+    def extrude(self, outline, bottom, top, material):
+        """Make a convex brush from a counter-clockwise XY footprint."""
+        low = [Vec(x, y, bottom) for x, y in outline]
+        high = [Vec(x, y, top) for x, y in outline]
+        flat = {'mat': material, 'uaxis': UVAxis(1, 0, 0), 'vaxis': UVAxis(0, -1, 0)}
+        faces = [Side(self.vmf, low[:3], **flat), Side(self.vmf, high[:3][::-1], **flat)]
+        for i, point in enumerate(low):
+            following = low[(i+1) % len(low)]
+            axis = (following - point).norm()
+            faces.append(Side(self.vmf, [following, point, high[i]], mat=material,
+                              uaxis=UVAxis(axis.x, axis.y, 0), vaxis=UVAxis(0, 0, -1)))
+        self.vmf.add_brush(Solid(self.vmf, sides=faces))
 
     def shell(self, lo, hi, open_sky=False):
         x0,y0,z0=lo
@@ -205,6 +224,63 @@ def city():
     return m
 
 
+def shaft_ring(m, x, y, radius, rim, z, height):
+    # Sector joints create a walkable inspection deck and hold the clamp housings.
+    def perimeter(size):
+        corner = round(size * .43)
+        return [(x + a, y + b) for a, b in (
+            (size, corner), (corner, size), (-corner, size), (-size, corner),
+            (-size, -corner), (-corner, -size), (corner, -size), (size, -corner))]
+    outer, inner = perimeter(radius), perimeter(radius-rim)
+    for i in range(8):
+        j = (i+1) % 8
+        sector = [outer[i], outer[j], inner[j], inner[i]]
+        m.extrude(sector, z, z+height, REACTOR_BEAM if i % 2 else REACTOR_PLATE)
+
+
+def shaft_fixtures(m, center, radius, top, bottom, decks):
+    x, y, z = center
+    for deck in decks:
+        shaft_ring(m, x, y, radius, 108, deck, 54)
+        shaft_ring(m, x, y, radius+16, 18, deck+21, 8)
+        for side in (-1, 1):
+            m.box((x-164,y+side*(radius-98)-6,deck-6),
+                  (x+164,y+side*(radius-98)+6,deck+14), COOL_STRIP)
+    for side in (-1, 1):
+        sx = x+side*(radius-61)
+        for far in (-1, 1):
+            sy = y+far*(radius-122)
+            m.box((sx-38,sy-49,bottom),(sx+38,sy+49,top), REACTOR_CAGE)
+            m.box((sx-50,sy-63,bottom+32),(sx+50,sy+63,bottom+79), REACTOR_PLATE)
+            m.box((sx-57,sy-74,top-93),(sx+57,sy+74,top-36), REACTOR_PLATE)
+        sx = x+side*67
+        m.box((sx-8,y-29,z+174),(sx+8,y+29,top), REACTOR_BEAM)
+    m.box((x-68,y-70,z+175),(x+68,y+70,top), REACTOR_CAGE)
+    m.box((x-111,y-109,top-86),(x+111,y+109,top-44), REACTOR_PLATE)
+    m.box((x-74,y-76,bottom),(x+74,y+76,z-175), REACTOR_CAGE)
+    m.box((x-98,y-96,z-201),(x+98,y+96,z-175), REACTOR_PLATE)
+    m.box((x-103,y-99,z-183),(x+103,y-92,z-177), ALARM_STRIP)
+    m.box((x-103,y+92,z-183),(x+103,y+99,z-177), ALARM_STRIP)
+    for level,palette in [(z-118,'232 111 75 420'),(z+226,'100 168 238 680')]:
+        m.light((x-194,y,level),palette)
+        m.light((x+210,y,level),palette)
+
+
+def reactor_landmarks(m, center, coolants, hazards, goal):
+    m.endpoint('d6_reactor_center', center)
+    m.endpoint('d6_reactor_escape_goal', goal)
+    for i, (x,y,z) in enumerate(coolants, start=1):
+        m.endpoint(f'd6_reactor_coolant_{i}', (x,y,z))
+        # Connect each suspended exchanger to a separate service shelf.
+        m.box((x-93,y-92,z-104),(x+93,y+92,z-79), REACTOR_PLATE)
+        m.box((x-29,y-27,z-79),(x+29,y+27,z-63), REACTOR_BEAM)
+        m.box((x-71,y-97,z-94),(x+71,y-91,z-83), COOL_STRIP)
+        m.box((x-71,y+91,z-94),(x+71,y+97,z-83), COOL_STRIP)
+        m.light((x,y,z+126),'88 153 221 400')
+    for name, pos, angles in hazards:
+        m.ent('info_target',pos,f'd6_reactor_hazard_{name}',angles=angles)
+
+
 def reactor():
     m=Map('d6_reactor_escape')
     m.shell((0,-1088,-128),(6592,1088,1536))
@@ -250,7 +326,7 @@ def reactor():
             'd6_swarm_3':(1930,364,490),'d6_swarm_4':(2170,-310,318),'d6_swarm_5':(2410,143,826),
             'd6_guard_1':(3760,-545,592),'d6_guard_2':(4220,536,735),'d6_guard_3':(4510,-485,623),
             'd6_enforcer_boss':(2418,62,535),'d6_enforcer_support':(2532,-156,565),
-            'd6_arc_boss':(4190,20,630),'d6_arc_support':(4445,260,650),
+            'd6_arc_boss':(4272,120,642),'d6_arc_support':(4445,260,650),
             'd6_charge_1':(573,108,110),'d6_charge_2':(3407,-212,258),'d6_exit_zone':(6362,0,250)}.items():
         m.endpoint(name,pos)
     for name,pos in {
@@ -265,7 +341,6 @@ def reactor():
     m.wall_x(2688,1088,0,1536,-332,492,450,1160,METAL)
     m.model('d6_sentry_relic',(682,-238,108),'grav','0 17 0')
     m.model('d6_sentry_gimbal',(682,-238,108),'grav_gimbal','22 90 44')
-    m.model('d6_reactor_profile',(3912,0,139),'shot_ion','0 0 0')
     for i,(x,y,z) in enumerate([(3635,-430,441),(4440,437,730)],start=1):
         name=f'd6_regulator_{i}'
         node=m.ent('func_breakable',name=name,health='74',material='2',spawnflags='512')
@@ -277,7 +352,7 @@ def reactor():
         m.event(relay,'OnTrigger',hardware['targetname'],'Kill')
         m.event(relay,'OnTrigger',spark['targetname'],'SparkOnce')
         m.light((x-30,y,z),'101 205 225 369')
-    m.text('d6_reactor_intro_text','REACTOR MAINTENANCE // CORE TEMPERATURE CRITICAL')
+    m.text('d6_reactor_intro_text','REACTOR MAINTENANCE // THERMAL INTERLOCK ACTIVE')
     m.text('d6_reactor_failure_text','CONTAINMENT LOST // FIND THE EVACUATION SHAFT',color='246 128 80',hold='5')
     m.text('d6_reactor_exit_text','EXIT FOUND // NEURAL PRIORITIES SAVED',hold='6')
     m.event(m.ent('logic_auto',(176,0,80)),'OnMapSpawn','d6_reactor_intro_text','Display',delay=1)
@@ -289,15 +364,33 @@ def reactor():
     m.laser('d6_service_laser_b',(2550,0,91),(2550,0,880),(2539,-11,91),(2562,11,880),23)
     for x,y in [(2304,-264),(2750,216),(4268,-400)]:
         m.model('d6_mine_display',(x,y,136),'mine_air')
+    center=(3944,0,420)
+    shaft_fixtures(m,center,512,1536,0,(173,1204))
+    reactor_landmarks(m,center,[(3456,-704,260),(4512,712,1102),(4320,-625,718)],[
+        (1,(3624,-936,625),'0 90 0'),
+        (2,(4534,939,493),'0 270 0'),
+        (3,(3298,221,1136),'0 0 0'),
+        ('escape_1',(5568,-543,402),'0 90 0'),
+        ('escape_2',(5940,582,669),'0 270 0'),
+    ],(6310,0,430))
+    for x in (3352,4230,4756):
+        for y in (-1030,1030):
+            m.box((x-86,y-44,232),(x+86,y+44,1380),REACTOR_CAGE)
+            m.box((x-113,y-51,534),(x+113,y+51,553),COOL_STRIP)
+            m.box((x-113,y-51,1004),(x+113,y+51,1023),COOL_STRIP)
+    # Offset shield fins leave both the low maintenance circuit and the upper flyway open.
+    for x0,y0,z0,x1,y1,z1 in [
+        (3320,-1088,302,3360,-671,832), (4650,653,576,4692,1088,1048),
+        (5488,-1088,121,5532,-588,664), (5820,576,476,5864,1088,1204),
+    ]:
+        m.box((x0,y0,z0),(x1,y1,z1),REACTOR_PLATE)
+        m.box((x0-4,y0,z1),(x1+4,y1,z1+13),REACTOR_BEAM)
     core=m.ent('func_breakable',name='d6_reactor_core',health='245',material='2',spawnobject='0',spawnflags='512')
-    m.box((3830,-75,53),(4000,75,223),METAL,core)
-    m.box((3834,-97,0),(3994,97,49),CONCRETE)
-    for y in (-114,114):
-        m.box((3814,y-13,0),(4014,y+13,402),METAL)
+    m.box((3881,-63,366),(4007,63,474),REACTOR_CAGE,core)
     fail=m.relay('d6_core_failure',(3970,0,400))
     m.event(core,'OnBreak','d6_core_failure')
     m.ent('env_shake',(3980,0,167),'d6_core_shake',amplitude='7',frequency='28',duration='4',radius='3500',spawnflags='8')
-    m.ent('env_explosion',(3927,0,134),'d6_core_blast',iMagnitude='88',spawnflags='1')
+    m.ent('env_explosion',center,'d6_core_blast',iMagnitude='88',spawnflags='1')
     m.ent('ambient_generic',(4040,0,283),'d6_alarm',message='ambient/alarms/klaxon1.wav',health='6',spawnflags='17')
     m.event(fail,'OnTrigger','d6_reactor_failure_text','Display')
     m.event(fail,'OnTrigger','d6_core_shake','StartShake')
@@ -307,7 +400,7 @@ def reactor():
         (5340,-390,264),(5360,390,285),26,True)
     m.event(fail,'OnTrigger',exit_beam['targetname'],'TurnOn',delay=.45)
     m.event(fail,'OnTrigger',exit_hurt['targetname'],'Enable',delay=.45)
-    door=m.ent('func_door',name='d6_escape_door',movedir='-90 0 0',speed='232',lip='0',wait='-1',spawnflags='32')
+    door=m.ent('func_door',name='d6_escape_door',movedir='-90 0 0',speed='232',lip='0',wait='-1',spawnflags=SCRIPTED_DOOR)
     m.box((4870,-197,0),(4912,197,639),METAL,door)
     m.event(fail,'OnTrigger','d6_escape_door','Open',delay=.65)
     done=m.relay('d6_escape_complete',(6260,0,450))
@@ -315,6 +408,95 @@ def reactor():
     exit_zone=m.gate('trigger_once','d6_escape_trigger',(6178,-298,0),(6420,298,1350),True)
     m.event(fail,'OnTrigger','d6_escape_trigger','Enable')
     m.event(exit_zone,'OnStartTouch','d6_escape_complete')
+    return m
+
+
+def rogue_reactor():
+    m=Map('d6_rogue_reactor')
+    m.shell((0,-1024,0),(3736,1024,2176))
+    # Service hangar has a straight lower access and a slower, covered ramp in the upper wall.
+    m.box((181,-286,0),(614,286,397), REACTOR_BEAM)
+    m.box((170,-300,397),(624,300,407), REACTOR_PLATE)
+    m.box((550,-295,407),(624,-282,416), COOL_STRIP)
+    m.box((550,282,407),(624,295,416), COOL_STRIP)
+    m.ent('info_player_start',(416,0,416),angles='0 0 0')
+    for y in (-164, 164):
+        m.ent('info_player_start',(416,y,416),angles='0 0 0')
+    m.endpoint('d6_rogue_reactor_entry',(416,0,416))
+    # Partition at x=832, with an offset upper bypass and a wider lower throat.
+    for y0,y1,z0,z1 in (
+        (-1024,-675,0,2176), (700,1024,0,2176),
+        (-675,700,0,280), (-675,-545,280,708), (570,700,280,708),
+        (-675,700,708,1120), (-675,206,1120,1508),
+        (-675,700,1508,2176),
+    ):
+        m.box((818,y0,z0),(866,y1,z1), REACTOR_PLATE)
+    for y,z in [(-542,472),(566,472),(208,1232),(694,1232)]:
+        m.box((806,y-6,z),(872,y+6,z+144), COOL_STRIP)
+    m.box((328,482,890),(791,769,925), REACTOR_CAGE)
+    m.box((116,-820,0),(354,-646,861), REACTOR_CAGE)
+    m.light((641,0,580),'127 177 213 640')
+    m.light((578,503,1220),'123 156 218 620')
+    center=(1888,0,1024)
+    shaft_fixtures(m,center,410,2176,0,(330,1696))
+    reactor_landmarks(m,center,[(1344,-435,550),(2210,514,939),(1616,-490,1482)],[
+        (1,(1290,-916,683),'0 90 0'),
+        (2,(2434,910,863),'0 270 0'),
+        (3,(978,144,1310),'0 0 0'),
+        ('escape_1',(2548,-740,1737),'0 90 0'),
+        ('escape_2',(3330,873,1905),'0 270 0'),
+    ],(3456,520,1888))
+    # The fins provide real brush cover while leaving passages over, under and beside them.
+    for x0,y0,z0,x1,y1,z1 in [
+        (1108,-1024,258,1149,-612,935),
+        (1452,544,647,1500,1024,1307),
+        (2320,-1024,429,2364,-544,1040),
+        (2452,393,978,2500,1024,1475),
+        (2674,-1024,1162,2723,-244,1516),
+        (2652,674,341,2696,1024,838),
+        (3169,-1024,1122,3215,217,1962),
+        (3176,794,1591,3228,1024,2176),
+    ]:
+        m.box((x0,y0,z0),(x1,y1,z1), REACTOR_PLATE)
+        m.box((x0-8,y0,z1-19),(x1+8,y1,z1-8), REACTOR_BEAM)
+    for x,y,z in [(980,-705,247),(1354,693,690),(1816,-735,1077),(2267,690,1427),
+                  (2650,-545,1534),(2811,520,1445),(3257,484,1629),(3548,599,1732)]:
+        m.box((x-108,y-149,z),(x+108,y+149,z+26),REACTOR_CAGE)
+        m.box((x-103,y-151,z+11),(x+103,y-144,z+21),COOL_STRIP)
+    # Every route out of the chamber passes through this door. The gate is
+    # actuated by the encounter Lua only once the containment vessel is breached.
+    for y0,y1,z0,z1 in [(-1024,312,0,2176),(716,1024,0,2176),
+                         (312,716,0,1648),(312,716,2112,2176)]:
+        m.box((2952,y0,z0),(3008,y1,z1),REACTOR_BEAM)
+    gate=m.ent('func_door',name='d6_reactor_escape_gate',movedir='-90 0 0',
+               speed='440',lip='0',wait='-1',spawnflags=SCRIPTED_DOOR)
+    m.box((2958,312,1648),(2998,716,2112),REACTOR_CAGE,gate)
+    m.box((2941,284,1648),(2951,312,2112),ALARM_STRIP)
+    m.box((2941,716,1648),(2951,744,2112),ALARM_STRIP)
+    m.box((2941,284,2112),(2951,744,2127),ALARM_STRIP)
+    m.box((3300,246,1809),(3634,788,1834),REACTOR_PLATE)
+    for x in (3316,3524):
+        m.box((x,260,1833),(x+20,775,1838),COOL_STRIP)
+    m.light((2897,522,1892),'255 122 76 450')
+    m.light((3214,520,1930),'141 203 237 590')
+    m.light((3510,578,1988),'104 232 170 820')
+    for x,y,z in [(1112,0,585),(1180,-620,1099),(1494,625,380),(1844,-738,1458),
+                  (2268,654,523),(2450,0,1188),(2608,-558,1550),(2205,604,1868)]:
+        m.light((x,y,z),'91 163 219 570')
+    for i,pos in enumerate([(1220,-341,522),(1204,382,719),(1560,-497,996),(1800,656,1348),
+                            (2312,394,570),(2388,-408,1235),(2080,574,1627),(2604,-385,1760)],1):
+        m.endpoint(f'd6_rogue_reactor_wave_{i}',pos)
+        m.ent('info_node_air',pos)
+    for name,pos in {
+        'battery_1':(560,-115,472),'ammo_1':(560,139,475),
+        'battery_2':(1361,687,762),'repair_1':(1796,-729,1147),
+        'ammo_2':(2282,697,1503),'repair_2':(2641,-559,1603),
+        'reload_1':(1021,-705,315),'reload_2':(1810,-724,1147),
+        'reload_3':(2287,686,1516),
+    }.items():
+        m.endpoint('d6_supply_'+name,pos)
+    m.text('d6_rogue_reactor_text','EXPERIMENTAL SHAFT // START A RUN AT THE SERVICE DECK')
+    m.event(m.ent('logic_auto',(416,0,520)),'OnMapSpawn','d6_rogue_reactor_text','Display',delay=1.3)
     return m
 
 
@@ -353,9 +535,12 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('directory',type=Path)
     parser.add_argument('--preview-data',type=Path)
+    parser.add_argument('--maps',nargs='+',choices=[
+        'd6_city17_drain','d6_reactor_escape','d6_relay_vault','d6_rogue_reactor'])
     args=parser.parse_args()
     args.directory.mkdir(parents=True,exist_ok=True)
-    maps=[city(),reactor(),vault()]
+    maps=[level for level in (city(),reactor(),vault(),rogue_reactor())
+          if args.maps is None or level.name in args.maps]
     for level in maps: level.write(args.directory)
     if args.preview_data: args.preview_data.write_text(json.dumps({level.name:level.brushes for level in maps}))
 

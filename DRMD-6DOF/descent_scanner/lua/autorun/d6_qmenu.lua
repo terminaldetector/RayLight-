@@ -64,7 +64,7 @@ hook.Add("PopulateToolMenu", "D6_QMenu", function()
         CmdButton(panel, "Roguelike · завершить забег", "d6_rogue_stop")
         panel:Help("Режим дрона")
         CmdButton(panel, "Включить / выключить 6DOF", "6dof_toggle")
-        panel:ControlHelp("Выбор секции: 1–5 или колесо мыши. Меню: bind F6 d6_menu_toggle")
+        panel:ControlHelp("Выбор секции — 1–4 или колесо мыши. Сброс мины — C.")
 
         CmdButton(panel, "Flight Assist (стабилизация / Ньютон)", "6dof_flightassist")
         CmdButton(panel, "Always-Run (постоянная тяга)", "6dof_alwaysrun")

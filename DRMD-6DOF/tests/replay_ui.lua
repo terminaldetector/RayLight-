@@ -46,6 +46,7 @@ function draw.SimpleText(text,font,x,y,color,align,vertical)
 end
 
 dofile(root .. "d6_arsenal.lua")
+dofile(root .. "d6_reactor.lua")
 dofile(root .. "d6_weapon_feed.lua")
 dofile(root .. "d6_interface.lua")
 dofile(root .. "d6_hangar.lua")
@@ -218,7 +219,8 @@ end
 if page == "intro" then
     U.PaintGround(canvasW,canvasH,"ДИРЕКТИВА 04 · Разогнать протест у станции",
         "Диспетчер Альянса · Очистить площадь",2)
-elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" or page=="boss" then
+elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" or page=="boss"
+    or page=="coolant" or page=="critical" or page=="shaft_escape" then
     local mountPalette = {}
     for i, class in ipairs(mounts) do mountPalette[i] = A.Families[A.Entries[class].family] end
     local state = {
@@ -244,6 +246,17 @@ elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode
     elseif page == "rogue" then
         state.trial, state.warning, state.charge = "Забег 38271 · Волна 3 / 5", "", 0
         state.hp,state.shield,state.energy = 89,47,65
+    elseif page == "coolant" then
+        state.map, state.order = "Реакторный зал", "Отключить контуры охлаждения"
+        state.reactorPhase,state.reactorDown,state.reactorTotal,state.reactorHeat = 1,1,3,.24
+        state.trial = ""
+    elseif page == "critical" then
+        state.map, state.order = "Реакторный зал", "КРИТИЧЕСКАЯ МАССА · пробить ядро"
+        state.reactorPhase,state.reactorHP = 2,.53
+        state.trial = ""
+    elseif page == "shaft_escape" then
+        state.map, state.order, state.deadline, state.deadlineSpan = "Шахта", "Аварийный выход открыт", 27,40
+        state.reactorPhase,state.trial = 3,"Забег 38271 · Реактор / выход"
     end
     for _, changes in ipairs({{}, {hp=100,shield=0}, {hp=20,shield=100},
         {hp=150,hpMax=200,shield=25}, {hp=100,shield=0,shieldMax=0,energy=0},
@@ -257,6 +270,15 @@ elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode
     end
     commands = {}
     U.PaintHUD(canvasW, canvasH, state)
+    local reactorLabel = ({coolant="КОНТУРЫ  1/3    ·    КРИТИЧНОСТЬ  24%",
+        critical="ЦЕЛОСТНОСТЬ ЯДРА",shaft_escape="ДО РАСПАДА  27"})[page]
+    if reactorLabel then
+        local found = false
+        for _, command in ipairs(commands) do
+            if command.text == reactorLabel then found = true; break end
+        end
+        assert(found, "current reactor phase publishes the matching HUD label")
+    end
     if page=="rogue" then
         local scale=U.Scale(canvasW,canvasH)
         local w,h=math.min(canvasW-38,491*scale),290*scale
