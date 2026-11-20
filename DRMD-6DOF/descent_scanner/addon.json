@@ -1,0 +1,7 @@
+{
+    "title":       "Descent 6DOF",
+    "description": "Six-degree scanner combat with five mounts, inertia, adhesion field, optical beam, portals and arena waves.",
+    "type":        "weapon",
+    "tags":        ["fun", "realism"],
+    "ignore": []
+}

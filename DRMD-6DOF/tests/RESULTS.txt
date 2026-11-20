@@ -1,0 +1,127 @@
+DRMD 6DOF · Облачная проверка
+20.11.2026 · Garry’s Mod x64, официальный выделенный сервер Sandbox
+81 / 81 серверная проверка. Ещё 6 повторных проверок при прямой загрузке реактора.
+21 / 21 сценарий воспроизведения GLua на трёх разрешениях.
+79 / 79 моделей MDL проверены в движке. Две карты собраны инструментами Hammer++.
+
+АРЕНА · gm_flatgrass
+PASS | 01 · Sandbox server boot | gm_flatgrass
+PASS | 02 · arena profile
+PASS | 03 · Half-Life 2 map detection
+PASS | 04 · all 29 weapons and SCK registered | 29
+PASS | 05 · flight, scanner and active first mount
+PASS | 06 · no workshop and stock tools auto-granted
+PASS | 07 · mount migration and swap
+PASS | 08 · fifth mount rejects reassignment
+PASS | 09 · rockets use energy and publish recoil
+PASS | 10 · delegated rocket cooldown gate
+PASS | 11 · swept projectile hits world exactly once at 5200 u/s | 1
+PASS | 12 · phase weapon places a linked pair on real brush surfaces | 2
+PASS | 13 · phase traversal preserves speed and exits the linked portal
+PASS | 14 · Rocket Strider initialized and publishes its custom appearance
+PASS | 15 · gravity unit initialized with its own mesh tag
+PASS | 16 · Strider telegraph precedes projectile wave
+PASS | 17 · trial starts with first group
+PASS | 18 · trial cleanup releases tracked entities
+PASS | 19 · actual Strider projectiles spawned | 13
+PASS | 20 · campaign spawn preserves stock player
+PASS | 21 · campaign suppresses auto kit and removes portals
+PASS | 22 · campaign leaves stock engine physics cap | 3500
+PASS | 23 · control panel can disable stabilization on the first press
+PASS | 24 · dash impulse publishes its cooldown and consumes reserve
+PASS | 25 · phase gates transport a full player hull and rotate momentum
+PASS | 26 · warp reaches a clear destination and preserves a flight impulse
+PASS | 27 · native GLua compiler accepts client HUD, models and effects
+PASS | 28 · phase traversal respects an obstruction on the entry side
+PASS | 29 · gravity drone captures real VPhysics debris into orbit
+PASS | 30 · deleting a gravity drone restores the debris physics
+PASS | 31 · clearing a group advances to the next encounter wave
+PASS | 32 · scanner optic matches muzzle axis with pitch and roll
+PASS | 33 · five mipmapped material assets mount in Garry's Mod
+PASS | 34 · all three Resistance variants spawn with their own art and armor
+PASS | 35 · trial wave three brings all three Resistance hulls | 3 / 3
+PASS | 36 · rolled dash follows local up and keeps a tangential impulse
+PASS | 37 · movement retains boosted speed beyond the dash window | 2532 u/s
+PASS | 38 · airbrake reduces speed through ordinary game movement | 771 u/s
+PASS | 39 · use attaches to a brush and keeps lateral momentum | Y 300 · Z -1244
+PASS | 40 · releasing use clears the field and carries flight momentum
+PASS | 41 · a free VPhysics anchor exchanges momentum with the scanner | ship 19 · prop -430
+PASS | 42 · deleting an anchor automatically releases adhesion
+PASS | 43 · Hyperbeam charges from the normal attack action
+PASS | 44 · fired segment starts at the model lens under roll
+PASS | 45 · a released optical burst damages both targets and cools down | 174 / 223
+PASS | 46 · solid geometry occludes targets behind the optical beam
+PASS | 47 · elite enforcement drone deploys in the final wave
+PASS | 48 · a hit on the giant hull reaches the boss shield | NPC [119][npc_cscanner] / 4.2
+PASS | 49 · the boss telegraphs and fires physical projectiles | 5
+PASS | 50 · swept projectiles also hit the extended weapon pods
+PASS | 51 · 79 native Source model files mount and validate | 79
+PASS | 52 · all four deployables use scripted entities with distinct models and physics | 4
+PASS | 53 · a live physics bomb carries its detailed Source mesh
+PASS | 54 · all three campaign profiles resolve safe exhibit positions on real test geometry
+PASS | 55 · the physics bomb reports a single world impact | 1 | Entity [0][worldspawn] at -612.000000 -583.000000 -12287.750000
+PASS | 56 · plasma mine arms on its timer
+PASS | 57 · a recovery cloud charges and heals the player on contact
+PASS | 58 · gravity carrier holds physical cargo above and below its spherical field | 7 props, Z -120 to 88
+PASS | 59 · escort plans separate factions, reserve 3D slots and stagger fire | escort
+PASS | 60 · losing the leader promotes an escort and frees cargo
+PASS | 61 · seeded roguelike starts actual enemies and excludes a concurrent trial
+PASS | 62 · clearing a run wave offers three distinct upgrades
+PASS | 63 · choosing a card starts the next wave and prevents another selection
+PASS | 64 · death clears the run and restores the baseline integrity
+PASS | 65 · arc elite has a separate chassis and extended pod hitboxes
+PASS | 66 · thermal warning precedes the five-bolt gap pattern | 5
+PASS | 67 · twin discharge traces can drain the pilot shield | 56
+PASS | 68 · replaying a seed repeats its draft and five waves finish with the new elite | 5
+PASS | 69 · older workshop weapons preserve their explicit projectile model and scale
+PASS | 70 · the workshop homing module launches the authored rocket as a scripted projectile
+
+ЭПИЗОД · d6_city17_drain → d6_reactor_escape · один запуск сервера
+PASS | 71 · city BSP loads with native ground opponents
+PASS | 72 · city chapter starts grounded with a stock firearm
+PASS | 73 · the real Hammer trigger records the EMP on entering
+PASS | 74 · all stair steps and the sewer floor have BSP collision
+PASS | 75 · Hammer exit contains the native landmark and the Sandbox transfer volume
+PASS | 76 · reactor BSP runs in 6DOF with native personnel and traps
+PASS | 77 · flight through the entry volume starts the gravity swarm
+PASS | 78 · guard section deploys rocket and plasma Striders | 2
+PASS | 79 · lethal core damage activates the native OnBreak collapse relay
+PASS | 80 · collapse opens the evacuation door and places live airborne mines | 282
+PASS | 81 · reaching the native exit cancels the failure clock
+
+ПРЯМОЙ ЗАПУСК РЕАКТОРА · повторены проверки 76–81
+
+МОДЕЛИ И КАРТЫ
+PASS | 29 unique weapon rigs | 24 enemy classes | 14 ordnance and cargo types
+PASS | 79 production meshes | 208982 triangles | finite vertices and material keys
+PASS | d6_city17_drain.vmf → BSP · VBSP++, VVIS++, VRAD++ (LDR)
+PASS | d6_reactor_escape.vmf → BSP · VBSP++, VVIS++, VRAD++ (LDR)
+
+ВОСПРОИЗВЕДЕНИЕ ИНТЕРФЕЙСА GLUA
+PASS | cockpit | 1600×900 | 90 paint operations
+PASS | hangar | 1600×900 | 161 paint operations
+PASS | campaign | 1600×900 | 161 paint operations
+PASS | beam | 1600×900 | 87 paint operations
+PASS | flight | 1600×900 | 88 paint operations
+PASS | episode | 1600×900 | 91 paint operations
+PASS | rogue | 1600×900 | 126 paint operations
+PASS | cockpit | 1024×768 | 90 paint operations
+PASS | hangar | 1024×768 | 161 paint operations
+PASS | campaign | 1024×768 | 161 paint operations
+PASS | beam | 1024×768 | 87 paint operations
+PASS | flight | 1024×768 | 88 paint operations
+PASS | episode | 1024×768 | 91 paint operations
+PASS | rogue | 1024×768 | 126 paint operations
+PASS | cockpit | 640×480 | 90 paint operations
+PASS | hangar | 640×480 | 161 paint operations
+PASS | campaign | 640×480 | 161 paint operations
+PASS | beam | 640×480 | 87 paint operations
+PASS | flight | 640×480 | 88 paint operations
+PASS | episode | 640×480 | 91 paint operations
+PASS | rogue | 640×480 | 126 paint operations
+
+ОБЪЁМ ПРОВЕРКИ
+Серверные проверки используют управляемого бота и загруженные BSP.
+Стенд первых трёх карт Half-Life 2 проверен на геометрии gm_flatgrass.
+Кадры получены в Blender и через воспроизведение команд GLua.
+Графический клиент Garry’s Mod и оригинальный клиент Half-Life 2 в этом прогоне были недоступны.

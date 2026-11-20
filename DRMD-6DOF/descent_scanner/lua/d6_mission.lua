@@ -1,0 +1,152 @@
+D6_Mission = {}
+local M = D6_Mission
+M.City = "d6_city17_drain"
+M.Reactor = "d6_reactor_escape"
+
+function M.IsEpisode()
+    local map = game.GetMap()
+    return map == M.City or map == M.Reactor
+end
+
+function M.AllowsFlight()
+    return game.GetMap() ~= M.City
+end
+
+if CLIENT then return end
+local stage, objective, expires = 0, "", 0
+local missionUnits = {}
+local waveTypes = {
+    swarm = {"grav","mg","laser","rpg","manhack_fast"},
+    guard = {"rocket_strider","plasma_strider","manhack_fast"},
+}
+
+local function publish(ply)
+    ply:SetNW2Int("D6_EpisodeStage",stage)
+    ply:SetNW2String("D6_EpisodeOrder",objective)
+    ply:SetNW2Float("D6_EpisodeDeadline",expires)
+end
+
+local function advance(nextStage, label, deadline)
+    stage, objective, expires = nextStage, label, deadline or 0
+    for _, ply in ipairs(player.GetAll()) do publish(ply) end
+end
+
+local function marker(name)
+    local mark = ents.FindByName(name)[1]
+    return IsValid(mark) and mark:GetPos() or nil
+end
+
+function M.NewCloud(pos, energy, heal)
+    local cloud = ents.Create("d6_energy_cloud")
+    if not IsValid(cloud) then return end
+    cloud.D6_Charge, cloud.D6_Healing = energy, heal
+    cloud:SetPos(pos)
+    cloud:Spawn()
+    return cloud
+end
+
+local function spawnWave(ply, which)
+    for i, variant in ipairs(waveTypes[which]) do
+        local pos = marker("d6_"..which.."_"..i)
+        if not pos then continue end
+        local npc
+        if variant == "manhack_fast" then npc = SpawnManhackKamikaze(ply,pos)
+        elseif variant == "rocket_strider" then npc = SpawnRocketStrider(ply,pos)
+        elseif variant == "plasma_strider" then npc = SpawnPlasmaStrider(ply,pos)
+        else npc = SpawnEnemyDrone(ply,"npc_cscanner",variant,pos) end
+        if IsValid(npc) then missionUnits[#missionUnits+1] = npc end
+    end
+end
+
+local function cargo(x,z)
+    for i=1,7 do
+        local side=(i%2==0 and 1 or -1)*(104+i*31)
+        local pos=Vector(x+i*77,side,z+i*64)
+        local ent,body=D6_Wep.Ordnance("salvage_ballast",pos,nil,
+            {mobile=true,mass=22,collectible=true,group=COLLISION_GROUP_NONE})
+        if not IsValid(ent) then continue end
+        body:SetVelocity(Vector(38-i*3,side>0 and -62 or 57,31+i*8))
+        body:AddAngleVelocity(Vector(i*8,22,17))
+        missionUnits[#missionUnits+1]=ent
+    end
+end
+
+local function reset()
+    for _, entity in ipairs(missionUnits) do if IsValid(entity) then entity:Remove() end end
+    missionUnits = {}
+    local map=game.GetMap()
+    if map == M.City then advance(1,"ДИРЕКТИВА 04 · Освободить проход")
+    elseif map == M.Reactor then advance(1,"Найти реактор · зарядить корпус") end
+end
+
+hook.Add("InitPostEntity","D6_EpisodeEntry",reset)
+hook.Add("PostCleanupMap","D6_EpisodeReset",reset)
+hook.Add("PlayerSpawn","D6_EpisodeSpawn",function(ply)
+    if not M.IsEpisode() then return end
+    publish(ply)
+    if game.GetMap() == M.City then
+        timer.Simple(0,function()
+            if not IsValid(ply) or not ply:Alive() then return end
+            for _,class in ipairs({"weapon_physgun","weapon_physcannon","gmod_tool","gmod_camera"}) do ply:StripWeapon(class) end
+            if not ply:HasWeapon("weapon_smg1") then ply:Give("weapon_smg1") end
+            ply:SetAmmo(90,"SMG1")
+        end)
+    end
+end)
+
+hook.Add("AcceptInput","D6_EpisodeEvents",function(ent,input,activator)
+    if not M.IsEpisode() or input:lower() ~= "trigger" or not IsValid(ent) then return end
+    local event = ent:GetName()
+    if game.GetMap() == M.City then
+        if event == "d6_emp" and stage == 1 then advance(2,"ЭМИ · Найти технический канал") end
+        if event == "d6_city_transfer" and stage < 3 and IsValid(activator) and activator:IsPlayer() then
+            advance(3,"Технический канал · Переход в реактор")
+            RunConsoleCommand("changelevel", M.Reactor)
+        end
+        return
+    end
+    if not IsValid(activator) or not activator:IsPlayer() then activator = player.GetAll()[1] end
+    if not IsValid(activator) then return end
+    if event == "d6_swarm_enter" and stage == 1 then
+        advance(2,"Гравитационный рой · Пройти в реакторный зал")
+        cargo(1550,135)
+        spawnWave(activator,"swarm")
+        local pos = marker("d6_charge_1")
+        if pos then M.NewCloud(pos,45,35) end
+    elseif event == "d6_guard_enter" and stage <= 2 then
+        advance(3,"Разрушить реакторное ядро")
+        spawnWave(activator,"guard")
+        local pos = marker("d6_charge_2")
+        if pos then M.NewCloud(pos,52,35) end
+    elseif event == "d6_core_failure" and stage < 4 then
+        advance(4,"РАСПАД · Эвакуационный шлюз",CurTime()+58)
+        cargo(4670,88)
+        for _, pos in ipairs({Vector(5132,-242,245),Vector(5545,280,535),Vector(5940,-198,286)}) do
+            local ent=D6_Wep.Ordnance("mine_air",pos,nil,{mobile=true,mass=15,group=COLLISION_GROUP_PROJECTILE})
+            if not IsValid(ent) then continue end
+            ent.IsAirMine=true
+            ent.NextScan=CurTime()+0.85
+            ent:SetNWBool("D6_MineArmed",true)
+            missionUnits[#missionUnits+1]=ent
+        end
+    elseif event == "d6_escape_complete" and stage == 4 then
+        advance(5,"ВЫХОД НАЙДЕН · Приоритеты сохранены")
+    end
+end)
+
+timer.Create("D6_EpisodeDeadline",.25,0,function()
+    if game.GetMap() ~= M.Reactor or stage ~= 4 or expires > CurTime() then return end
+    advance(6,"ОТСЕК ПОТЕРЯН · d6_episode_restart")
+    for _,ply in ipairs(player.GetAll()) do if ply:Alive() then ply:Kill() end end
+end)
+
+concommand.Add("d6_episode_restart",function(ply)
+    if M.IsEpisode() and (not IsValid(ply) or D6_Session.CanEditWorld(ply)) then game.CleanUpMap() end
+end)
+
+hook.Add("OnNPCKilled","D6_CargoAfterKill",function(npc,attacker)
+    if not D6_Session.IsArena() or not npc.D6_Variant or not IsValid(attacker) or not attacker:IsPlayer() then return end
+    if #ents.FindByClass("d6_energy_cloud") >= 20 then return end
+    local strength=math.Clamp(npc:GetMaxHealth()/220,0.62,2.3)
+    M.NewCloud(npc:WorldSpaceCenter(),math.floor(18*strength),math.floor(12*strength))
+end)

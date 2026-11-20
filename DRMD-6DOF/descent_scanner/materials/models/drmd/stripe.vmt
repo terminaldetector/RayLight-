@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+ "$basetexture" "drmd/drmd_finish_coating"
+ "$color" "[0.4588 0.1922 0.1765]"
+}
