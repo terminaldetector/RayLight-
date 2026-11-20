@@ -175,6 +175,9 @@ hook.Add("Think", "D6_AI_Core", function()
         local travel = point-center
         local dist = travel:Length()
         local aim = travel:Angle()
+        if npc.D6_FireAim and (npc.D6_BraceUntil or 0)>ct then
+            aim=(npc.D6_FireAim-center):Angle()
+        end
         local previous = npc:GetAngles()
         aim.r = math.Clamp(math.AngleDifference(previous.y,aim.y)*0.54, -28, 28)
         npc:SetAngles(LerpAngle(dt*6,previous,aim))
@@ -187,13 +190,14 @@ hook.Add("Think", "D6_AI_Core", function()
             npc.D6_BreakVector = aim:Right()*(npc:EntIndex()%2 == 0 and 510 or -510)+aim:Up()*129
         end
         desired = D6_Swarm.Steering(npc, desired, spec.move)
+        if (npc.D6_BraceUntil or 0)>ct then desired=desired*.25 end
         body:SetVelocity(LerpVector(dt*4.8,body:GetVelocity(),desired))
         body:EnableGravity(false)
         body:AddAngleVelocity(-body:GetAngleVelocity()*dt*9)
         if dist <= spec.range and dist > 140 and ct >= (npc.D6_NextAttack or 0) and D6_Swarm.AllowsFire(npc, ct)
             and not util.TraceLine({start = center, endpos = point, filter = {npc,enemy}, mask = MASK_SHOT}).Hit then
             npc.D6_NextAttack = ct+spec.cooldown
-            D6_Patterns.Warn(npc,point,spec.windup)
+            D6_Patterns.Warn(npc,point,spec.windup,spec.kind=="explosive" or npc.D6_Variant=="laser")
             for i=1,spec.burst do
                 timer.Simple(spec.windup+(i-1)*spec.interval, function()
                     if not IsValid(npc) or not IsValid(enemy) or npc:Health() <= 0 or not enemy:Alive() or not D6_Session.IsArena() then return end

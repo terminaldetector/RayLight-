@@ -156,6 +156,11 @@ function U.PaintHUD(w, h, state)
             U.Bar(w/2-76*scale,118*scale,152*scale,2*scale,state.deadline/58,C.orange)
         end
     end
+    if state.boss and state.boss~="" then
+        local hue=state.phase==1 and C.aqua or (state.phase==3 and C.warn or C.orange)
+        U.Text(state.boss,"small",w/2,102*scale,hue,TEXT_ALIGN_CENTER)
+        U.Bar(w/2-114*scale,121*scale,228*scale,3*scale,state.bossHP or 1,hue)
+    end
 
     U.Panel(left, y, leftW, panelH)
     gauge("КОРПУС", state.hp, state.hpMax, left+pad, y+12*scale, leftW-2*pad, scale,
@@ -244,7 +249,8 @@ function U.Snapshot(ply)
 
     local idle = now - ply:GetNWFloat("D6LastInput", now)
     local warning = ""
-    if now - ply:GetNW2Float("D6_CloudPickup",-20) < 1.0 then warning = "Энергия принята"
+    if now - ply:GetNW2Float("D6_SupplyAt",-20) < 1.4 then warning = ply:GetNW2String("D6_SupplyNotice","")
+    elseif now - ply:GetNW2Float("D6_CloudPickup",-20) < 1.0 then warning = "Энергия принята"
     elseif flight.braking then warning = "Аэротормоз"
     elseif flight.dashing then warning = "Импульс"
     elseif flight.adhering then warning = "Сцепление активно"
@@ -260,18 +266,22 @@ function U.Snapshot(ply)
     local trial = ply:GetNW2String("D6_TrialStatus", "")
     if wave > 0 then trial = string.format("Волна %d / 4   ·   %s", wave, trial) end
     local run = ply:GetNW2String("D6_RogueStatus", "")
+    local tier=D6_Balance.Tier(class)
     if wave == 0 and run ~= "" then trial = run end
     local shot = valid and weapon:GetNWFloat("D6_ShotAt", -1) or -1
     local drift = speed > 80 and vel:GetNormalized() or nil
     return {
         order = ply:GetNW2String("D6_EpisodeOrder",""),
         deadline = math.max(0,ply:GetNW2Float("D6_EpisodeDeadline",0)-now),
+        boss = ply:GetNW2String("D6_BossName",""),
+        bossHP = ply:GetNW2Float("D6_BossIntegrity",0),
+        phase = ply:GetNW2Int("D6_BossPhase",0),
         map = game.GetMap(), roll = flight.roll, yaw = ang.y, speed = speed, warning = warning,
         assist = ply:GetNWBool("D6_FlightAssist", true), boost = ply:GetNWBool("D6AlwaysRun"),
         hp = hp, hpMax = ply:GetMaxHealth(), shield = shield, shieldMax = ply:GetNWFloat("D6_ShieldMax", 100),
         energy = energy, energyMax = D6_Energy.GetMax(ply), weapon = name, mounts = mounts,
         accent = family and family.color or C.aqua, active = A.Slot(ply, class), charge = charge,
-        weaponStatus = status, weaponGroup = family and family.label or "Вооружение",
+        weaponStatus = status, weaponGroup = family and (family.label..(tier and " · "..D6_Balance.TierLabel[tier] or "")) or "Вооружение",
         dash = 1 - math.Clamp((ply:GetNWFloat("D6DashCD", 0) - now)/D6_Mobility.DashCooldown, 0, 1),
         kick = shot > 0 and math.Clamp(1-(now-shot)*6, 0, 1) or 0,
         trial = trial, drift = drift and {drift:Dot(ang:Right()), -drift:Dot(ang:Up())},
@@ -284,16 +294,26 @@ local function cockpit(ply)
         and GetViewEntity() == ply
 end
 
+function U.PaintGround(w,h,order,caption,remaining)
+    local s=U.Scale(w,h)
+    U.Box(30*s,30*s,3*s,34*s,C.orange)
+    if caption~="" and remaining>0 then
+        local opacity=math.min(remaining*2,1)
+        U.Box(w/2-206*s,h*.747,412*s,49*s,Color(10,17,23,210*opacity))
+        U.Text(caption,"label",w/2,h*.747+17*s,Color(222,231,224,255*opacity),TEXT_ALIGN_CENTER)
+    end
+    U.Text("ABADDON  /  ОПТИКА АЛЬЯНСА", "label",42*s,27*s,C.text)
+    U.Text(order,"small",42*s,48*s,C.muted)
+end
+
 hook.Add("HUDPaint", "D6_Cockpit", function()
     local ply = LocalPlayer()
     if cockpit(ply) then U.PaintHUD(ScrW(), ScrH(), U.Snapshot(ply)); return end
     if not IsValid(ply) or not ply:Alive() or game.GetMap()~=D6_Mission.City then return end
     local order=ply:GetNW2String("D6_EpisodeOrder","")
     if order=="" then return end
-    local s=U.Scale(ScrW(),ScrH())
-    U.Box(30*s,30*s,3*s,34*s,C.orange)
-    U.Text("ОПТИКА АЛЬЯНСА", "label",42*s,27*s,C.text)
-    U.Text(order,"small",42*s,48*s,C.muted)
+    U.PaintGround(ScrW(),ScrH(),order,ply:GetNW2String("D6_EpisodeCaption",""),
+        ply:GetNW2Float("D6_EpisodeCaptionEnd",0)-CurTime())
 end)
 local replaced = {CHudHealth = true, CHudBattery = true, CHudAmmo = true,
     CHudSecondaryAmmo = true, CHudCrosshair = true}

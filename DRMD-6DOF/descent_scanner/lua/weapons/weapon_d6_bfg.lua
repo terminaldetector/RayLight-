@@ -101,7 +101,7 @@ function SWEP:PrimaryAttack()
             if not hitPos then return end
             local pos = hitPos
 
-            if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+            if D6_Wep.Damageable(hitEnt) then
                 D6_Wep.DirectDamage(owner, b, hitEnt, IMPACT_DMG, exo, (hitNormal or -dir) * 8000)
             end
             D6_Wep.SplashDamage(owner, b, pos, 0, IMPACT_SPLASH, IMPACT_RAD, exo, 7000, hitEnt)

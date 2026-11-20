@@ -1,4 +1,4 @@
-if not SERVER or D6_Mission.IsEpisode() then return end
+if not SERVER or game.GetMap()~="gm_flatgrass" then return end
 
 local function check(name, pass, detail)
     MsgN(string.format("[DRMD QA] %s | %s%s", pass and "PASS" or "FAIL", name, detail and (" | " .. tostring(detail)) or ""))
@@ -202,6 +202,37 @@ local function verifyRogue(bot,ground,done)
     end)
 end
 
+local function verifyArcArsenal(bot,elite,done)
+    D6_Patterns.ArcElite(elite,bot)
+    timer.Simple(.82,function()
+        local rockets=0
+        for _,shot in ipairs(ents.FindByClass("d6_projectile")) do
+            if shot:GetOwner()~=elite then continue end
+            if shot:GetNWString("D6_ProjectileArt")=="shot_mega" and shot:GetNW2Bool("D6_ProjectileTint") then rockets=rockets+1 end
+            shot:Remove()
+        end
+        check("99 · the upper rack launches a pair of blue plasma rockets",rockets==2,rockets)
+        bot:GodDisable()
+        bot:SetNWFloat("D6_Shield",100)
+        D6_Patterns.ArcElite(elite,bot)
+        local eyeCharge=elite:GetNW2Int("D6_ArcMode")==4 and elite:GetNW2Float("D6_EyeCharge")>0
+        timer.Simple(1.11,function()
+            local shield=bot:GetNWFloat("D6_Shield",100)
+            check("100 · the blue-to-red optic windup precedes the high-energy eye beam",eyeCharge and shield<=45,shield)
+            bot:GodEnable()
+            local idle=D6_Drones.Muzzle(elite,7)
+            D6_Patterns.ArcElite(elite,bot)
+            timer.Simple(.85,function()
+                local rotating=D6_Drones.Muzzle(elite,7):Distance(idle)>2
+                local rail=elite:GetNW2Float("D6_WeaponCycle_thermal",-5)>CurTime()-.25
+                check("101 · the rotary group changes its muzzle pose and the belly rail actually fires",rotating and rail)
+                elite:Remove()
+                done()
+            end)
+        end)
+    end)
+end
+
 local function verifyArcElite(bot,ground,done)
     local center=ground+Vector(760,-1300,320)
     bot:SetPos(center)
@@ -218,11 +249,25 @@ local function verifyArcElite(bot,ground,done)
     elite.D6_AI=nil
     elite:SetAngles(Angle(0,0,0))
     elite:GetPhysicsObject():EnableMotion(false)
-    local side=elite:GetRight()*64
+    local side=elite:GetRight()*(D6_Session.ArcElite.scale*26.5)
     local trace=D6_Wep.CombatTrace({start=pos+side+Vector(240,0,3),endpos=pos+side-Vector(240,0,3),
         mask=MASK_SHOT,filter=bot})
     check("65 · arc elite has a separate chassis and extended pod hitboxes",trace.Entity==elite
         and D6_Drones.Get(elite).mesh=="combine_arc_elite" and elite.D6_Modules.primaryL.name=="ArcBattery")
+    local front=D6_Drones.Muzzle(elite,1)-elite:GetPos()
+    D6_Drones.TrackBanks(elite,elite:GetPos()+Vector(-930,0,650),.5)
+    local reversed=D6_Drones.Muzzle(elite,1)-elite:GetPos()
+    check("97 · the gimbals carry the emission sockets through reverse yaw and positive elevation",
+        front.x>100 and reversed.x<0 and reversed.z>55)
+    elite:SetNW2Angle("D6_BankAngle_left",angle_zero)
+    elite:SetNW2Angle("D6_BankAngle_right",angle_zero)
+    local muzzle=D6_Drones.Muzzle(elite,1)
+    D6_Drones.Fired(elite,"left")
+    timer.Simple(.055,function()
+        check("93 · weapon recoil moves the same bank used by the shot socket",
+            IsValid(elite) and D6_Drones.Muzzle(elite,1):Distance(muzzle)>.22
+            and D6_Drones.Recoil(elite,"right",CurTime())==0)
+    end)
     local started=D6_Patterns.ArcElite(elite,bot)
     local warning=elite:GetNWBool("D6_ArcThermal") and elite:GetNWFloat("D6_ThreatAt")>CurTime()
     local custom=D6_Arsenal.NativeModel("shot_homing")
@@ -250,8 +295,7 @@ local function verifyArcElite(bot,ground,done)
                 if shot:GetOwner()==elite and shot:GetModel()==custom then missile=true;shot:Remove() end
             end
             check("70 · the workshop homing module launches the authored rocket as a scripted projectile",missile)
-            elite:Remove()
-            done()
+            verifyArcArsenal(bot,elite,done)
         end)
     end)
 end
@@ -299,6 +343,13 @@ local function verifyAssetsAndSwarm(bot,ground,done)
             end
         end)
     end
+    local tiers={}
+    local mapped=true
+    for _, item in ipairs(D6_Arsenal.Order) do
+        local tier=D6_Balance.Tier(item.class)
+        if tier then tiers[tier]=true else mapped=false end
+    end
+    check("82 · all 29 weapons are classified into three active damage tiers",mapped and table.Count(tiers)==3)
     local layout=true
     for _, section in pairs(D6_Campaign.Maps) do if #D6_Campaign.Layout(bot,section)~=3 then layout=false end end
     check("54 · all three campaign profiles resolve safe exhibit positions on real test geometry",layout and table.Count(D6_Campaign.Maps)==3)
@@ -375,7 +426,7 @@ local function verifyCampaign(bot)
             check("22 · campaign leaves stock engine physics cap", GetConVar("sv_maxvelocity"):GetInt() < 999999,
                 GetConVar("sv_maxvelocity"):GetInt())
             local parsed = true
-            for _, file in ipairs({"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_render.lua",
+            for _, file in ipairs({"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_render.lua",
                 "d6_interface.lua", "d6_hangar.lua", "d6_client.lua", "d6_rogue.lua", "autorun/d6_whiplash.lua",
                 "weapons/weapon_d6_hyperbeam.lua", "entities/d6_phase_gate/cl_init.lua",
                 "entities/d6_projectile/cl_init.lua"}) do
@@ -408,13 +459,21 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
         end
         check("32 · scanner optic matches muzzle axis with pitch and roll", axesCorrect)
         local finishes = file.Find("materials/drmd/drmd_finish_*.vtf", "GAME")
-        local mountedFinishes = #finishes == 5
+        local eliteFinishes = {
+            ["drmd_finish_arc_shell.vtf"]=true,
+            ["drmd_finish_siege_plate.vtf"]=true,
+            ["drmd_finish_turned_steel.vtf"]=true,
+        }
+        local mountedFinishes = #finishes == 8
         for _, name in ipairs(finishes) do
             local raw = file.Read("materials/drmd/" .. name, "GAME")
+            local detail = eliteFinishes[name]
+            eliteFinishes[name] = nil
             mountedFinishes = mountedFinishes and raw ~= nil and raw:sub(1,4) == "VTF\0"
-                and raw:byte(57) == 9 and #raw == 349604
+                and raw:byte(57) == (detail and 10 or 9) and #raw == (detail and 1398180 or 349604)
         end
-        check("33 · five mipmapped material assets mount in Garry's Mod", mountedFinishes)
+        check("33 · eight mipmapped finishes, including all three elite textures, mount in Garry's Mod",
+            mountedFinishes and not next(eliteFinishes))
         local bot = player.CreateNextBot("DRMD Test Pilot")
         if not IsValid(bot) then check("pilot connected", false); return end
 

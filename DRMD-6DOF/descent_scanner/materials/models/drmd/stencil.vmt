@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+ "$basetexture" "drmd/drmd_finish_arc_shell"
+ "$color" "[0.7373 0.7020 0.5922]"
+}

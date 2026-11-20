@@ -950,7 +950,7 @@ function SWEP:HookRailProjectile(ent)
         end
 
         -- Живая цель → урон (+детонация, если снаряд взрывной)
-        if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+        if D6_Wep.Damageable(hitEnt) then
             done = true
             ent.D6_RailHit = true
             timer.Remove(scanId)

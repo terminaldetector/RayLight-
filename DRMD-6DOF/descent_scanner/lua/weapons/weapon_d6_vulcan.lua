@@ -110,7 +110,6 @@ function SWEP:_DoFire(owner)
 
     D6_Wep.FireProjectile({
         art = "shot_kinetic", artScale = .87, muzzleFX = true,
-        muzzleFX = true,
         weapon = self,
         swept = true,
         converge = true,
@@ -131,7 +130,7 @@ function SWEP:_DoFire(owner)
             { col = Color(220, 240, 255), sw = 5,  ew = 0, life = 0.10 },
         },
         onHit = function(b, hitEnt, hitPos, hitNormal)
-            if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+            if D6_Wep.Damageable(hitEnt) then
                 D6_Wep.DirectDamage(owner, b, hitEnt, BOLT_DMG, DMG_BULLET, dir * 2000)
             end
             local ef = EffectData()

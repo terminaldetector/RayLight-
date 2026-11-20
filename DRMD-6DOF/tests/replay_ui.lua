@@ -122,7 +122,10 @@ local function paint(p, parentClip)
     end
 end
 
-if page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" then
+if page == "intro" then
+    U.PaintGround(canvasW,canvasH,"ДИРЕКТИВА 04 · Разогнать протест у станции",
+        "Диспетчер Альянса · Очистить площадь",2)
+elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" or page=="boss" then
     local mountPalette = {}
     for i, class in ipairs(mounts) do mountPalette[i] = A.Families[A.Entries[class].family] end
     local state = {
@@ -141,6 +144,10 @@ if page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or
     elseif page == "episode" then
         state.map, state.order, state.deadline = "Реакторный отсек", "РАСПАД · Эвакуационный шлюз", 38.1
         state.trial, state.warning, state.charge = "", "", 0
+    elseif page == "boss" then
+        state.map, state.order = "Реакторный зал", "ПЕРЕГРЕВ · проходить через разрывы в залпах"
+        state.boss, state.bossHP, state.phase = "Дуговой штурмовик",.37,3
+        state.trial,state.warning="", ""
     elseif page == "rogue" then
         state.trial, state.warning, state.charge = "Забег 38271 · Волна 3 / 5", "", 0
         state.hp,state.shield,state.energy = 89,47,65

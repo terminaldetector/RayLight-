@@ -5,8 +5,8 @@ local colors = {combine = Color(148,219,224), resistance = Color(217,167,115)}
 local names = {
     assault="Средний штурмовик", mg="Дрон с парными пушками", laser="Лазерный дрон", interceptor="Лёгкий перехватчик",
     rpg="Ракетоносец", artillery="Дальняя артиллерия", rocket_elite_homing="Элитный ракетчик", rocket_elite_aa="Элитный зенитный дрон",
-    grav="Грависканер", support="Ремонтный дрон", heavy="Тяжёлый плазмодрон", heavy_elite="Элитный бронедрон", seeker="Ловец",
-    arc_elite="Элитный дуговой штурмовик",
+    grav="Грависканер", support="Ремонтный дрон", heavy="Тяжёлый плазмодрон", heavy_elite="Ракетно-пулемётный бронедрон", seeker="Ловец",
+    arc_elite="Сверхтяжёлый дуговой штурмовик",
     rocket_strider="Rocket Strider", plasma_strider="Плазменный страйдер", manhack_fast="Манхак", wheatley="Подрывной дрон",
     chopper="Летающая огневая платформа", worm="Наземный червь", mine="Минный дрон",
 }
@@ -21,7 +21,7 @@ local tactics = {gravity="Собирает подвижный груз и рас
     rear="Держит дистанцию и стреляет через просветы строя.", flank="Смещается по высоте и заходит сбоку.", screen="Прикрывает ведущего и стреляет очередями."}
 for key, name in pairs(D6_Session.Resistance) do names[key] = name end
 for key, drone in pairs(D.Types) do
-    local note=key=="arc_elite" and "Сводит два дуговых луча и сбрасывает раскалённые заряды." or tactics[drone.role]
+    local note=key=="arc_elite" and "Поворотные стволы, плазморакеты, рельсотрон и луч из оптики." or tactics[drone.role]
     entries[#entries+1] = {key=key,kind="npc",name=names[key],mesh=drone.mesh,
         group=drone.faction=="resistance" and "Сопротивление" or "Альянс", color=colors[drone.faction], note=note or ""}
 end

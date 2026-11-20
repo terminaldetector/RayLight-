@@ -6,6 +6,7 @@ dofile(root .. "d6_session.lua")
 dofile(root .. "d6_arsenal.lua")
 dofile(root .. "d6_art_geometry.lua")
 dofile(root .. "d6_art_models.lua")
+dofile(root .. "d6_art_elites.lua")
 dofile(root .. "d6_art_ordnance.lua")
 dofile(root .. "d6_drone_catalog.lua")
 

@@ -93,82 +93,75 @@ for _, s in ipairs(sides) do
     capacitor:Fastener(-6.8, s*3.6, 6.19, 0.59)
 end
 
-local assault = G.New("assault")
-assault:Loft("frame", 0, -1, {{-21,7,5},{-16,12,8},{7,12,8},{19,6,5}})
-assault:Loft("armor", 0, 4, {{-16,8,3},{-11,11,5,2},{8,11,4,2},{18,6,2}})
-assault:Loft("dark", 0, -5, {{-16,4,3},{5,9,4},{15,7,3}})
-for _, s in ipairs(sides) do
-    plate(assault, "steel", s, {{-14,7},{9,7},{15,14},{7,23},{-9,21},{-17,13}}, -3, 3)
-    plate(assault, "bone", s, {{-13,10},{6,9},{12,14},{5,20},{-7,20},{-14,15}}, 2.9, 5.1)
-    plate(assault, "frame", s, {{-16,16},{-9,19},{-2,21},{-10,24},{-19,20}}, -3.65, -0.4)
-    assault:Box("frame", 2, s*15.8, -4.8, 19, 8, 6)
-    assault:Collar(10, 18, s*16, -4.6, 3.3, "dark")
-    assault:Collar(-22, -17, s*8.1, -0.6, 4.4, "emit", true)
-    assault:Box("copper", -6, s*14.8, 5.7, 11, 3, 1.3)
-    assault:Box("emit", 9.5, s*12.8, 5.3, 3.25, 0.85, 0.6)
-    vents(assault, 4, 15.9, 5.45, s, 5, 1.5)
-    assault:Fastener(-7.2, s*16.7, 5.14, 0.69)
-    assault:Fastener(7.8, s*15.1, 5.15, 0.62)
-    assault:Tube("dark", {4,s*16,-4.6}, {12,s*16,-4.6}, {{0,2.1},{0.24,2.13},{1,1.9}}, 14)
-    assault:Cable({{-10,s*12,-2.7},{-6,s*17,-3.5},{4,s*17,-4.8}}, 0.40)
-    fins(assault, -7.2, 11.5, 5.2, s)
-    optic(assault, 19.4, 3.05*s, 1.1, 2.45)
-end
-
-local interceptor = G.New("interceptor")
-interceptor:Loft("frame", 0, 0, {{-23,5,4},{-13,8,6},{0,8,5},{17,4,3},{23,1.8,1.8}})
-interceptor:Loft("steel", 0, 3.1, {{-16,4,1.65},{-7,6.8,3.5},{7,5,2.2},{21,2,1}})
-interceptor:Loft("glass", 0, 5.8, {{-6,2,0.64},{0,3,1.3},{12,1.7,0.6}})
-optic(interceptor, 23, 0, 0, 1.65)
-for _, s in ipairs(sides) do
-    plate(interceptor, "armor", s, {{9,4},{-4,23},{-22,32},{-19,23},{-12,7}}, -1.9, 1.35)
-    plate(interceptor, "frame", s, {{5,7},{-8,20},{-22,29},{-17,20},{-10,10}}, 1.25, 2.85)
-    interceptor:Fastener(-11, s*16.8, 2.88, 0.55)
-    interceptor:Fastener(-16.9, s*23.8, 2.86, 0.59)
-    plate(interceptor, "copper", s, {{-7,20},{-16,26},{-19,26},{-11,20}}, 2.78, 3.15)
-    plate(interceptor, "emit", s, {{-9,20},{-22,29.5},{-22.3,28.6},{-9.3,19.3}}, 2.8, 3.15)
-    interceptor:Loft("dark", s*9.1, -0.4, {{-23,3.6,3.9},{-17,5,4.4},{-3,3.2,3.3},{7,1.7,2}})
-    interceptor:Collar(-24.3, -17, s*9.1, -0.4, 3.8, "emit", true)
-    interceptor:Rod("steel", {-3,17*s,-2.2}, {13,13*s,-3.1}, 1.6, 8)
-    interceptor:Rod("dark", {11,13.5*s,-3.1}, {16,12.2*s,-3.5}, 1.15, 8)
-    vents(interceptor, -10, 9.3, 3.8, s, 4, 1.6)
-end
-
-local artillery = G.New("artillery")
-artillery:Loft("frame", 0, -2, {{-28,14,9},{-20,18,10},{14,19,10},{24,13,6}})
-artillery:Loft("armor", 0, 5, {{-24,10,3},{-15,14,5,3},{2,13,5,1},{17,10,3},{23,7,2}})
-artillery:Box("bone", 5, 0, 12.2, 20, 12, 3.3)
-optic(artillery, 25.2, 0, 2.1, 4.25)
-for _, s in ipairs(sides) do
-    artillery:Loft("frame", s*19.2, 3.7, {{-17,6,7},{-13,9.4,10},{10,9.4,10},{15,8,8}})
-    artillery:Box("bone", -0.2, s*19.2, 10, 24, 17, 8)
-    artillery:Box("armor", 1, s*28.2, 3.8, 21, 2.3, 14.6)
-    artillery:Box("frame", 2.2, s*28.2, 4.8, 19, 2.6, 4.5)
-    for j = -1, 1 do
-        for k = 0, 1 do artillery:Collar(12.2, 16.2, s*(19 + j*4.8), 4.6+k*5.4, 2.5, "copper") end
+-- The compact Combine units use ribbed pressure shells and articulated emitter banks.
+local function bioHull(name, length, width, height, metal, eye)
+    local model=G.New(name)
+    model.section="Pressure shell and sensor spine"
+    local profile={{-.96,.29,.39},{-.81,.65,.71},{-.51,.91,.92},{-.06,1,1},{.51,.83,.91},{.79,.61,.76},{.96,.43,.50}}
+    local rings={}
+    for i, p in ipairs(profile) do
+        local ring={}
+        for j=1,28 do
+            local t=(j-.5)*math.pi/14
+            ring[j]={p[1]*length,math.cos(t)*width*p[2],math.sin(t)*height*p[3]+1.1}
+        end
+        rings[i]=ring
     end
-    artillery:Collar(-29, -19, s*9.1, -2.3, 5.2, "emit", true)
-    artillery:Rod("steel", {-17,s*20,13.1}, {-12,s*20,21}, 1.05)
-    artillery:Box("emit", -11.3, s*20, 21.3, 2.5, 1.6, 1.3)
-    vents(artillery, 6, 19, 14.1, s, 6, 2)
-    artillery:Fastener(-9.2, s*24.3, 14.02, 0.67)
-    artillery:Fastener(8.4, s*23.5, 14.02, 0.64)
-    fins(artillery, 9, 21, 14.18, s)
+    model:Rings(metal,rings,{0,0,1.1})
+    model:Loft("black_steel",0,-height*.56,{{-length*.87,width*.28,height*.24},{-length*.61,width*.6,height*.31},
+        {length*.35,width*.48,height*.3},{length*.73,width*.29,height*.19}})
+    optic(model,length*.98,0,height*.22,eye)
+    for _, s in ipairs(sides) do
+        local root=width*s
+        model:Collar(-length*.99,-length*.74,root*.52,-height*.18,width*.34,"emit",true)
+        model:Cable({{-length*.83,root*.56,-height*.2},{-length*.53,root*.91,-height*.62},
+            {-length*.12,root*.96,-height*.73},{length*.55,root*.66,-height*.2}},.47)
+        for i=0,4 do
+            local x=length*(-.64+i*.23)
+            local y=root*(.89+math.sin(i*.8)*.085)
+            model:Rod(i%2==0 and "turned_steel" or "arc_plate",{x,y,height*.64},{x-.85,y*1.05,height*.12},.52,10)
+            model:Rod("black_steel",{x-.85,y*1.05,height*.12},{x-1.57,y*.89,-height*.35},.51,10)
+        end
+        model:Rod("emit",{length*.54,root*.65,height*.68},{length*.68,root*.58,height*.64},.34,10)
+    end
+    return model
 end
 
-local support = G.New("support")
-support:Loft("frame", 0, 0, {{-19,7,6},{-11,10,8},{7,10,6},{15,5,4}})
-support:Loft("bone", 0, 4.3, {{-17,5,3},{-11,7,4},{6,8,3},{14,4,1.9}})
-support:Collar(10, 17.45, 0, -2, 5.4, "emit")
-for _, s in ipairs(sides) do
-    plate(support, "steel", s, {{-12,6},{-5,21},{4,26},{18,24},{22,16},{18,13},{11,18},{0,19},{-6,11}}, -3.4, 1.7)
-    plate(support, "bone", s, {{-10,8},{-4,20},{4,24},{17,22},{20,16},{17,15},{10,20},{0,20},{-3,13}}, 1.65, 3.15)
-    support:Rod("copper", {-4,s*16,-2}, {16,s*20,-2}, 1.18)
-    support:Collar(-19.6, -13.2, s*5.6, -0.2, 4, "emit", true)
-    support:Rod("emit", {17.25,s*16.9,0.5}, {21.4,s*15.5,0.3}, 1.27)
-    support:Box("dark", 4.3, s*21, 3.4, 9.5, 3.4, 0.9)
-    support:Box("emit", 4.3, s*21, 3.8, 6, 1.25, 0.75)
+local function bioEmitter(model,x,y,z,mode)
+    for _,s in ipairs(sides) do
+        model.section=s>0 and "Port armature" or "Starboard armature"
+        local yy=s*y
+        local width=mode=="rocket" and 4.72 or 3.14
+        model:Rod("black_steel",{x-12,yy*.61,z-2.5},{x-10,yy*.98,z},2.4,16)
+        model:Tube("arc_plate",{x-16.3,yy,z},{x-3,yy,z},{{0,width*.61},{.21,width},{.57,width*.94},{1,width*.66}},24)
+        model:Rod("turned_steel",{x-7.4,yy,z},{x-2.1,yy,z},width*.49,16)
+        model:Collar(x-3.6,x,yy,z,width*.67,mode=="rocket" and "dark" or "emit")
+        for j=0,3 do
+            model:Rod(j%2==0 and "turned_steel" or "black_steel",{x-12+j*2.15,yy,z},{x-11.44+j*2.15,yy,z},width*(.96-j*.073),20)
+        end
+        model:Cable({{x-16.5,yy*.65,z-1.1},{x-18,yy*.92,z-3.22},{x-9,yy*1.09,z-3.7},{x-3.7,yy,z-2}},.51)
+        model:Box(mode=="rocket" and "hazard" or "stencil",x-9.8,yy,z+width-.1,3.28,width, .38)
+    end
 end
+
+local assault = bioHull("assault",21.1,13.1,9.6,"siege_cast",3.61)
+bioEmitter(assault,19,16,-4.6,"cannon")
+local interceptor = bioHull("interceptor",22.6,9.45,9.06,"arc_plate",3.05)
+bioEmitter(interceptor,16.4,12.3,-3.1,"pulse")
+interceptor.section="Mandibles"
+for _,s in ipairs(sides) do
+    interceptor:Rod("arc_shell",{6,s*5.2,-4.7},{15.1,s*6.7,-6.1},1.55,16)
+    interceptor:Rod("black_steel",{15.1,s*6.7,-6.1},{21.3,s*3.92,-4.87},.84,16)
+end
+local artillery = bioHull("artillery",27.2,16.8,12.6,"siege_cast",4.46)
+bioEmitter(artillery,16.7,19,10,"rocket")
+artillery.section="Chamber armour"
+artillery:Loft("siege_plate",0,11.8,{{-23,6.2,2.1},{-15,9.1,4.0},{2,8.1,4.3},{12,6.4,2.6}})
+local support = bioHull("support",18.7,11.4,10.6,"arc_shell",3.42)
+bioEmitter(support,21.4,15.5,.3,"repair")
+support.section="Repair fluid reservoir"
+support:Rod("copper",{-11,0,-7.6},{11,0,-5.55},3.69,28)
+support:Collar(10,14.1,0,-5.5,3.9,"emit")
 
 local heavy = G.New("heavy")
 heavy:Loft("dark", 0, -1.5, {{-30,12,8},{-24,19,10},{12,18,13},{25,13,8},{32,8,6}})
@@ -417,55 +410,22 @@ for _, s in ipairs(sides) do
 end
 
 -- Individual loadout hulls keep sensor and launcher silhouettes readable at range.
-local gunner = G.New("combine_gunner")
-gunner:Loft("frame",0,-.74,{{-21,8.9,6.12},{-13,11.4,8.5},{8,11.6,7.6},{19,7.5,5.04}})
-gunner:Loft("steel",0,4.1,{{-17,7,3.1},{-10,10.5,4.8},{5,10.5,3.55},{15.5,6.1,2.1}})
-optic(gunner,19.9,0,2,3.36)
-for _, s in ipairs(sides) do
-    gunner:Box("armor",-2,s*13.5,.1,19,8.6,8.8)
-    gunner:Rod("steel",{3,s*14,-1.8},{22.4,s*14,-1.8},2.03,16)
-    gunner:Collar(19,25,s*14,-1.8,2.97,"dark")
-    gunner:Rod("copper",{-9,s*16.68,4.3},{8,s*16.07,4.3},.84)
-    gunner:Collar(-22.1,-15,s*7,-1.29,4.82,"emit",true)
-    vents(gunner,4.1,14.25,4.76,s,5,1.5)
+local gunner = bioHull("combine_gunner",19.85,10.84,8.62,"siege_plate",3.35)
+bioEmitter(gunner,25,14,-1.8,"cannon")
+
+local laserShip = bioHull("combine_laser",24.2,10.71,9.79,"arc_plate",3.0)
+laserShip.section="Focusing cage"
+laserShip:Collar(21,27,0,0,4.25,"emit")
+for _,s in ipairs(sides) do
+    laserShip:Rod("copper",{6,s*6.3,4.5},{19.5,s*4.95,2.84},1.05,14)
+    laserShip:Rod("black_steel",{19.5,s*4.95,2.84},{25.6,s*3.94,.59},.66,14)
 end
 
-local laserShip = G.New("combine_laser")
-laserShip:Loft("frame",0,0,{{-25,5.4,4.4},{-14,9.6,6.5},{1,10.7,5.65},{21,5.73,3.94},{26,3.9,2.36}})
-laserShip:Collar(21,27,0,0,3.82,"glass")
-laserShip:Rod("emit",{24.75,0,0},{25.51,0,0},1.15,18)
-for _, s in ipairs(sides) do
-    plate(laserShip,"armor",s,{{9,7},{-12,24},{-20,26},{-16,15},{-8,8}},-1.18,2.78)
-    plate(laserShip,"edge",s,{{5,8},{-11,20},{-17,21},{-12,14},{-5,8}},2.59,3.54)
-    laserShip:Rod("copper",{-6,s*4.4,4.61},{18.4,s*2.75,2.83},.78,10)
-    laserShip:Collar(-25,-17,s*5.9,-.93,3.6,"emit",true)
-    laserShip:Box("emit",-10,s*16.85,3.15,4.53,.7,.43)
-end
+local rocketeer = bioHull("combine_rocketeer",24.3,13.5,10.03,"siege_cast",3.62)
+bioEmitter(rocketeer,15,11.8,8,"rocket")
 
-local rocketeer = G.New("combine_rocketeer")
-rocketeer:Loft("frame",0,-1,{{-21,9.1,5.9},{-15,13.4,9.2},{13,13.5,7.2},{20,9.4,5.1}})
-rocketeer:Loft("armor",0,4.5,{{-18,8,3.4},{-10,11,5.1},{7,11,4.86},{17,7.9,3.2}})
-optic(rocketeer,21,0,-2,3.62)
-for _, s in ipairs(sides) do
-    rocketeer:Loft("bone",s*11.8,8,{{-15,3.7,3.6},{-12,5.5,5.1},{10,5.2,4.87},{13.9,4.76,4.16}})
-    rocketeer:Collar(10.5,15,s*11.8,8,3.6,"dark")
-    rocketeer:Box("hazard",-1,s*12,13.03,4.44,6.8,.53)
-    rocketeer:Rod("frame",{-10,s*7.5,2.9},{-10,s*12,6.6},2.14)
-    rocketeer:Collar(-22.7,-16,s*7.6,-3.2,4.51,"emit",true)
-    rocketeer:Cable({{-16,s*9.5,-3},{-11,s*15.5,-5.7},{2,s*16.3,-2.3}},.68)
-end
-
-local seeker = G.New("combine_seeker")
-seeker:Loft("frame",0,1.1,{{-23,4.75,4.4},{-12,9.0,7.3},{7,10,6.2},{19,6,4.15},{22.3,3.4,2.8}})
-optic(seeker,22.5,0,2.1,3.26)
-for _, s in ipairs(sides) do
-    plate(seeker,"ceramic",s,{{-16,7},{-16,15},{-6,28},{7,28},{17,12},{13,8}},-2.8,2.87)
-    plate(seeker,"frame",s,{{-10,12},{-5,25},{6,25},{12,14}},2.67,4.3)
-    seeker:Loft("armor",s*17,2.13,{{-15,3.2,2.9},{-7,4.6,3.8},{9,4.55,3.68},{13,3.4,3.3}})
-    seeker:Collar(10.2,14,s*17,2.13,2.91,"dark")
-    seeker:Collar(-23.3,-17,s*6.7,1.13,4.02,"emit",true)
-    seeker:Rod("emit",{-9,s*22.5,3.8},{3.6,s*22.5,3.8},.47)
-end
+local seeker = bioHull("combine_seeker",22.6,11.8,10.05,"arc_shell",3.93)
+bioEmitter(seeker,14,17,2.1,"rocket")
 
 local homing = chassis("elite_homing",seeker)
 homing:Loft("ceramic", 16.8,5.48,{{-14,3.9,3.4},{-10,6.5,5},{13,6.5,5},{18.8,5.3,4.0}})
@@ -523,93 +483,6 @@ local function eliteArmor(model)
         model:Fastener(-6.3, s*24.2, 13.37, 0.68)
         model:Fastener(11.3, s*22.5, 13.37, 0.65)
     end
-end
-
-local elite = G.New("combine_elite")
-elite:Loft("frame", 0, 0, {{-24,10,8},{-17,17,12},{2,18,13},{20,13,10},{24,9,7}})
-elite:Loft("steel", 0, 8, {{-20,12,3.7},{-12,15.7,7.8,1.4},{8,16.3,7.1,-0.5},{20,12,5,-2}})
-elite:Loft("dark", 0, -6, {{-19,9,5},{6,12,7},{19,9.8,6.5}})
-elite:Loft("frame", 0, 1.0, {{17,8,7},{22.3,7.4,6.2},{24.6,6.6,5.9}})
-elite:Collar(21, 26.6, 0, 1.03, 5.4, "glass")
-elite:Rod("emit", {24.27,0,1.03}, {24.62,0,1.03}, 1.72, 24)
-elite:Box("frame", -2.3, 0, -13.7, 18, 10.2, 6.5)
-elite:Rod("steel", {-7,0,-13.6}, {-7,0,-20.4}, 2.7, 12)
-elite:Box("dark", -4.6, 0, -19.75, 12.8, 7.9, 4.4)
-elite:Rod("frame", {-6.4,-5.02,-20.2}, {-6.4,5.02,-20.2}, 3.15, 16)
-elite:Rod("steel", {-6.4,-5.12,-20.2}, {-6.4,5.12,-20.2}, 1.64, 12)
-elite:Cable({{-6.4,0,-20.2},{-6.5,0,-24.4},{-7.0,0,-28.4},{-7.1,0,-31.0}}, 0.48)
-elite:Rod("steel", {-7.1,0,-30.45}, {-7.1,0,-34.25}, 0.86, 10)
-elite:Collar(16.2, 19.2, -9.6, 6.5, 2.65, "glass")
-elite:Rod("edge", {18.08,-9.6,6.5}, {18.25,-9.6,6.5}, 1.28, 12)
-for _, s in ipairs(sides) do
-    plate(elite, "ceramic", s, {{-10,11},{-8,17.5},{7,17.5},{17,12},{10,8},{0,8}}, 9.8, 12.5)
-    plate(elite, "stripe", s, {{6,10},{11,9.6},{13,14},{8,16}}, 12.5, 12.71)
-    elite:Fastener(-7.1, s*15.9, 12.5, 0.74)
-    elite:Fastener(6.2, s*14.6, 12.51, 0.74)
-    elite:Box("armor", -1, s*13.5, 15.5, 7, 8, 5.8)
-    elite:Rod("edge", {-9,s*14.3,16.8}, {9,s*14.3,16.8}, 1.6, 12)
-    elite:Loft("armor", s*14.45, 22.15, {{-12,6,5.15},{-9,7.9,6.35},{11,7.9,6.35},{13,7.3,5.8}})
-    elite:Box("dark", 11.36, s*14.45, 22.15, 1.9, 14.7, 10.6)
-    for col = -1, 1 do
-        for row = -1, 1 do
-            elite:Collar(11, 14.3, s*14.45+col*4.15, 22.15+row*3.35, 1.56, row == 1 and "stripe" or "dark")
-        end
-    end
-    elite:Box("steel", -1.5, s*16.5, 28.35, 17, 5.3, 0.79)
-    elite:Box("hazard", 7, s*19.6, 28.67, 3.1, 2.8, 0.3)
-    elite:Loft("frame", s*24.2, -0.2, {{-19,4,3.65},{-12,6.85,5.35},{4,7,5.6},{11,5.15,4.7}})
-    elite:Box("steel", -2.9, s*27.65, 3.65, 18.2, 6.2, 2.1)
-    for col = -1, 1, 2 do
-        local y = s*24.2 + col*2.51
-        elite:Rod("steel", {6,y,0.4}, {27.8,y,0.4}, 1.51, 12)
-        elite:Rod("frame", {9.5,y,0.4}, {17,y,0.4}, 2.06, 12)
-        elite:Collar(24.4, 28.7, y, 0.4, 1.86, "dark")
-    end
-    elite:Collar(-24.2, -16, s*10, -0.8, 5.1, "emit", true)
-    elite:Box("dark", -4.7, s*17.55, 5.9, 14.1, 3.15, 0.7)
-    vents(elite, -0.9, 17.5, 6.34, s, 6, 1.58)
-    elite:Cable({{-17,s*18.4,-6},{-12,s*22.8,-11.1},{0,s*23.8,-11.8},{7,s*20.8,-7.4}}, 1.15)
-    elite:Rod("steel", {-7.2,0,-33.8}, {-6.85,s*2.3,-34.8}, 0.78, 10)
-    elite:Rod("edge", {-6.85,s*2.3,-34.8}, {-6.48,s*3.9,-34.04}, 0.67, 10)
-    elite:Rod("edge", {-6.48,s*3.9,-34.04}, {-6.15,s*4.7,-32.43}, 0.43, 8)
-end
-
-local arc = G.New("combine_arc_elite")
-arc:Loft("frame",0,1.8,{{-25,8.5,8},{-18,17,13},{4,18.1,14.3},{21,12.6,10.6},{25,8.2,8.8}})
-arc:Loft("ceramic",0,12,{{-15,11.4,2},{-8,16.5,6.3},{8,15,5.9},{22,9.3,3}})
-arc:Loft("dark",0,-8,{{-21,7,5},{-11,13,4.7},{17,10,4.6},{22,5.4,2}})
-arc:Collar(16.7,27.3,0,3.5,7.25,"glass")
-arc:Rod("emit",{24.5,0,3.5},{25.15,0,3.5},3.28,24)
-arc:Box("armor",-7.8,0,17.4,15.6,7.5,5.12)
-arc:Loft("steel",0,22.1,{{-27,4.1,3.1},{-15,6.9,4},{3,7.1,3.75},{9,5.08,2.9}})
-arc:Collar(4.4,10.1,0,22,3.5,"dark")
-arc:Box("hazard",-7.85,0,26.03,8.9,7.1,.48)
-arc:Loft("armor",0,-18.2,{{-14,5.4,4},{-8,11.5,8.5},{7,10.5,8.7},{14,6.9,5.6}})
-arc:Collar(8.1,16.1,0,-18.2,6.11,"hot")
-arc:Rod("hot",{13,0,-18.2},{14.5,0,-18.2},3.45,24)
-for _, s in ipairs(sides) do
-    plate(arc,"armor",s,{{-14,11.5},{-12,21.8},{1,24.6},{13,17},{15,11}},5.1,9.5)
-    plate(arc,"stripe",s,{{0,17},{4,16},{5,21.9},{1.6,23}},9.52,9.76)
-    arc:Rod("steel",{-12,s*13.5,1.5},{-6,s*24,1.5},3.5,14)
-    arc:Loft("frame",s*26.4,1.3,{{-14,4.8,4.6},{-8,7.7,6.7},{10,7.8,6.2},{19,5.78,4.5}})
-    arc:Loft("bone",s*26.4,7.4,{{-9,5.2,2.1},{-5,6.6,2.9},{11,6.1,2.9},{18,5.2,2}})
-    arc:Box("stripe",6,s*28.4,10,4.7,4.3,.62)
-    arc:Collar(25,36,s*26.4,1.35,3.75,"emit")
-    for _, offset in ipairs({-2.45,2.45}) do
-        local y=s*26.4+offset
-        arc:Rod("steel",{11,y,1.35},{29,y,1.35},1.16,12)
-        arc:Rod("copper",{14.1,y,1.35},{21.45,y,1.35},1.55,12)
-    end
-    for j=0,5 do
-        arc:Box("dark",11.5-j*2.55,s*29.4,9.5,1.04,2.6,.51)
-        arc:Box("edge",11.2-j*2.55,s*29.4,9.76,.5,2.1,.23)
-    end
-    arc:Fastener(-5,s*25.9,10.23,.57)
-    arc:Fastener(-6,s*14.88,15.8,.63)
-    arc:Cable({{-17,s*11.2,-5},{-16,s*17.3,-9},{-8,s*24,-10},{5,s*25.9,-6}},1.06)
-    arc:Cable({{-9,s*9,-17},{-4,s*11.2,-21},{4,s*9.4,-22.3},{10,s*5.9,-19.6}},.88)
-    arc:Rod("hot",{-7.4,s*10.7,-15.6},{6.1,s*10.34,-15.6},.52,10)
-    arc:Collar(-26,-19.2,s*10.7,-2.2,4.3,"emit",true)
 end
 
 eliteArmor(strider)

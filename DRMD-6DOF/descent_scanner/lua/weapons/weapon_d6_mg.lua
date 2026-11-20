@@ -81,7 +81,6 @@ function SWEP:PrimaryAttack()
 
     D6_Wep.FireProjectile({
         art = "shot_kinetic", muzzleFX = true,
-        muzzleFX = true,
         weapon = self,
         swept = true,
         converge = true,
@@ -102,7 +101,7 @@ function SWEP:PrimaryAttack()
             { col = Color(255, 255, 255), sw = 4,  ew = 0, life = 0.08 },
         },
         onHit = function(b, hitEnt, hitPos, hitNormal)
-            if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+            if D6_Wep.Damageable(hitEnt) then
                 D6_Wep.DirectDamage(owner, b, hitEnt, BOLT_DMG, DMG_BULLET, dir * 1500)
             end
             if IsValid(hitEnt) then

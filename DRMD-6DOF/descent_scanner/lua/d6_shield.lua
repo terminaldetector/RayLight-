@@ -97,6 +97,10 @@ if SERVER then
         if not IsValid(target) then return end
         -- Только дроны с установленными слоями защиты
         if target.D6_Shield == nil then return end
+        if target.D6_EncounterShield then
+            dmginfo:SetDamage(0)
+            return true
+        end
 
         local dmg     = dmginfo:GetDamage()
         if dmg <= 0 then return end

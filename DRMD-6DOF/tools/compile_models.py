@@ -13,7 +13,7 @@ def write_materials(game, palette, finishes):
     for name, color in palette.items():
         finish = finishes.get(name)
         basetexture = f'drmd/drmd_finish_{finish}' if finish else 'vgui/white'
-        shader = 'UnlitGeneric' if name in {'emit', 'hot'} else 'VertexLitGeneric'
+        shader = 'UnlitGeneric' if name in {'emit', 'hot', 'lamp', 'siege_eye'} else 'VertexLitGeneric'
         if name == 'emit':
             color = [133, 201, 216]
         tint = ' '.join(f'{component / 255:.4f}' for component in color)

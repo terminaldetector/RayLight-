@@ -1,0 +1,5 @@
+UnlitGeneric
+{
+ "$basetexture" "vgui/white"
+ "$color" "[0.9294 0.3098 0.2392]"
+}

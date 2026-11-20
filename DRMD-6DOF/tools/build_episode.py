@@ -79,8 +79,18 @@ class Map:
     def light(self,pos,rgba='192 220 217 480'):
         self.ent('light',pos,_light=rgba)
 
-    def model(self,name,pos,mesh,angle='0 0 0'):
-        self.ent('prop_dynamic_override',pos,name,model=f'models/drmd/{mesh}.mdl',solid='0',angles=angle)
+    def model(self,name,pos,mesh,angle='0 0 0',**fields):
+        return self.ent('prop_dynamic_override',pos,name,model=f'models/drmd/{mesh}.mdl',solid='0',angles=angle,**fields)
+
+    def flyby(self,name,origin,mesh,scale,yaw,travel,trigger):
+        x,y,z=origin
+        rail=self.ent('func_movelinear',origin,name+'_rail',movedir=f'0 {travel} 0',
+                      movedistance='275',speed='116',blockdamage='0')
+        self.box((x-3,y-3,z-3),(x+3,y+3,z+3),NODRAW,rail)
+        self.model(name,origin,mesh,f'0 {yaw} 0',parentname=rail['targetname'],modelscale=scale)
+        self.relay(name+'_sighting',origin)
+        self.event(trigger,'OnStartTouch',name+'_sighting')
+        self.event(trigger,'OnStartTouch',rail['targetname'],'Open')
 
     def laser(self,name,pos,finish,lo,hi,damage=15,start_disabled=False):
         self.endpoint(name+'_a',pos)
@@ -133,6 +143,8 @@ def city():
     m.ent('weapon_rpg',(1018,-206,21),'d6_ground_rpg')
     for x in [1070,1360,1720,2270]:
         m.ent('item_rpg_round',(x,184,23))
+    for x,y,z in [(308,110,22),(1124,-189,22),(1716,238,21),(3920,-145,-350),(4400,152,-350)]:
+        m.ent('item_ammo_smg1',(x,y,z))
     for x,z in [(410,20),(1460,30),(2210,20),(4010,-362),(4430,-359)]:
         m.ent('item_healthkit',(x,-137,z))
         m.ent('item_battery',(x,137,z))
@@ -142,8 +154,11 @@ def city():
     for x in range(3820,4710,146):
         m.ent('info_node',(x,0,-367))
         m.ent('info_node_air',(x,38,-196))
-    for i in range(3):
-        m.ent('npc_citizen',(530+i*37,(-1)**i*(120+i*18),11),f'd6_citizen_{i+1}',citizentype='1')
+    for i in range(8):
+        m.ent('npc_citizen',(405+(i%4)*58,(-1)**i*(148+(i//4)*74),11),f'd6_citizen_{i+1}',citizentype='1')
+    m.endpoint('d6_crowd_shelter',(338,-363,13))
+    for x in (396,452,510):
+        m.ent('prop_physics',(x,53,30),model='models/props_c17/furniturechair001a.mdl')
     for i,(x,y) in enumerate([(858,-251),(977,196),(1440,213),(1954,-173),(2326,78)]):
         cls='npc_metropolice' if i<2 else 'npc_combine_s'
         m.ent(cls,(x,y,13),additionalequipment='weapon_smg1',angles='0 180 0')
@@ -154,11 +169,18 @@ def city():
         m.ent('npc_manhack',(3870+i*152,(-1)**i*93,-200),f'd6_drain_manhack_{i+1}')
     for x,y,z in [(1887,-74,24),(4130,169,-358),(4274,-176,-356)]:
         m.ent('prop_physics',(x,y,z),model='models/props_c17/oildrum001_explosive.mdl')
-    m.text('d6_radio_text','DIRECTIVE 04 // CLEAR THE STATION APPROACH')
+    m.text('d6_radio_text','DIRECTIVE 04 // DISPERSE THE STATION PROTEST')
+    m.text('d6_city_title','HALF-LIFE: ABADDON // CITY 17',color='176 217 227',hold='3')
     m.text('d6_emp_text','LOCAL OVERRIDE // PRIORITY TABLE LOST',color='240 168 107')
     m.text('d6_sewer_text','MAINTENANCE CHANNEL // REACTOR ACCESS AHEAD')
     auto=m.ent('logic_auto',(128,0,96))
-    m.event(auto,'OnMapSpawn','d6_radio_text','Display',delay=1)
+    m.event(auto,'OnMapSpawn','d6_city_title','Display',delay=.40)
+    m.event(auto,'OnMapSpawn','d6_radio_text','Display',delay=3.5)
+    m.ent('ambient_generic',(578,0,89),'d6_dispersal_siren',message='ambient/alarms/klaxon1.wav',health='6',spawnflags='49')
+    orders=m.relay('d6_protest_order',(392,0,73))
+    m.event(orders,'OnTrigger','d6_dispersal_siren','PlaySound')
+    m.event(orders,'OnTrigger','d6_dispersal_siren','StopSound',delay=2.8)
+    m.event(m.gate('trigger_once','d6_protest_path',(349,-431,0),(429,429,186)),'OnStartTouch','d6_protest_order')
     emp=m.relay('d6_emp',(625,32,96))
     m.ent('env_shake',(599,0,132),'d6_emp_shake',amplitude='4',frequency='28',duration='1.3',radius='750',spawnflags='8')
     m.ent('env_fade',(603,24,144),'d6_emp_flash',duration='.28',holdtime='.16',renderamt='186',rendercolor='187 229 244',spawnflags='0')
@@ -167,6 +189,10 @@ def city():
     m.event(emp,'OnTrigger','d6_emp_text','Display',delay=.55)
     emp_trigger=m.gate('trigger_once','d6_emp_path',(549,-433,0),(671,432,245))
     m.event(emp_trigger,'OnStartTouch','d6_emp')
+    m.flyby('d6_city_enforcer',(1135,-378,365),'combine_elite','4.2',157,90,
+            m.gate('trigger_once','d6_city_enforcer_path',(719,-428,0),(810,434,225)))
+    m.flyby('d6_city_arc',(2139,379,316),'combine_arc_elite','5.3',209,-90,
+            m.gate('trigger_once','d6_city_arc_path',(1685,-470,0),(1750,468,267)))
     beam,hurt=m.laser('d6_drain_laser',(4120,-224,-257),(4120,225,-257),
         (4109,-226,-268),(4135,226,-246),18)
     m.event(m.gate('trigger_once','d6_drain_entry',(3750,-226,-385),(3830,226,-82)),
@@ -223,11 +249,34 @@ def reactor():
     for name,pos in {'d6_swarm_1':(1490,-287,428),'d6_swarm_2':(1690,81,665),
             'd6_swarm_3':(1930,364,490),'d6_swarm_4':(2170,-310,318),'d6_swarm_5':(2410,143,826),
             'd6_guard_1':(3760,-545,592),'d6_guard_2':(4220,536,735),'d6_guard_3':(4510,-485,623),
+            'd6_enforcer_boss':(2418,62,535),'d6_enforcer_support':(2532,-156,565),
+            'd6_arc_boss':(4190,20,630),'d6_arc_support':(4445,260,650),
             'd6_charge_1':(573,108,110),'d6_charge_2':(3407,-212,258),'d6_exit_zone':(6362,0,250)}.items():
         m.endpoint(name,pos)
+    for name,pos in {
+        'battery_1':(732,136,114),'battery_2':(2110,390,748),'battery_3':(5380,270,583),
+        'ammo_1':(1295,-288,226),'ammo_2':(3430,435,544),'ammo_3':(5701,-316,866),
+        'repair_1':(2530,-322,979),'repair_2':(4617,-240,306),
+        'module_hyperbeam':(2538,-421,804),'module_homing':(1675,-362,429),
+        'module_gravmine':(3310,525,542),'module_railmk2':(3660,-467,894),
+    }.items():
+        m.endpoint('d6_supply_'+name,pos)
+    m.wall_x(1456,1088,0,1536,-620,198,112,894,CONCRETE)
+    m.wall_x(2688,1088,0,1536,-332,492,450,1160,METAL)
     m.model('d6_sentry_relic',(682,-238,108),'grav','0 17 0')
     m.model('d6_sentry_gimbal',(682,-238,108),'grav_gimbal','22 90 44')
     m.model('d6_reactor_profile',(3912,0,139),'shot_ion','0 0 0')
+    for i,(x,y,z) in enumerate([(3635,-430,441),(4440,437,730)],start=1):
+        name=f'd6_regulator_{i}'
+        node=m.ent('func_breakable',name=name,health='74',material='2',spawnflags='512')
+        m.box((x-22,y-22,z-29),(x+22,y+22,z+29),METAL,node)
+        hardware=m.model(name+'_cage',(x-16,y,z),'grav_gimbal','0 180 20',modelscale='1.7')
+        spark=m.ent('env_spark',(x,y,z),name+'_spark',Magnitude='2',TrailLength='1')
+        relay=m.relay(name+'_broken',(x,y,z))
+        m.event(node,'OnBreak',relay['targetname'])
+        m.event(relay,'OnTrigger',hardware['targetname'],'Kill')
+        m.event(relay,'OnTrigger',spark['targetname'],'SparkOnce')
+        m.light((x-30,y,z),'101 205 225 369')
     m.text('d6_reactor_intro_text','REACTOR MAINTENANCE // CORE TEMPERATURE CRITICAL')
     m.text('d6_reactor_failure_text','CONTAINMENT LOST // FIND THE EVACUATION SHAFT',color='246 128 80',hold='5')
     m.text('d6_reactor_exit_text','EXIT FOUND // NEURAL PRIORITIES SAVED',hold='6')
@@ -269,13 +318,44 @@ def reactor():
     return m
 
 
+def vault():
+    m=Map('d6_relay_vault')
+    m.shell((0,-1152,-100),(4136,1152,1536))
+    m.box((0,-1152,-78),(4136,1152,0),FLOOR)
+    m.box((145,-282,6),(563,282,112),METAL)
+    m.ent('info_player_start',(350,0,126),angles='0 0 0')
+    for x,side,height in [(895,-1,338),(1246,1,579),(1840,-1,926),(2210,1,299),(2780,-1,627),(3420,1,1041)]:
+        y=side*657
+        m.box((x-105,y-76,0),(x+105,y+76,height),CONCRETE)
+        m.box((x-191,y-161,height),(x+194,y+183,height+27),METAL)
+    m.wall_x(1500,1152,0,1536,-512,632,197,994)
+    m.wall_x(2896,1152,0,1536,-676,543,463,1292)
+    for x,y,z,wide in [(1054,90,416,126),(2010,-151,703,182),(2491,159,994,137),(3618,-108,651,182)]:
+        m.box((x-wide,y-69,z),(x+wide,y+69,z+29),METAL)
+        for offset in (-wide,wide-15):
+            m.box((x+offset,y-69,z+29),(x+offset+15,y+69,z+90),CONCRETE)
+    for x in (280,630,920,1250,1750,2150,2560,3120,3600,3940):
+        m.light((x,238,364),'152 209 233 652')
+        m.light((x,-469,1042),'229 167 115 713')
+    for name,pos in {
+        'battery_1':(1098,92,502),'repair_1':(1840,-642,1012),'ammo_1':(1262,645,663),
+        'battery_2':(3430,659,1120),'ammo_2':(2780,-666,705),'repair_2':(3722,-50,752),
+        'reload_1':(889,-644,425),'reload_2':(2200,665,388),'reload_3':(2500,134,1077),
+    }.items():
+        m.endpoint('d6_supply_'+name,pos)
+    m.laser('d6_vault_lower',(3180,-340,587),(3180,340,587),(3169,-345,576),(3191,345,597),16)
+    m.text('d6_vault_entry','RELAY VAULT // FLIGHT LEVELS OPEN')
+    m.event(m.ent('logic_auto',(280,0,156)),'OnMapSpawn','d6_vault_entry','Display',delay=1.3)
+    return m
+
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('directory',type=Path)
     parser.add_argument('--preview-data',type=Path)
     args=parser.parse_args()
     args.directory.mkdir(parents=True,exist_ok=True)
-    maps=[city(),reactor()]
+    maps=[city(),reactor(),vault()]
     for level in maps: level.write(args.directory)
     if args.preview_data: args.preview_data.write_text(json.dumps({level.name:level.brushes for level in maps}))
 

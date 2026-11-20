@@ -82,6 +82,7 @@ local function cleanup(ply, state, message)
     if not run then return end
     runs[ply]=nil
     for _,ent in ipairs(run.enemies) do if IsValid(ent) then ent:Remove() end end
+    if IsValid(ply) and IsValid(ply.D6_VaultReserve) then ply.D6_VaultReserve:Remove() end
     if not IsValid(ply) then return end
     local old=run.old
     ply:SetMaxHealth(old.hp)
@@ -150,6 +151,7 @@ function R.Start(ply, seed)
 end
 
 local function offer(ply, run)
+    D6_Supplies.VaultReserve(ply,run.wave)
     local choices=table.Copy(keys)
     run.offers={}
     for i=1,3 do

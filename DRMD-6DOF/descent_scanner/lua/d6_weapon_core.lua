@@ -124,6 +124,10 @@ function D6_Wep.Targetable(owner, target)
     return target:IsNextBot()
 end
 
+function D6_Wep.Damageable(target)
+    return IsValid(target) and (target:IsNPC() or target:IsPlayer() or target.D6_EpisodeTarget)
+end
+
 local enforcerHulls = {}
 local eliteScale = D6_Session.Enforcer.scale
 local enforcerBoxes = {
@@ -139,7 +143,7 @@ function D6_Wep.RegisterEnforcerHull(npc, hull)
     if hull and hull.parts then
         boxes = {}
         for i, part in ipairs(hull.parts) do
-            boxes[i] = {Vector(unpack(part[1]))*hull.scale, Vector(unpack(part[2]))*hull.scale}
+            boxes[i] = {Vector(unpack(part[1]))*hull.scale, Vector(unpack(part[2]))*hull.scale,part[3]}
         end
     end
     enforcerHulls[npc] = boxes
@@ -165,7 +169,9 @@ function D6_Wep.CombatTrace(data)
         if not IsValid(npc) or not includesEntity(data.filter, npc) then continue end
         local origin, angles = npc:GetPos(), npc:GetAngles()
         for _, box in ipairs(boxes) do
-            local hit, normal = util.IntersectRayWithOBB(data.start, delta, origin, angles, box[1] - padding, box[2] + padding)
+            local center,rotation=origin,angles
+            if box[3] then center,rotation=D6_Drones.BankPose(npc,box[3],CurTime()) end
+            local hit, normal = util.IntersectRayWithOBB(data.start, delta, center, rotation, box[1] - padding, box[2] + padding)
             if not hit then continue end
             local fraction = (hit - data.start):Dot(delta)/length
             if fraction >= 0 and fraction < result.Fraction then
@@ -362,6 +368,9 @@ if SERVER then
         local radius = math.Clamp(cfg.physRadius or 3, 1, 16)
         local p = ents.Create("d6_projectile")
         if not IsValid(p) then return end
+        local gun=cfg.weapon
+        if not IsValid(gun) and IsValid(owner) and owner:IsPlayer() then gun=owner:GetActiveWeapon() end
+        if IsValid(gun) then p.D6_WeaponClass=gun:GetClass() end
         if not cfg.swept then p.D6_PhysRadius = radius end
         p.D6_DamageClass = cfg.dmgClass
         local projectileArt = cfg.art or cfg.dmgClass or "kinetic"
@@ -374,6 +383,7 @@ if SERVER then
         p:SetCollisionGroup(COLLISION_GROUP_PROJECTILE)
         if customModel and cfg.scale then p:SetModelScale(cfg.scale,0) end
         if cfg.color then p:SetColor(cfg.color) end
+        if cfg.projectileTint then p:SetNW2Bool("D6_ProjectileTint",true) end
         p:SetRenderMode(cfg.renderAdd ~= false and RENDERMODE_TRANSADD or RENDERMODE_NORMAL)
 
         -- Трассеры
@@ -435,7 +445,7 @@ if SERVER then
         local di = DamageInfo()
         di:SetAttacker(IsValid(attacker) and attacker or game.GetWorld())
         di:SetInflictor(IsValid(inflictor) and inflictor or game.GetWorld())
-        di:SetDamage(dmg)
+        di:SetDamage(D6_Balance.Damage(attacker,inflictor,target,dmg))
         di:SetDamageType(dmgType)
         di:SetDamageForce(force or Vector(0, 0, 0))
         target:TakeDamageInfo(di)

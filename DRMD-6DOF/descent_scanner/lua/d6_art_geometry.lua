@@ -10,6 +10,10 @@ G.palette = {
     scrap = {111, 114, 88}, rust = {135, 84, 54}, tarp = {93, 92, 79},
     primer = {119, 104, 87}, oxide = {145, 68, 49}, canvas = {120, 115, 90},
     rubber = {43, 47, 47}, emit = {255, 255, 255}, hot = {255, 204, 127},
+    siege_plate = {93, 105, 110}, siege_cast = {69, 81, 86}, siege_oxide = {123, 77, 58},
+    arc_shell = {137, 150, 149}, arc_plate = {86, 105, 110}, arc_sink = {95, 79, 62},
+    turned_steel = {144, 150, 143}, black_steel = {71, 81, 82},
+    stencil = {188, 179, 151}, lamp = {225, 239, 233}, siege_eye = {237, 79, 61},
 }
 G.finishes = {
     armor = "coating", bone = "coating", hazard = "coating",
@@ -18,6 +22,9 @@ G.finishes = {
     dark = "polymer", rubber = "polymer", glass = "glass",
     scrap = "salvage", rust = "salvage", tarp = "salvage", primer = "salvage",
     oxide = "salvage", canvas = "polymer",
+    siege_plate = "siege_plate", siege_cast = "siege_plate", siege_oxide = "siege_plate",
+    arc_shell = "arc_shell", arc_plate = "arc_shell", arc_sink = "siege_plate",
+    turned_steel = "turned_steel", black_steel = "turned_steel", stencil = "arc_shell",
 }
 
 function G.UV(position, normal)
@@ -59,7 +66,7 @@ function Model:Tri(material, a, b, c, center, inward)
     end
     local part = self.parts[material] or {}
     self.parts[material] = part
-    part[#part + 1] = {a, b, c, normal}
+    part[#part + 1] = {a, b, c, normal, self.section}
 end
 
 function Model:Quad(material, a, b, c, d, center, inward)

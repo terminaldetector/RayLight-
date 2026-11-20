@@ -2,8 +2,8 @@
 -- d6_autoload.lua — Автозагрузка мода Descent 6DOF
 -- =========================================================
 
-local sharedFiles = {"d6_session.lua", "d6_arsenal.lua", "d6_drone_catalog.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
-local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_ordnance.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua"}
+local sharedFiles = {"d6_session.lua", "d6_arsenal.lua", "d6_combat_balance.lua", "d6_drone_catalog.lua", "d6_supplies.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
+local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua"}
 
 for _, path in ipairs(sharedFiles) do
     if SERVER then AddCSLuaFile(path) end
@@ -63,6 +63,7 @@ if SERVER then
     TryInclude("d6_ai_roles.lua")    -- тонкий: LOADOUTS + SpawnD6Role-обёртка
     TryInclude("d6_encounter.lua")
     TryInclude("d6_trial.lua")
+    TryInclude("d6_reactor_boss.lua")
     AddCSLuaFile("d6_rogue.lua")
     TryInclude("d6_rogue.lua")
     -- Меню — только клиент, но включаем чтобы сработал SERVER-раздел в других файлах
@@ -122,13 +123,19 @@ if SERVER then
     game.AddAmmoType({ name = "d6_smart",      dmgtype = DMG_BLAST, maxcarry = 4  })
     game.AddAmmoType({ name = "d6_mega",       dmgtype = DMG_BLAST, maxcarry = 2  })
 
-    local function giveLoadout(ply)
+    local function giveLoadout(ply,all)
         local count = 0
+        local restricted=not all and game.GetMap()==D6_Mission.Reactor
         for _, item in ipairs(D6_Arsenal.Order) do
+            if restricted and D6_Balance.Tier(item.class)~=1 and not D6_Arsenal.Slot(ply,item.class)
+                and not (ply.D6_EpisodeUnlocks and ply.D6_EpisodeUnlocks[item.class]) then continue end
+            if restricted and item.class=="weapon_d6_gravmine"
+                and not (ply.D6_EpisodeUnlocks and ply.D6_EpisodeUnlocks[item.class]) then continue end
             if not IsValid(ply:GetWeapon(item.class)) and IsValid(ply:Give(item.class, true)) then
                 count = count + 1
             end
         end
+        if restricted then return count end
         for class, data in pairs(D6_Weapons or {}) do
             if data.autoGive and not IsValid(ply:GetWeapon(class)) then
                 if IsValid(ply:Give(class, true)) then
@@ -147,7 +154,7 @@ if SERVER then
 
     concommand.Add("d6_give_weapons", function(ply)
         if not D6_Session.IsArena() or not D6_Session.CanEditWorld(ply) then return end
-        local count = giveLoadout(ply)
+        local count = giveLoadout(ply,true)
         ply:PrintMessage(HUD_PRINTTALK, "[Abaddon] Выдано систем: " .. count)
     end)
 

@@ -94,7 +94,7 @@ function SWEP:PrimaryAttack()
             },
             onHit = function(b, hitEnt, hitPos, hitNormal)
                 if not hitPos then return end
-                if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+                if D6_Wep.Damageable(hitEnt) then
                     D6_Wep.DirectDamage(owner, b, hitEnt, PELLET_DMG, kin, (hitNormal or -pdir) * 1500)
                 end
                 D6_Wep.SplashDamage(owner, b, hitPos, 0, PELLET_SPLASH, PELLET_RAD, kin, 1800, hitEnt)

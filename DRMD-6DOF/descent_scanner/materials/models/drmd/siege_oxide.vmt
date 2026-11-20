@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+ "$basetexture" "drmd/drmd_finish_siege_plate"
+ "$color" "[0.4824 0.3020 0.2275]"
+}

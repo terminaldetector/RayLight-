@@ -85,7 +85,10 @@ local function D6_ResolveOrientation(npc, target)
     local bankG  = fp.bankGain or 1
     local bankM  = fp.bankMax  or 50
 
-    if IsValid(target) then
+    if npc.D6_FireAim and (npc.D6_BraceUntil or 0)>CurTime() then
+        local aim=(npc.D6_FireAim-npc:GetPos()):Angle()
+        des.p,des.y,des.r=aim.p,aim.y,0
+    elseif IsValid(target) then
         local toTarget = target:GetPos() - npc:GetPos()
         local desYaw   = toTarget:Angle().y
         local tgtPitch = toTarget:Angle().p
@@ -138,6 +141,13 @@ end
 -- legacy mode: bit-identical Lerp6 reproduction (Phase-0 non-breaking migration)
 -- physics mode: two-stage spool (ThrustCur → DesiredVel) + inertia (Vel → ThrustCur)
 local function D6_FlightControl(npc, fp, phys, ft)
+    local burst=npc.D6_BossBurst
+    if burst and burst.expires>CurTime() then
+        D6_ReactorBoss.Ram(npc,burst,ft)
+        phys:SetVelocity(burst.velocity)
+        npc.D6_Vel=burst.velocity
+        return
+    end
     if fp.flightMode == "legacy" then
         if npc.D6_DesiredVel == nil then return end
         local rate = npc.D6_DesiredVelRate or 5
@@ -461,7 +471,7 @@ D6_RegisterModule("Laser", {
 D6_RegisterModule("Missile", {
     slot = "primaryR", energyCost = 18, cooldown = 2.71, range = 2500,
     OnFire = function(npc,target,ctx)
-        D6_Patterns.Warn(npc,target:WorldSpaceCenter(),.57)
+        D6_Patterns.Warn(npc,target:WorldSpaceCenter(),.57,true)
         timer.Simple(.57,function()
             if not IsValid(npc) or npc:Health() <= 0 or not IsValid(target) or not target:Alive() then return end
             fireFromModule(npc,target,ctx,"explosive",1100,32,"shot_homing",.07,"weapons/rpg/rocketfire1.wav",D6_Patterns.HomeTowards(target,1.1))
@@ -485,17 +495,19 @@ D6_RegisterModule("RepairBeam", {
         local radius   = lo.healRadius   or 300
         local amt      = lo.healAmt      or 4
         npc.D6_NextHeal = CurTime() + interval
-        local myPos = npc:GetPos()
-        for _, ally in ipairs(ents.FindInSphere(myPos, radius)) do
-            if not IsValid(ally) then continue end
-            if ally:GetClass() ~= "npc_cscanner" then continue end
-            if ally == npc or not ally.D6_AI then continue end
-            local curHp = ally:Health(); local maxHp = ally:GetMaxHealth()
-            if curHp < maxHp then
-                ally:SetHealth(math.min(curHp + amt, maxHp))
-                local ef = EffectData(); ef:SetOrigin(ally:GetPos()); ef:SetScale(0.4)
-                util.Effect("cball_bounce", ef)
-            end
+        local source=D6_Drones.Get(npc)
+        local candidates={}
+        for _, ally in ipairs(ents.FindInSphere(npc:GetPos(), radius)) do
+            if not IsValid(ally) or ally==npc or not ally.D6_Variant or ally:Health()<=0 then continue end
+            local art=D6_Drones.Get(ally)
+            if not art or (source and art.faction~=source.faction) then continue end
+            local damage=1-ally:Health()/math.max(1,ally:GetMaxHealth())
+            if damage>0 then candidates[#candidates+1]={unit=ally,damage=damage} end
+        end
+        table.sort(candidates,function(a,b) return a.damage>b.damage end)
+        local slot=(npc.D6_RepairPort or 0)%2+1
+        for _, candidate in ipairs(candidates) do
+            if D6_Patterns.Repair(npc,candidate.unit,slot,amt) then npc.D6_RepairPort=slot;break end
         end
     end,
 })
@@ -843,6 +855,10 @@ hook.Add("Think", "D6_RoleDispatch", function()
         local myPos   = npc:GetPos()
         local scanDist = math.max(loadout.rangeMax or 900, 900) * 2
         local target, dist = NearestPlayer(myPos, scanDist)
+        if IsValid(target) and npc.D6_Variant=="arc_elite" and ct>=(npc.D6_BankUpdate or 0) then
+            npc.D6_BankUpdate=ct+.056
+            D6_Drones.TrackBanks(npc,target:WorldSpaceCenter()+target:GetVelocity()*.075,.056)
+        end
 
         -- Reset per-tick movement intent (behavior will set if actively moving)
         npc.D6_DesiredVel     = nil
@@ -900,6 +916,10 @@ hook.Add("Think", "D6_RoleDispatch", function()
             npc.D6_DesiredVel = D6_Swarm.Steering(npc,npc.D6_DesiredVel,fp.maxSpeed)
         else
             D6_AvoidObstacles(npc, fp, ft)
+        end
+        if (npc.D6_BraceUntil or 0)>ct then
+            npc.D6_DesiredVel=npc.D6_Vel*.18
+            npc.D6_DesiredVelRate=7
         end
 
         -- Stages 9/10/14: orientation (maneuver override → else target/travel) → angular

@@ -107,7 +107,7 @@ function SWEP:Think()
                 filter = owner, mask = MASK_SHOT })
 
             local hitEnt = tr.Entity
-            if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+            if D6_Wep.Damageable(hitEnt) then
                 local dmg = Lerp(self._Heat, BASE_DMG, MAX_DMG)
                 D6_Wep.DirectDamage(owner, owner, hitEnt, dmg,
                     D6_DAMAGE.energy.dmgType, dir * 2000)

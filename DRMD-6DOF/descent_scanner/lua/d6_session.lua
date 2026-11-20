@@ -1,12 +1,12 @@
 D6_Session = {}
 D6_Session.Enforcer = {scale = 4.2, radius = 132, below = 147, above = 122}
-D6_Session.ArcElite = {scale = 2.35, radius = 94, below = 68, above = 61,
+D6_Session.ArcElite = {scale = 5.3, radius = 204, below = 151, above = 146,
     parts = {
         {{-24,-18,-12},{27,18,17}},
-        {{-13,-34,-6},{36,-16,9}},
-        {{-13,16,-6},{36,34,9}},
+        {{-14,-34,-7},{36,-16,9},"right"},
+        {{-14,16,-7},{36,34,9},"left"},
         {{-21,-8,15},{8,8,26}},
-        {{-12,-11,-28},{16,11,-11}},
+        {{-12,-11,-28},{25,11,-11}},
     },
 }
 D6_Session.Resistance = {

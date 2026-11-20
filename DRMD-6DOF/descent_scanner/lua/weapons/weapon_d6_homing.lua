@@ -111,7 +111,7 @@ function SWEP:PrimaryAttack()
             if not hitPos then return end  -- lifetime expiry, no explosion
             local pos = hitPos
 
-            if IsValid(hitEnt) and (hitEnt:IsNPC() or hitEnt:IsPlayer()) then
+            if D6_Wep.Damageable(hitEnt) then
                 D6_Wep.DirectDamage(owner, b, hitEnt, DIRECT_DMG, DMG_BLAST,
                     (hitNormal or -dir) * 5000)
             end

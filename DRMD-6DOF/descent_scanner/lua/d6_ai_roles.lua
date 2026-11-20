@@ -100,14 +100,14 @@ local LOADOUTS = {
     },
     arc_elite = {
         ai="anchor", appearance="arc_elite", slots={primaryL="ArcBattery"},
-        hp=570, scale=D6_Session.ArcElite.scale, hull=D6_Session.ArcElite,
-        color=Color(162,182,186), speed=325, rangeMin=510, rangeMax=1120,
+        hp=1040, scale=D6_Session.ArcElite.scale, hull=D6_Session.ArcElite,
+        color=Color(162,182,186), speed=260, rangeMin=635, rangeMax=1320,
         chargeDist=440, chargeCD=8.6, chargeDur=0.38, chargeSpeed=690,
-        shield=115, shieldMax=115, armor=80, armorMax=80,
+        shield=175, shieldMax=175, armor=145, armorMax=145,
         resist={kinetic=.16, energy=.26, explosive=.08},
-        phys={flightMode="physics", mass=158, spoolUp=5, spoolDown=2.1, velLerp=3.6,
-            maxSpeed=610, angPower=150, angInertia=.91, angSpinSup=.23, angMax=280,
-            rollMul=.76, bankGain=.66, bankMax=32},
+        phys={flightMode="physics", mass=317, spoolUp=3.8, spoolDown=2.1, velLerp=2.8,
+            maxSpeed=470, angPower=97, angInertia=.94, angSpinSup=.29, angMax=198,
+            rollMul=.53, bankGain=.42, bankMax=24},
     },
 }
 

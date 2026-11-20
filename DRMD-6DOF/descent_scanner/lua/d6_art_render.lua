@@ -18,6 +18,7 @@ local signal = CreateMaterial("drmd_model_signal", "UnlitGeneric",
 local glow = Material("sprites/light_glow02_add")
 local trail = Material("sprites/laserbeam")
 local neutral = Color(194, 208, 206)
+local localSignals = {lamp = 1.0, siege_eye = 0.91}
 
 local skins = D6_Drones.Types
 A.Skins = skins
@@ -34,10 +35,14 @@ local function compile(name)
     local model = G.models[name]
     if not model then return end
     local cache = {}
+    local rig = D6_Drones.Rigs[name]
     for material, part in pairs(model.parts) do
-        local triangles = {}
+        local groups = {}
         local rgb = G.palette[material]
         for _, face in ipairs(part) do
+            local bank = rig and rig.sections[face[5]] or "body"
+            local triangles = groups[bank] or {}
+            groups[bank] = triangles
             local n = face[4]
             local shade = math.Clamp(0.81 + n[3]*0.17 + n[1]*0.08 - n[2]*0.07, 0.53, 1)
             local col = Color(rgb[1]*shade, rgb[2]*shade, rgb[3]*shade)
@@ -48,21 +53,19 @@ local function compile(name)
                 triangles[#triangles + 1] = {pos = Vector(p[1],p[2],p[3]), normal = normal, u = u, v = v, color = col}
             end
         end
-        local object = Mesh()
-        object:BuildFromTriangles(triangles)
-        cache[material] = object
+        for bank, triangles in pairs(groups) do
+            local object = Mesh()
+            object:BuildFromTriangles(triangles)
+            cache[bank] = cache[bank] or {}
+            cache[bank][material] = object
+        end
     end
     meshCache[name] = cache
     return cache
 end
 
 local transform = Matrix()
-function A.Draw(name, position, angles, scale, ink, power, lit)
-    local model = meshCache[name] or compile(name)
-    if not model then return false end
-    ink, power = ink or neutral, power or 1
-    local light = lit and render.GetLightColor(position) or nil
-    local brightness = light and math.Clamp(0.55 + light:Length()*0.45, 0.56, 1.25) or 1.06
+local function drawBatch(model, position, angles, scale, brightness, ink, power)
     transform:Identity()
     transform:SetTranslation(position)
     transform:SetAngles(angles)
@@ -70,7 +73,7 @@ function A.Draw(name, position, angles, scale, ink, power, lit)
     cam.PushModelMatrix(transform)
     render.SetColorModulation(brightness, brightness, brightness)
     for material, part in pairs(model) do
-        if material ~= "emit" and material ~= "hot" then
+        if material ~= "emit" and material ~= "hot" and not localSignals[material] then
             render.SetMaterial(finishes[G.finishes[material]] or plain)
             part:Draw()
         end
@@ -86,8 +89,38 @@ function A.Draw(name, position, angles, scale, ink, power, lit)
         render.SetColorModulation(ink.r/255*power, ink.g/255*power, ink.b/255*power)
         model.emit:Draw()
     end
+    for material, strength in pairs(localSignals) do
+        if model[material] then
+            local color = G.palette[material]
+            local amount = strength*(material == "siege_eye" and power or 1)/255
+            render.SetMaterial(signal)
+            render.SetColorModulation(color[1]*amount, color[2]*amount, color[3]*amount)
+            model[material]:Draw()
+        end
+    end
     render.SetColorModulation(1, 1, 1)
     cam.PopModelMatrix()
+end
+
+function A.Draw(name, position, angles, scale, ink, power, lit, ent)
+    local model = meshCache[name] or compile(name)
+    if not model then return false end
+    ink, power = ink or neutral, power or 1
+    local light = lit and render.GetLightColor(position) or nil
+    local brightness = light and math.Clamp(0.55 + light:Length()*0.45, 0.56, 1.25) or 1.06
+    local now = CurTime()
+    for bank,batch in pairs(model) do
+        local lighting,source,rotation=ink,position,angles
+        if bank~="body" and IsValid(ent) then
+            source,rotation=D6_Drones.BankPose(ent,bank,now)
+            if bank=="eye" then
+                local started=ent:GetNW2Float("D6_EyeCharge",-10)
+                local charge=math.Clamp((now-started)/.95,0,1)
+                if now-started<1.38 then lighting=Color(Lerp(charge,113,255),Lerp(charge,203,79),Lerp(charge,248,51)) end
+            end
+        end
+        drawBatch(batch,source,rotation,scale,brightness,lighting,power)
+    end
     return true
 end
 
@@ -108,7 +141,7 @@ function A.DrawProjectile(ent)
     if not G.models[mesh] then return end
     local pos, ang = ent:GetPos(), ent:GetAngles()
     local col = projectileColor(tag)
-    if not spec then
+    if not spec or ent:GetNW2Bool("D6_ProjectileTint") then
         local rgb = ent:GetColor()
         if rgb.r + rgb.g + rgb.b < 760 then col = rgb end
     end
@@ -131,11 +164,11 @@ function A.DrawProjectile(ent)
     return true
 end
 
-function A.DrawDrone(variant, pos, ang, power, animated, factor)
+function A.DrawDrone(variant, pos, ang, power, animated, factor, ent)
     local skin = skins[variant]
     if not skin then return end
     local scale = factor or skin.scale
-    A.Draw(skin.mesh,pos,ang,scale,skin.color,power,true)
+    A.Draw(skin.mesh,pos,ang,scale,skin.color,power,true,ent)
     if skin.mesh == "cutter" then
         local spin = Angle(ang.p,ang.y,ang.r)
         if animated then spin:RotateAroundAxis(ang:Up(), (CurTime()*610)%360) end
@@ -161,7 +194,7 @@ local function drawAssigned(ent, flags)
         local charge = math.max(0, ent:GetNWFloat("D6_ThreatAt", 0) - CurTime())
         local power = charge > 0 and (0.72 + math.abs(math.sin(CurTime()*23))*0.38) or 0.70
         if variant == "grav" then power = power + ent:GetNW2Int("D6_GravityLoad",0)*0.04 end
-        A.DrawDrone(variant,pos,ang,power,true)
+        A.DrawDrone(variant,pos,ang,power,true,nil,ent)
         return
     elseif projectile ~= "" and G.models[projectile] then
         A.DrawProjectile(ent)
@@ -395,7 +428,12 @@ end)
 
 local arcShots={}
 net.Receive("D6_ArcDischarge",function()
-    arcShots[#arcShots+1]={start=net.ReadVector(),finish=net.ReadVector(),hit=net.ReadBool(),untilTime=CurTime()+.31}
+    local start,finish,hit,optic=net.ReadVector(),net.ReadVector(),net.ReadBool(),net.ReadBool()
+    local duration=optic and .51 or .31
+    arcShots[#arcShots+1]={start=start,finish=finish,hit=hit,optic=optic,duration=duration,untilTime=CurTime()+duration}
+end)
+net.Receive("D6_RepairLink",function()
+    arcShots[#arcShots+1]={start=net.ReadVector(),finish=net.ReadVector(),repair=true,untilTime=CurTime()+.31}
 end)
 
 hook.Add("PostDrawTranslucentRenderables", "D6_ArtThreats", function(depth, sky)
@@ -411,12 +449,19 @@ hook.Add("PostDrawTranslucentRenderables", "D6_ArtThreats", function(depth, sky)
         local ink, scale = art.color, art.scale
         if art.mesh == "combine_arc_elite" then
             local thermal=ent:GetNWBool("D6_ArcThermal")
-            local color=thermal and Color(255,170,93) or ink
+            local mode=ent:GetNW2Int("D6_ArcMode",2)
+            local mix=math.Clamp((now-ent:GetNW2Float("D6_EyeCharge",now))/.95,0,1)
+            local color=mode==4 and Color(Lerp(mix,113,255),Lerp(mix,204,71),Lerp(mix,246,49))
+                or thermal and Color(255,170,93) or ink
             local endPos=ent:GetNWVector("D6_ThreatAim",ent:GetPos())
-            for i=thermal and 3 or 1,thermal and 3 or 2 do
+            local first,last=1,2
+            if mode==4 then first,last=4,4
+            elseif mode==3 then first,last=5,6
+            elseif thermal then first,last=3,3 end
+            for i=first,last do
                 local source=D6_Drones.Muzzle(ent,i)
-                flash(source,color,(28+14*math.abs(math.sin(remaining*26)))*scale,167)
-                if not thermal then
+                flash(source,color,(18+8*math.abs(math.sin(remaining*26)))*scale,154)
+                if not thermal and mode~=3 then
                     render.SetMaterial(trail)
                     render.DrawBeam(source,endPos,1.55,0,1,Color(color.r,color.g,color.b,118))
                 end
@@ -425,6 +470,7 @@ hook.Add("PostDrawTranslucentRenderables", "D6_ArtThreats", function(depth, sky)
         end
         local cursor = ent:GetPos() + ent:GetForward()*27*scale
         if art.mesh == "combine_elite" then cursor = ent:GetPos() + (ent:GetForward()*26.7 + ent:GetUp()*1.03)*scale end
+        if art.guns and art.mesh~="combine_elite" then cursor=D6_Drones.Muzzle(ent,1,cursor) end
         flash(cursor, ink, 29*scale + math.abs(math.sin(remaining*25))*19, 130 + 60*math.abs(math.sin(remaining*17)))
         local aim = ent:GetNWVector("D6_ThreatAim", cursor)
         render.SetMaterial(trail)
@@ -432,11 +478,11 @@ hook.Add("PostDrawTranslucentRenderables", "D6_ArtThreats", function(depth, sky)
     end
     for i=#arcShots,1,-1 do
         local shot=arcShots[i]
-        local life=(shot.untilTime-now)/.31
+        local life=(shot.untilTime-now)/(shot.duration or .31)
         if life<=0 then table.remove(arcShots,i);continue end
-        local color=skins.arc_elite.color
+        local color=shot.optic and Color(252,74,64) or shot.repair and skins.support.color or skins.arc_elite.color
         render.SetMaterial(trail)
-        render.DrawBeam(shot.start,shot.finish,14*life,0,2,Color(color.r,color.g,color.b,156*life))
+        render.DrawBeam(shot.start,shot.finish,(shot.optic and 35 or shot.repair and 5 or 14)*life,0,2,Color(color.r,color.g,color.b,156*life))
         render.DrawBeam(shot.start,shot.finish,3.2*life,0,1,Color(219,246,255,246*life))
         flash(shot.start,color,41*life,192*life)
         if shot.hit then flash(shot.finish,color,44*life,196*life) end
@@ -487,6 +533,25 @@ local function contactRing(point, normal, radius, color)
         last = nextPoint
     end
 end
+
+local shockFields={}
+net.Receive("D6_BossField",function()
+    shockFields[#shockFields+1]={origin=net.ReadVector(),radius=net.ReadFloat(),time=CurTime()+net.ReadFloat()}
+end)
+hook.Add("PostDrawTranslucentRenderables","D6_BossShocks",function(depth,sky)
+    if depth or sky then return end
+    local now=CurTime()
+    for i=#shockFields,1,-1 do
+        local field=shockFields[i]
+        local age=now-field.time
+        if age>.67 then table.remove(shockFields,i);continue end
+        local radius=age<0 and field.radius or math.max(18,field.radius*math.min(1,age/.43))
+        local alpha=age<0 and 103+60*math.abs(math.sin(now*24)) or 227*(1-age/.67)
+        for _,normal in ipairs({vector_up,Vector(1,0,0),Vector(0,1,0)}) do
+            contactRing(field.origin,normal,radius,tone(amber,alpha))
+        end
+    end
+end)
 
 local function drawAdhesion(ply, now)
     local index = ply:GetNW2Int("D6_AdhesionEntity", -1)

@@ -1,8 +1,8 @@
 Half-Life: Abaddon · Облачная проверка
 20.11.2026 · Garry’s Mod x64, официальный выделенный сервер Sandbox
-81 / 81 серверная проверка. Ещё 6 повторных проверок при прямой загрузке реактора.
-21 / 21 сценарий воспроизведения GLua на трёх разрешениях.
-79 / 79 моделей MDL проверены в движке. Две карты собраны инструментами Hammer++.
+101 из 101 серверной проверки. При прямой загрузке реактора повторены 15 из 15.
+27 из 27 сценариев интерфейса на трёх разрешениях.
+79 моделей Source MDL, восемь текстур VTF, три карты BSP и VMF.
 
 АРЕНА · gm_flatgrass
 PASS | 01 · Sandbox server boot | gm_flatgrass
@@ -37,7 +37,7 @@ PASS | 29 · gravity drone captures real VPhysics debris into orbit
 PASS | 30 · deleting a gravity drone restores the debris physics
 PASS | 31 · clearing a group advances to the next encounter wave
 PASS | 32 · scanner optic matches muzzle axis with pitch and roll
-PASS | 33 · five mipmapped material assets mount in Garry's Mod
+PASS | 33 · eight mipmapped finishes, including all three elite textures, mount in Garry's Mod
 PASS | 34 · all three Resistance variants spawn with their own art and armor
 PASS | 35 · trial wave three brings all three Resistance hulls | 3 / 3
 PASS | 36 · rolled dash follows local up and keeps a tangential impulse
@@ -53,16 +53,16 @@ PASS | 45 · a released optical burst damages both targets and cools down | 174 
 PASS | 46 · solid geometry occludes targets behind the optical beam
 PASS | 47 · elite enforcement drone deploys in the final wave
 PASS | 48 · a hit on the giant hull reaches the boss shield | NPC [119][npc_cscanner] / 4.2
-PASS | 49 · the boss telegraphs and fires physical projectiles | 5
+PASS | 49 · the boss telegraphs and fires physical projectiles | 8
 PASS | 50 · swept projectiles also hit the extended weapon pods
 PASS | 51 · 79 native Source model files mount and validate | 79
 PASS | 52 · all four deployables use scripted entities with distinct models and physics | 4
 PASS | 53 · a live physics bomb carries its detailed Source mesh
 PASS | 54 · all three campaign profiles resolve safe exhibit positions on real test geometry
-PASS | 55 · the physics bomb reports a single world impact | 1 | Entity [0][worldspawn] at -612.000000 -583.000000 -12287.750000
+PASS | 55 · the physics bomb reports a single world impact | 1 | Entity [0][worldspawn] at 156.000000 -198.999985 -12287.750000
 PASS | 56 · plasma mine arms on its timer
 PASS | 57 · a recovery cloud charges and heals the player on contact
-PASS | 58 · gravity carrier holds physical cargo above and below its spherical field | 7 props, Z -120 to 88
+PASS | 58 · gravity carrier holds physical cargo above and below its spherical field | 7 props, Z -153 to 126
 PASS | 59 · escort plans separate factions, reserve 3D slots and stagger fire | escort
 PASS | 60 · losing the leader promotes an escort and frees cargo
 PASS | 61 · seeded roguelike starts actual enemies and excludes a concurrent trial
@@ -75,8 +75,14 @@ PASS | 67 · twin discharge traces can drain the pilot shield | 56
 PASS | 68 · replaying a seed repeats its draft and five waves finish with the new elite | 5
 PASS | 69 · older workshop weapons preserve their explicit projectile model and scale
 PASS | 70 · the workshop homing module launches the authored rocket as a scripted projectile
+PASS | 82 · all 29 weapons are classified into three active damage tiers
+PASS | 93 · weapon recoil moves the same bank used by the shot socket
+PASS | 97 · the gimbals carry the emission sockets through reverse yaw and positive elevation
+PASS | 99 · the upper rack launches a pair of blue plasma rockets | 2
+PASS | 100 · the blue-to-red optic windup precedes the high-energy eye beam | 43
+PASS | 101 · the rotary group changes its muzzle pose and the belly rail actually fires
 
-ЭПИЗОД · d6_city17_drain → d6_reactor_escape · один запуск сервера
+СЮЖЕТ · Сити 17 → реактор
 PASS | 71 · city BSP loads with native ground opponents
 PASS | 72 · city chapter starts grounded with a stock firearm
 PASS | 73 · the real Hammer trigger records the EMP on entering
@@ -86,16 +92,31 @@ PASS | 76 · reactor BSP runs in 6DOF with native personnel and traps
 PASS | 77 · flight through the entry volume starts the gravity swarm
 PASS | 78 · guard section deploys rocket and plasma Striders | 2
 PASS | 79 · lethal core damage activates the native OnBreak collapse relay
-PASS | 80 · collapse opens the evacuation door and places live airborne mines | 282
+PASS | 80 · collapse opens the evacuation door and places live airborne mines
 PASS | 81 · reaching the native exit cancels the failure clock
+PASS | 83 · station protest runs before the EMP flips the patrol relationship
+PASS | 84 · both distinct elite models travel on their Hammer rails along the opening route | true / true
+PASS | 85 · the first officer brings repair support and arriving early cannot destroy the core | NPC [183][npc_cscanner] / NPC [185][npc_cscanner] / Entity [95][func_breakable] / stage 2
+PASS | 86 · the heavyweight actually dashes along a tilted 6DOF vector | 825.953796 -1016.361938 258.908600
+PASS | 87 · the warned shock hits a flight target inside its radius | 60.249221801758
+PASS | 88 · the final officer is linked to two regulators and has repair support
+PASS | 89 · an equipped arena weapon can break a shield regulator through normal fire
+PASS | 90 · destroying both regulators disengages the shield
+PASS | 91 · overheat fires three staggered rings of actual projectiles with gaps | 33
+PASS | 92 · defeating both officers unlocks the core and removes the boss HUD
+PASS | 96 · a floating weapon pickup unlocks a module previously absent from the story loadout
 
-ПРЯМОЙ ЗАПУСК РЕАКТОРА · повторены проверки 76–81
+ПОЛИГОН · d6_relay_vault
+PASS | 94 · the vault BSP mounts pickups across distinct elevations and has a real raised entrance frame
+PASS | 95 · a live bank recharges the weapons reserve and a seeded vault run stages the next cache
+PASS | 98 · the elevated ammunition cache adds real launcher ammunition
 
 МОДЕЛИ И КАРТЫ
 PASS | 29 unique weapon rigs | 24 enemy classes | 14 ordnance and cargo types
-PASS | 79 production meshes | 208982 triangles | finite vertices and material keys
+PASS | 79 production meshes | 279319 triangles | finite vertices and material keys
 PASS | d6_city17_drain.vmf → BSP · VBSP++, VVIS++, VRAD++ (LDR)
 PASS | d6_reactor_escape.vmf → BSP · VBSP++, VVIS++, VRAD++ (LDR)
+PASS | d6_relay_vault.vmf → BSP · VBSP++, VVIS++, VRAD++ (LDR)
 
 ВОСПРОИЗВЕДЕНИЕ ИНТЕРФЕЙСА GLUA
 PASS | cockpit | 1600×900 | 90 paint operations
@@ -105,6 +126,8 @@ PASS | beam | 1600×900 | 87 paint operations
 PASS | flight | 1600×900 | 88 paint operations
 PASS | episode | 1600×900 | 91 paint operations
 PASS | rogue | 1600×900 | 126 paint operations
+PASS | intro | 1600×900 | 5 paint operations
+PASS | boss | 1600×900 | 93 paint operations
 PASS | cockpit | 1024×768 | 90 paint operations
 PASS | hangar | 1024×768 | 161 paint operations
 PASS | campaign | 1024×768 | 161 paint operations
@@ -112,6 +135,8 @@ PASS | beam | 1024×768 | 87 paint operations
 PASS | flight | 1024×768 | 88 paint operations
 PASS | episode | 1024×768 | 91 paint operations
 PASS | rogue | 1024×768 | 126 paint operations
+PASS | intro | 1024×768 | 5 paint operations
+PASS | boss | 1024×768 | 93 paint operations
 PASS | cockpit | 640×480 | 90 paint operations
 PASS | hangar | 640×480 | 161 paint operations
 PASS | campaign | 640×480 | 161 paint operations
@@ -119,9 +144,10 @@ PASS | beam | 640×480 | 87 paint operations
 PASS | flight | 640×480 | 88 paint operations
 PASS | episode | 640×480 | 91 paint operations
 PASS | rogue | 640×480 | 126 paint operations
+PASS | intro | 640×480 | 5 paint operations
+PASS | boss | 640×480 | 93 paint operations
 
 ОБЪЁМ ПРОВЕРКИ
-Серверные проверки используют управляемого бота и загруженные BSP.
-Стенд первых трёх карт Half-Life 2 проверен на геометрии gm_flatgrass.
-Кадры получены в Blender и через воспроизведение команд GLua.
-Графический клиент Garry’s Mod и оригинальный клиент Half-Life 2 в этом прогоне были недоступны.
+Сервер использует управляемого бота и загруженные BSP. Кадры получены в Blender и воспроизведением команд GLua.
+Стенд первых трёх штатных карт Half-Life 2 проверен на геометрии gm_flatgrass.
+Графический клиент Garry’s Mod и нативный Half-Life 2 в этом прогоне были недоступны.
