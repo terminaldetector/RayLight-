@@ -234,8 +234,11 @@ hook.Add("EntityRemoved", "D6_ArtForget", function(ent)
 end)
 hook.Add("ShutDown", "D6_DestroyMeshes", function()
     for _, model in pairs(meshCache) do
-        for _, part in pairs(model) do part:Destroy() end
+        for _, bank in pairs(model) do
+            for _, part in pairs(bank) do part:Destroy() end
+        end
     end
+    meshCache = {}
 end)
 
 function A.DrawWorldWeapon(weapon)
@@ -269,15 +272,16 @@ local function drawMount(item, weapon, position, angles, scale, lit, active)
     local kick, ignition = recoil(weapon)
     local charge = item.charge and IsValid(weapon) and weapon:GetNWFloat(item.charge, 0) or 0
     local power = (active and 0.96 or 0.34) + 0.38*ignition + 0.52*charge
-    A.Draw(item.mesh, position - angles:Forward()*kick, angles, scale, data.color, power, lit)
+    local bodyPosition = position - angles:Forward()*kick
+    A.Draw(item.mesh, bodyPosition, angles, scale, data.color, power, lit)
     if item.family == "mine" then
         local hinge = Angle(angles.p, angles.y, angles.r)
         hinge:RotateAroundAxis(hinge:Forward(), math.Clamp(kick*17, 0, 64))
         A.Draw("mine_hatch", position - angles:Up()*(4 + kick*0.45)*scale, hinge, scale, data.color, power, lit)
     end
     if item.family ~= "optic" and (ignition > 0 or charge > 0.2) then
-        local port = arsenal.Port(position,angles,item,1)
-        local muzzle = position + (port-position)*scale
+        local port = arsenal.Port(bodyPosition,angles,item,1)
+        local muzzle = bodyPosition + (port-bodyPosition)*scale
         flash(muzzle, data.color, (10 + ignition*14 + charge*8)*scale, 128*ignition + 51*charge)
     end
 end
@@ -343,6 +347,22 @@ hook.Add("PostDrawTranslucentRenderables", "D6_ArtViewMount", function(depth, sk
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() or ply:ShouldDrawLocalPlayer() or ply:InVehicle()
     or GetViewEntity() ~= ply then return end
+    if ply:GetNWBool("D6On") then
+        local mounts = D6_ViewMounts.Collect(ply, arsenal, hasWorkshop)
+        local angles, origin = EyeAngles(), EyePos()
+        local drift = ply._D6AngVel or {}
+        local bob = math.cos(RealTime()*4)*math.min(ply:GetVelocity():Length()/1500, 1)*0.2
+        render.DepthRange(0, 0.08)
+        for _, mount in ipairs(mounts) do
+            if not mount.customActive then
+                local position, scale = D6_ViewMounts.Pose(origin, angles, mount.slot,
+                    ScrW()/math.max(ScrH(), 1), (drift.yaw or 0)*0.12, bob)
+                drawMount(mount.item, mount.weapon, position, angles, scale, false, mount.active)
+            end
+        end
+        render.DepthRange(0, 1)
+        return
+    end
     local weapon = ply:GetActiveWeapon()
     if not IsValid(weapon) then return end
     local class = weapon:GetClass()

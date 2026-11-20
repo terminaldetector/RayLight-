@@ -20,13 +20,16 @@ local function SafeGetPhys(ent)
 end
 
 function SpawnEnemyDrone(ply, class, variant, customPos)
-    local npc = ents.Create(class)
+    local npc = D6_Actors.Create(class)
     if not IsValid(npc) then return end
     if customPos then
         npc:SetPos(customPos)
-    else
+    elseif IsValid(ply) then
         local tr = ply:GetEyeTrace()
         npc:SetPos(tr.HitPos + tr.HitNormal * 50)
+    else
+        npc:Remove()
+        return
     end
     npc:Spawn()
     npc:Activate()
@@ -55,7 +58,7 @@ function SpawnEnemyDrone(ply, class, variant, customPos)
     else
         npc:SetModelScale(1.4, 0); npc:SetMaxHealth(150); npc:SetHealth(150)
     end
-    npc:AddEntityRelationship(ply, D_HT, 99)
+    if IsValid(ply) then npc:AddEntityRelationship(ply, D_HT, 99) end
     return npc
 end
 
@@ -113,7 +116,7 @@ hook.Add("Think", "D6_AI_Core", function()
     if not D6_Session.IsArena() then return end
     local ct = CurTime()
     if ct - _D6PropT    > 0.12 then _D6PropCache    = ents.FindByClass("d6_ordnance");  _D6PropT    = ct end
-    if ct - _D6ScannerT > 0.10 then _D6ScannerCache = ents.FindByClass("npc_cscanner"); _D6ScannerT = ct end
+    if ct - _D6ScannerT > 0.10 then _D6ScannerCache = D6_Actors.GetAll(); _D6ScannerT = ct end
 
     -- ── 1. Воздушные мины ─────────────────────────────────
     for _, mine in ipairs(_D6PropCache) do
@@ -144,7 +147,7 @@ hook.Add("Think", "D6_AI_Core", function()
         if ct > (mine.NextScan or 0) then
             mine.NextScan = ct + 0.15
             for _, ent in ipairs(ents.FindInSphere(minePos, MINE_TRIGGER_DIST)) do
-                if (ent:IsPlayer() or ent:IsNPC()) and ent:GetClass() ~= "npc_cscanner" then
+                if (ent:IsPlayer() or ent:IsNPC()) and not D6_Actors.IsCombat(ent) then
                     mine:EmitSound("ambient/explosions/explode_1.wav", 90, 100)
                     local explode = ents.Create("env_explosion")
                     if IsValid(explode) then
@@ -168,7 +171,7 @@ hook.Add("Think", "D6_AI_Core", function()
         local body = spec and SafeGetPhys(npc)
         if not body then continue end
         local plan = D6_Swarm.GetPlan(npc)
-        local enemy = plan and plan.target or npc:GetEnemy()
+        local enemy = plan and plan.target or D6_Actors.FindTarget(npc, 3000)
         local center = npc:WorldSpaceCenter()
         if not IsValid(enemy) or not enemy:IsPlayer() or not enemy:Alive() or not enemy:GetNWBool("D6On") then continue end
         local point = enemy:WorldSpaceCenter()

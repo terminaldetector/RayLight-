@@ -122,7 +122,7 @@ function SpawnRocketEliteHoming(ply, customPos)
         pos = tr.HitPos + tr.HitNormal * 60
     end
 
-    local npc = ents.Create("npc_cscanner")
+    local npc = D6_Actors.Create()
     if not IsValid(npc) then return nil end
 
     npc:SetPos(pos)
@@ -159,7 +159,7 @@ end)
 
 -- ── Think: орбита + ГСН-ракета ───────────────────────────
 hook.Add("Think", "D6Frags2_HomingEliteAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "rocket_elite_homing" then continue end
 
         local myPos = npc:GetPos()
@@ -266,7 +266,7 @@ function SpawnRocketEliteAA(ply, customPos)
         pos = tr.HitPos + tr.HitNormal * 40
     end
 
-    local npc = ents.Create("npc_cscanner")
+    local npc = D6_Actors.Create()
     if not IsValid(npc) then return nil end
 
     npc:SetPos(pos)
@@ -301,7 +301,7 @@ end)
 
 -- ── Think: удержание высоты + зенитный залп ──────────────
 hook.Add("Think", "D6Frags2_AAAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "rocket_elite_aa" then continue end
 
         local myPos = npc:GetPos()
@@ -398,7 +398,7 @@ function SpawnRocketStrider(ply, customPos)
         pos = tr.HitPos + tr.HitNormal * 100
     end
 
-    local npc = ents.Create("npc_cscanner")
+    local npc = D6_Actors.Create()
     if not IsValid(npc) then return nil end
 
     npc:SetPos(pos)
@@ -435,7 +435,7 @@ end)
 
 -- ── Think: тяжёлая орбита + Gatling + боковые ракеты ─────
 hook.Add("Think", "D6Frags2_RocketStriderAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "rocket_strider" then continue end
 
         local myPos = npc:GetPos()
@@ -513,7 +513,7 @@ function SpawnPlasmaStrider(ply, customPos)
         pos = tr.HitPos + tr.HitNormal * 100
     end
 
-    local npc = ents.Create("npc_cscanner")
+    local npc = D6_Actors.Create()
     if not IsValid(npc) then return nil end
 
     npc:SetPos(pos)
@@ -550,7 +550,7 @@ end)
 
 -- ── Think: медленная орбита + серии combine_ball ──────────
 hook.Add("Think", "D6Frags2_PlasmaStriderAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "plasma_strider" then continue end
 
         local myPos = npc:GetPos()

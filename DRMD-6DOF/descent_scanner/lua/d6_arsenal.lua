@@ -146,6 +146,83 @@ weapon("hyperbeam", "Гиперлуч", "optic", nil, "D6_HyperCharge")
 weapon("plasmamine", "Плазменная мина", "mine")
 weapon("gravmine", "Гравитационная мина", "mine")
 
+-- The playable catalogue is deliberately smaller than the compatibility registry.
+-- Retired definitions remain addressable while existing saves/map rewards migrate;
+-- they are not additional choices in the hangar or the automatic loadout.
+A.LegacyOrder = A.Order
+A.Order = {}
+A.Playable = {}
+A.Replacements = {
+    vulcan="mg", laser="plasma", quad_laser="plasma", overdrive="plasma",
+    concussion="rockets", homing="rockets", smart_missile="rockets", mega_missile="rockets",
+    frag="heavy", darklance="railmk2", hyperbeam="plasma",
+    energytrap="gravmine", darkfield="gravmine", shockwave="bfg", reactor="bfg",
+    telefrag="phasegate", warp="whiplash",
+}
+local selected = {"mg", "flak", "plasma", "heavy", "rockets", "gravy_railgun", "railmk2",
+    "bfg", "whiplash", "phasegate", "plasmamine", "gravmine"}
+for _, suffix in ipairs(selected) do
+    local class = "weapon_d6_" .. suffix
+    A.Playable[class] = true
+    A.Order[#A.Order + 1] = A.Entries[class]
+end
+
+function A.ResolveClass(class)
+    if type(class) ~= "string" then return nil end
+    if A.Playable[class] then return class end
+    local suffix = class:match("^weapon_d6_(.+)$")
+    return suffix and A.Replacements[suffix] and ("weapon_d6_" .. A.Replacements[suffix]) or nil
+end
+
+-- Starting values for the first playable pass, not measured final balance.
+-- Capacity describes trigger cycles, not individual pellets in a volley.
+A.Operating = {
+    weapon_d6_mg = {tier=1, kind="continuous", energy=0},
+    weapon_d6_flak = {tier=2, kind="magazine", capacity=2, reload=1.8},
+    weapon_d6_plasma = {tier=2, kind="capacitor", capacity=6, reload=1.7},
+    weapon_d6_heavy = {tier=2, kind="ordnance", capacity=2, reload=2.4,
+        ammo="d6_shell", maxAmmo=12, initialAmmo=4, pickup=4},
+    weapon_d6_rockets = {tier=2, kind="ordnance", capacity=3, reload=2.0,
+        ammo="d6_rocket", maxAmmo=12, initialAmmo=4, pickup=4},
+    weapon_d6_gravy_railgun = {tier=2, kind="physical"},
+    weapon_d6_railmk2 = {tier=3, kind="charge", capacity=1, reload=1.5,
+        ammo="d6_rail_cell", maxAmmo=8, initialAmmo=3, pickup=2},
+    weapon_d6_bfg = {tier=3, kind="rare", capacity=1, reload=10,
+        ammo="d6_bfg_cell", maxAmmo=2, initialAmmo=1, pickup=0},
+    weapon_d6_whiplash = {tier=2, kind="utility"},
+    weapon_d6_phasegate = {tier=2, kind="utility"},
+    weapon_d6_plasmamine = {tier=2, kind="mine", ammo="d6_mine", maxAmmo=6, initialAmmo=2, pickup=2},
+    weapon_d6_gravmine = {tier=2, kind="mine", ammo="d6_mine", maxAmmo=6, initialAmmo=2, pickup=2},
+}
+for class, policy in pairs(A.Operating) do
+    A.Entries[class].ammo = policy.ammo
+end
+A.Starting = {weapon_d6_mg=true, weapon_d6_plasma=true, weapon_d6_heavy=true,
+    weapon_d6_gravy_railgun=true, weapon_d6_plasmamine=true}
+-- Old episode caches used Hyperbeam as a late powerful reward. A saved mount
+-- resolves to plasma, but that pickup must not become a duplicate starter gun.
+A.RewardAliases = {weapon_d6_hyperbeam="weapon_d6_bfg"}
+A.RewardWave = {
+    weapon_d6_flak=1, weapon_d6_rockets=1, weapon_d6_whiplash=1,
+    weapon_d6_phasegate=2, weapon_d6_gravmine=2,
+    weapon_d6_railmk2=3, weapon_d6_bfg=3,
+}
+
+function A.ResolveRewardClass(class)
+    return A.RewardAliases[class] or A.ResolveClass(class)
+end
+
+function A.AvailableRewards(ply, wave)
+    local choices = {}
+    for _, item in ipairs(A.Order) do
+        local required = A.RewardWave[item.class]
+        if required and wave >= required and not ply:HasWeapon(item.class) then
+            choices[#choices+1] = item.class
+        end
+    end
+    return choices
+end
+
 -- x forward, y right, z up. Both the renderer and shot origins use these positions.
 A.Mounts = {
     {label = "Левое крыло", pos = { 5, -24, -3}},
@@ -156,20 +233,24 @@ A.Mounts = {
 }
 
 A.Defaults = {
-    "weapon_d6_mg", "weapon_d6_plasma", "weapon_d6_rockets",
+    "weapon_d6_mg", "weapon_d6_plasma", "weapon_d6_heavy",
     "weapon_d6_gravy_railgun", "weapon_d6_plasmamine",
 }
 
 function A.CanMount(class)
     local item = A.Entries[class]
-    return item ~= nil and item.family ~= "mine"
+    return A.Playable[class] == true and item ~= nil and item.family ~= "mine"
+end
+
+function A.CanMine(class)
+    return A.Playable[class] == true and A.Entries[class].family == "mine"
 end
 
 function A.Normalize(saved)
     local slots, used = {}, {}
     if type(saved) ~= "table" then saved = {} end
     for i = 1, 4 do
-        local chosen = saved[i]
+        local chosen = A.ResolveClass(saved[i])
         if type(chosen) == "string" and A.CanMount(chosen) and not used[chosen] then
             slots[i], used[chosen] = chosen, true
         end
@@ -185,7 +266,8 @@ function A.Normalize(saved)
             end
         end
     end
-    slots[5] = A.Defaults[5]
+    local mine = A.ResolveClass(saved[5])
+    slots[5] = A.CanMine(mine) and mine or A.Defaults[5]
     return slots
 end
 
@@ -203,12 +285,18 @@ function A.Assign(slots, index, class)
     return true
 end
 
+function A.AssignMine(slots, class)
+    if not A.CanMine(class) then return false end
+    slots[5] = class
+    return true
+end
+
 function A.Get(ply, index)
     return ply:GetNW2String("D6_Mount" .. index, A.Defaults[index])
 end
 
 function A.Slot(ply, class)
-    if A.Entries[class] and A.Entries[class].family == "mine" then return 5 end
+    if A.CanMine(class) then return A.Get(ply, 5) == class and 5 or nil end
     for i = 1, 4 do
         if A.Get(ply, i) == class then return i end
     end
@@ -241,6 +329,31 @@ if SERVER then
     local function publish(ply, slots)
         for i = 1, #A.Mounts do ply:SetNW2String("D6_Mount" .. i, slots[i]) end
     end
+    A.Publish = publish
+
+    function A.EnsureOwned(ply)
+        local slots = A.Normalize(ply.D6_Mounts)
+        local used = {}
+        for i = 1, 4 do
+            if not IsValid(ply:GetWeapon(slots[i])) then slots[i] = false
+            else used[slots[i]] = true end
+        end
+        for i = 1, 4 do
+            if not slots[i] then
+                for j = 0, 3 do
+                    local class = A.Defaults[(i+j-1)%4+1]
+                    if not used[class] and IsValid(ply:GetWeapon(class)) then
+                        slots[i], used[class] = class, true
+                        break
+                    end
+                end
+                slots[i] = slots[i] or A.Defaults[i]
+            end
+        end
+        if not IsValid(ply:GetWeapon(slots[5])) then slots[5] = A.Defaults[5] end
+        ply.D6_Mounts = slots
+        publish(ply, slots)
+    end
 
     hook.Add("PlayerInitialSpawn", "D6_ArsenalLoad", function(ply)
         local stored = not ply:IsBot() and ply:GetPData(storageKey)
@@ -259,10 +372,21 @@ if SERVER then
         publish(ply, slots)
     end)
 
+    concommand.Add("d6_mine_set", function(ply, _, args)
+        if not IsValid(ply) or not D6_Session.IsArena() then return end
+        local class = args[1]
+        if not class or not A.CanMine(class) or not IsValid(ply:GetWeapon(class)) then return end
+        local slots = ply.D6_Mounts or A.Normalize()
+        if not A.AssignMine(slots, class) then return end
+        ply.D6_Mounts = slots
+        if not ply:IsBot() then ply:SetPData(storageKey, util.TableToJSON(slots)) end
+        publish(ply, slots)
+    end)
+
     concommand.Add("d6_mount_select", function(ply, _, args)
         if not IsValid(ply) or not ply:Alive() or not ply.D6On then return end
         local index = tonumber(args[1])
-        if not index or not A.Mounts[index] then return end
+        if not index or index % 1 ~= 0 or index < 1 or index > 4 then return end
         local class = A.Get(ply, index)
         if IsValid(ply:GetWeapon(class)) then ply:SelectWeapon(class) end
     end)
@@ -271,7 +395,8 @@ end
 if CLIENT then
     hook.Add("PlayerBindPress", "D6_SelectMount", function(ply, bind, pressed)
         if not pressed or not ply:Alive() or not ply:GetNWBool("D6On") then return end
-        local index = tonumber(bind:match("^slot([1-5])$"))
+        if bind == "slot5" then return true end
+        local index = tonumber(bind:match("^slot([1-4])$"))
         if index then
             local wep = ply:GetWeapon(A.Get(ply, index))
             if IsValid(wep) then input.SelectWeapon(wep) end
@@ -281,8 +406,8 @@ if CLIENT then
         local active = ply:GetActiveWeapon()
         local direction = bind == "invnext" and 1 or -1
         local start = IsValid(active) and A.Slot(ply, active:GetClass()) or (direction == 1 and 0 or 1)
-        for step = 1, #A.Mounts do
-            local slot = (start - 1 + step * direction) % #A.Mounts + 1
+        for step = 1, 4 do
+            local slot = (start - 1 + step * direction) % 4 + 1
             local wep = ply:GetWeapon(A.Get(ply, slot))
             if IsValid(wep) then
                 input.SelectWeapon(wep)

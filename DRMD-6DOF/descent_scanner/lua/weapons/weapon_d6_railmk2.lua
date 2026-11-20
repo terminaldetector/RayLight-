@@ -65,6 +65,11 @@ local function RefreshGravCfg()
     LURE_COOLDOWN = D6_GravCfg.Get(c, "LURE_COOLDOWN", LURE_COOLDOWN)
 end
 
+local function SetRecovery(weapon, delay)
+    local feed = D6_WeaponFeed and D6_WeaponFeed.Status(weapon)
+    weapon:SetNextPrimaryFire(math.max(CurTime() + delay, feed and feed.reloadAt or 0))
+end
+
 function SWEP:Initialize()
     RefreshGravCfg()
     self:SetWeaponHoldType(self.HoldType)
@@ -73,21 +78,30 @@ function SWEP:Initialize()
 end
 
 function SWEP:Deploy()
+    local charging = self._ChargeStart ~= nil
     self._ChargeStart = nil
     self._ChargeFired = false
-    if SERVER then self:SetNWFloat("D6_RailCharge", 0) end
+    if SERVER then
+        self:SetNWFloat("D6_RailCharge", 0)
+        if charging then SetRecovery(self, 0.23) end
+    end
     return true
 end
 
 function SWEP:Holster()
+    local charging = self._ChargeStart ~= nil
     self._ChargeStart = nil
     self._ChargeFired = false
-    if SERVER then self:SetNWFloat("D6_RailCharge", 0) end
+    if SERVER then
+        self:SetNWFloat("D6_RailCharge", 0)
+        if charging then SetRecovery(self, 0.23) end
+    end
     return true
 end
 
 function SWEP:PrimaryAttack()
     if not SERVER then return end
+    if CurTime() < self:GetNextPrimaryFire() then return end
     if self._ChargeStart then return end
     local owner = self:GetOwner()
     if not IsValid(owner) then return end
@@ -103,7 +117,12 @@ function SWEP:Think()
     if not SERVER then return end
     if not self._ChargeStart then return end
     local owner = self:GetOwner()
-    if not IsValid(owner) then return end
+    if not IsValid(owner) then
+        self._ChargeStart, self._ChargeFired = nil, false
+        self:SetNWFloat("D6_RailCharge", 0)
+        SetRecovery(self, 0.23)
+        return
+    end
     RefreshGravCfg()
 
     local ct   = CurTime()
@@ -116,7 +135,7 @@ function SWEP:Think()
         self._ChargeFired = true
         self._ChargeStart = nil
         self:SetNWFloat("D6_RailCharge", 0)
-        self:_DoChargedShot(owner)
+        self._ChargeFired = self:_DoChargedShot(owner) == true
         return
     end
 
@@ -159,7 +178,11 @@ local function PenetratingTrace(src, dir, range, owner, maxHits)
 end
 
 function SWEP:_DoQuickShot(owner)
-    if not D6_Wep.TrySpend(self, owner, ENERGY_QUICK) then return end
+    if not D6_Wep.TrySpend(self, owner, ENERGY_QUICK) then
+        -- Release the temporary ten-second charging lock on failed payment.
+        SetRecovery(self, 0.23)
+        return false
+    end
 
     local sa  = D6_Wep.ShootAng(owner)
     local dir = sa:Forward()
@@ -197,11 +220,15 @@ function SWEP:_DoQuickShot(owner)
     net.Broadcast()
 
     owner:EmitSound("weapons/physcannon/superphys_launch1.wav", 80, 115)
-    self:SetNextPrimaryFire(CurTime() + 0.5)
+    SetRecovery(self, 0.5)
+    return true
 end
 
 function SWEP:_DoChargedShot(owner)
-    if not D6_Wep.TrySpend(self, owner, ENERGY_CHARGE) then return end
+    if not D6_Wep.TrySpend(self, owner, ENERGY_CHARGE) then
+        SetRecovery(self, 0.23)
+        return false
+    end
 
     local sa   = D6_Wep.ShootAng(owner)
     local dir  = sa:Forward()
@@ -237,7 +264,8 @@ function SWEP:_DoChargedShot(owner)
     net.Broadcast()
 
     owner:EmitSound("ambient/energy/zap9.wav", 85, 78)
-    self:SetNextPrimaryFire(CurTime() + 1.5)
+    SetRecovery(self, 1.5)
+    return true
 end
 
 -- ─── RMB: precision gravity lure ─────────────────────────
@@ -249,10 +277,6 @@ function SWEP:SecondaryAttack()
     if not IsValid(owner) then return end
     RefreshGravCfg()
 
-    if not D6_Wep.TrySpend(self, owner, ENERGY_LURE) then return end
-    self._NextLure = ct + LURE_COOLDOWN
-    self:SetNextSecondaryFire(ct + LURE_COOLDOWN)
-
     local sa       = D6_Wep.ShootAng(owner)
     local fwd      = sa:Forward()
     local muz      = owner:GetShootPos()
@@ -260,19 +284,27 @@ function SWEP:SecondaryAttack()
     local bestEnt, bestMass = nil, 0
 
     for _, e in ipairs(ents.FindInSphere(muz, LURE_RANGE)) do
-        if e:GetClass() ~= "prop_physics" then continue end
-        local ph = e:GetPhysicsObject()
-        if not IsValid(ph) then continue end
-        local mass = ph:GetMass()
-        if mass > LURE_MAX_MASS then continue end
-        local toEnt = (e:GetPos() - muz):GetNormalized()
-        if toEnt:Dot(fwd) < cosLimit then continue end
-        if mass > bestMass then bestMass = mass; bestEnt = e end
+        if e:GetClass() == "prop_physics" then
+            local ph = e:GetPhysicsObject()
+            if IsValid(ph) then
+                local mass = ph:GetMass()
+                local toEnt = (e:GetPos() - muz):GetNormalized()
+                if mass <= LURE_MAX_MASS and toEnt:Dot(fwd) >= cosLimit and mass > bestMass then
+                    bestMass, bestEnt = mass, e
+                end
+            end
+        end
     end
 
     if not IsValid(bestEnt) then
+        self._NextLure = ct + 0.23
+        self:SetNextSecondaryFire(self._NextLure)
         owner:EmitSound("common/wpn_denyselect.wav", 60, 110); return
     end
+
+    if not D6_Wep.TrySpend(self, owner, ENERGY_LURE, "rail_lure") then return end
+    self._NextLure = ct + LURE_COOLDOWN
+    self:SetNextSecondaryFire(ct + LURE_COOLDOWN)
 
     local ph      = bestEnt:GetPhysicsObject()
     local toOwner = (owner:GetPos() - bestEnt:GetPos()):GetNormalized()

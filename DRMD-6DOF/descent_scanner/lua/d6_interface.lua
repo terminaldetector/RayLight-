@@ -9,6 +9,7 @@ U.colors = {
     dim = Color(101, 123, 121), text = Color(230, 234, 218),
     aqua = Color(119, 230, 217), lime = Color(182, 222, 124),
     orange = Color(255, 173, 102), warn = Color(244, 112, 86),
+    hull = Color(238, 78, 82), shield = Color(84, 164, 247), energy = Color(246, 209, 77),
 }
 local C = U.colors
 
@@ -78,6 +79,27 @@ local function gauge(label, value, max, x, y, w, scale, color)
     U.Text(label, "tiny", x, y, C.muted)
     U.Text(string.format("%d / %d", math.floor(value), math.floor(max)), "small", x+w, y - 2*scale, color, TEXT_ALIGN_RIGHT)
     U.Bar(x, y+14*scale, w, 4*scale, value/math.max(max, 1), color)
+end
+
+local function defenseGauge(state, x, y, w, scale)
+    local hpMax, shieldMax = math.max(state.hpMax, 0), math.max(state.shieldMax, 0)
+    local total = math.max(hpMax + shieldMax, 1)
+    local hullW, shieldW = w*hpMax/total, w*shieldMax/total
+    U.Text("КОРПУС", "tiny", x, y, C.hull)
+    U.Text("ЩИТ", "tiny", x+w, y, C.shield, TEXT_ALIGN_RIGHT)
+    U.Text(string.format("%d / %d", math.floor(state.hp), math.floor(hpMax)),
+        "small", x, y+13*scale, C.hull)
+    U.Text(string.format("%d / %d", math.floor(state.shield), math.floor(shieldMax)),
+        "small", x+w, y+13*scale, C.shield, TEXT_ALIGN_RIGHT)
+    local barY, barH = y+31*scale, 8*scale
+    U.Box(x, barY, w, barH, Color(53, 70, 72, 188))
+    -- Segment widths follow the maximum capacities, never the current damage.
+    -- A depleted shield therefore cannot stretch the remaining hull across it.
+    U.Box(x, barY, hullW*math.Clamp(state.hp/math.max(hpMax, 1), 0, 1), barH, C.hull)
+    U.Box(x+hullW, barY, shieldW*math.Clamp(state.shield/math.max(shieldMax, 1), 0, 1), barH, C.shield)
+    if hpMax > 0 and shieldMax > 0 then
+        U.Line(x+hullW, barY, x+hullW, barY+barH, C.bg)
+    end
 end
 
 local headings = {"С", "В", "Ю", "З"}
@@ -163,14 +185,13 @@ function U.PaintHUD(w, h, state)
     end
 
     U.Panel(left, y, leftW, panelH)
-    gauge("КОРПУС", state.hp, state.hpMax, left+pad, y+12*scale, leftW-2*pad, scale,
-        state.hp < state.hpMax*0.3 and C.warn or C.text)
-    gauge("ЩИТ", state.shield, state.shieldMax, left+pad, y+38*scale, leftW-2*pad, scale, C.aqua)
-    gauge("ЭНЕРГИЯ", state.energy, state.energyMax, left+pad, y+65*scale, leftW-2*pad, scale, C.lime)
+    defenseGauge(state, left+pad, y+12*scale, leftW-2*pad, scale)
+    gauge("ЭНЕРГИЯ", state.energy, state.energyMax, left+pad, y+65*scale, leftW-2*pad, scale, C.energy)
 
     U.Panel(dock, y+14*scale, dockW, panelH - 14*scale)
     U.Text("СЕКЦИИ", "tiny", dock+pad, y+23*scale, C.muted)
-    U.Text("1–5  /  КОЛЕСО", "tiny", dock+dockW-pad, y+23*scale, C.dim, TEXT_ALIGN_RIGHT)
+    local mineKey = D6_Mines and D6_Mines.KeyLabel and D6_Mines.KeyLabel() or "C"
+    U.Text("1–4  /  " .. mineKey .. ": МИНА", "tiny", dock+dockW-pad, y+23*scale, C.dim, TEXT_ALIGN_RIGHT)
     local cellW = (dockW - 2*pad - 4*5*scale)/5
     for i = 1, 5 do
         local x = dock+pad+(i-1)*(cellW+5*scale)
@@ -179,7 +200,7 @@ function U.PaintHUD(w, h, state)
         local ink = mount and mount.color or C.dim
         U.Box(x, y+42*scale, cellW, 25*scale, active and Color(49, 69, 67) or Color(27, 40, 43))
         U.Box(x, y+42*scale, cellW, 1.5*scale, active and ink or C.edge)
-        U.Text(i == 5 and "5 · М" or tostring(i), "small", x+cellW/2, y+48*scale,
+        U.Text(i == 5 and mineKey .. " · М" or tostring(i), "small", x+cellW/2, y+48*scale,
             active and C.text or C.muted, TEXT_ALIGN_CENTER)
     end
     U.Text(state.dash >= 1 and "РЫВОК ГОТОВ" or "РЫВОК ВОССТАНАВЛИВАЕТСЯ", "tiny",
@@ -227,9 +248,14 @@ function U.Snapshot(ply)
 
     local charge = item and item.charge and weapon:GetNWFloat(item.charge, 0) or 0
     local readyAt = valid and weapon:GetNextPrimaryFire() or 0
+    local feed = valid and D6_WeaponFeed and D6_WeaponFeed.Status(weapon, now)
+    if feed then readyAt = math.max(readyAt, feed.reloadAt or 0) end
     local status = readyAt > now+0.08 and string.format("Цикл · %.1f с", math.min(readyAt-now, 9.9)) or "К стрельбе готово"
     if charge > 0 then status = string.format("Заряд  %d%%", math.floor(charge*100))
+    elseif feed and (feed.reloadAt or 0) > now then status = string.format("Перезарядка · %.1f с", feed.reloadAt-now)
     elseif valid and item and item.ammo then status = string.format("Боезапас   %02d", ply:GetAmmoCount(item.ammo))
+    elseif feed and feed.kind == "capacitor" and (feed.capacity or 0) > 0 then
+        status = string.format("Серия   %d / %d", feed.remaining, feed.capacity)
     elseif valid and weapon.GetDRMDModeName then status = weapon:GetDRMDModeName()
     elseif class == "weapon_d6_hyperbeam" then
         if weapon:GetNWBool("D6_HyperFiring", false) then status = "Гиперлуч активен"

@@ -15,7 +15,7 @@
 --   Формат профиля (все значения — числа/строки/плоские таблицы):
 --     {
 --       base   = "assault",            -- роль-источник (справочно)
---       entity = "npc_cscanner",       -- базовая сущность
+--       entity = "d6_combat_drone",    -- собственный боевой NPC
 --       ai     = "pressure",           -- pressure|flank|standoff|support|anchor
 --       model  = { model="", skin=0, bodygroups={}, scale=1.2,
 --                  collisionScale=1.0 },
@@ -81,7 +81,7 @@ function D6_NPCWorkshop.ToLoadout(profileOrName)
 
     local lo = {
         -- NPC Workshop поля (читает D6_BuildDrone)
-        entity         = p.entity or "npc_cscanner",
+        entity         = D6_Actors.ResolveClass(p.entity),
         model          = m.model or "",
         skin           = m.skin or 0,
         bodygroups     = istable(m.bodygroups) and table.Copy(m.bodygroups) or nil,
@@ -130,7 +130,7 @@ function D6_NPCWorkshop.FromLoadout(lo, baseName)
     local col = lo.color or Color(200, 200, 200)
     return {
         base   = baseName or "custom",
-        entity = lo.entity or "npc_cscanner",
+        entity = D6_Actors.ResolveClass(lo.entity),
         ai     = lo.ai or "pressure",
         model  = {
             model = lo.model or "", skin = lo.skin or 0,

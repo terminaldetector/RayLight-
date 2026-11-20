@@ -59,7 +59,7 @@ end
 local function SpawnHeavy(ply, pos)
     if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","heavy")
     else
-        local npc=ents.Create("npc_cscanner"); if not IsValid(npc) then return end
+        local npc=D6_Actors.Create(); if not IsValid(npc) then return end
         npc:SetPos(pos); npc:Spawn(); npc:Activate()
         npc:SetMaxHealth(450); npc:SetHealth(450)
         npc:SetColor(Color(20,20,20)); D6_Session.SetVariant(npc, "heavy")

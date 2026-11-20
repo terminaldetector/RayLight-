@@ -281,14 +281,26 @@ if SERVER then
         if origin then weapon:SetNWVector("D6_ShotOrigin", origin) end
     end
 
-    function D6_Wep.TrySpend(wep, ply, amount)
-        if D6_Energy.TryConsume(ply, "weapons", amount) then return true end
-        wep:SetNextPrimaryFire(math.max(wep:GetNextPrimaryFire(), CurTime() + 0.23))
+    function D6_Wep.TrySpend(wep, ply, amount, context)
+        if not IsValid(wep) or not IsValid(ply) then return false, "invalid" end
+        local paid, reason
+        if D6_WeaponFeed then
+            paid, reason = D6_WeaponFeed.TrySpend(wep, ply, amount, context)
+        else
+            paid = D6_Energy.TryConsume(ply, "weapons", amount)
+            reason = paid and nil or "energy"
+        end
+        if paid then return true end
+        if context == "rail_lure" then
+            wep:SetNextSecondaryFire(math.max(wep:GetNextSecondaryFire(), CurTime() + 0.23))
+        else
+            wep:SetNextPrimaryFire(math.max(wep:GetNextPrimaryFire(), CurTime() + 0.23))
+        end
         if CurTime() >= (wep.D6_NextDrySound or 0) then
             ply:EmitSound("buttons/button10.wav", 62, 102)
             wep.D6_NextDrySound = CurTime() + 0.23
         end
-        return false
+        return false, reason
     end
 
     function D6_Wep.DeployPoint(ply, wanted, radius)

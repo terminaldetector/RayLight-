@@ -57,6 +57,7 @@ end
 -- АВТОДЕТЕКТ: после загрузки всех аддонов сканируем weapons.GetList()
 -- =========================================================
 local function MatchesPrefix(class)
+    if D6_Arsenal and D6_Arsenal.Entries[class] and not D6_Arsenal.Playable[class] then return false end
     for _, prefix in ipairs(AUTO_PREFIXES) do
         if class:sub(1, #prefix) == prefix then return true end
     end

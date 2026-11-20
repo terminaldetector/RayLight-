@@ -69,22 +69,40 @@ function SWEP:_Register(ent)
         if IsValid(old) then old:Remove() end
     end
     if SERVER then self:SetNWInt("D6_Deployed", #self._Deployed) end
+    ent:CallOnRemove("D6_MineBay", function(removed)
+        timer.Remove("D6_GMine_" .. removed:EntIndex())
+        if not IsValid(self) then return end
+        for i = #self._Deployed, 1, -1 do
+            if self._Deployed[i] == removed or not IsValid(self._Deployed[i]) then
+                table.remove(self._Deployed, i)
+            end
+        end
+        self:SetNWInt("D6_Deployed", #self._Deployed)
+    end)
 end
 
-function SWEP:PrimaryAttack()
-    if not SERVER then return end
+function SWEP:DeployMine()
+    if not SERVER then return false end
     local owner = self:GetOwner()
-    if not IsValid(owner) then return end
+    if not IsValid(owner) or not owner:IsPlayer() or not owner:Alive() or owner:InVehicle() then return false end
+    local now = CurTime()
+    if now < self:GetNextPrimaryFire() or now < (owner.D6_MineNextFire or 0) then return false end
 
     local dir = D6_Wep.ShootAng(owner):Forward()
     local muzzle = D6_Wep.Muzzle(owner, { fwd = 40, rgt = 0, up = -6 }, self:GetClass())
     local pos = D6_Wep.DeployPoint(owner, muzzle + dir * 60, 12)
-    if not pos or not D6_Wep.TrySpend(self, owner, ENERGY_COST) then return end
-    self:SetNextPrimaryFire(CurTime() + COOLDOWN)
+    if not pos then return false end
     local energyType = D6_DAMAGE.energy.dmgType
 
     local well = D6_Wep.Ordnance("mine_gravity", pos, owner, {angle = D6_Wep.AimAng(owner)})
-    if not IsValid(well) then return end
+    if not IsValid(well) then
+        self:SetNextPrimaryFire(now + 0.23)
+        return false
+    end
+    if not D6_Wep.TrySpend(self, owner, ENERGY_COST) then well:Remove(); return false end
+    self:SetNextPrimaryFire(math.max(self:GetNextPrimaryFire(), now + COOLDOWN))
+    owner.D6_MineNextFire = self:GetNextPrimaryFire()
+    well.D6_WeaponClass = self:GetClass()
     D6_Wep.MarkShot(self, muzzle, 0.8)
 
     self:_Register(well)
@@ -95,20 +113,22 @@ function SWEP:PrimaryAttack()
         if not IsValid(well) then timer.Remove("D6_GMine_" .. idx); return end
         local c = well:GetPos()
         for _, e in ipairs(ents.FindInSphere(c, PULL_RANGE)) do
-            if not IsValid(e) or e == well or e == owner then continue end
-            local toC = c - e:GetPos()
-            local d   = toC:Length()
-            if d < 16 then continue end
-            local fall = math.Clamp(1 - d / PULL_RANGE, 0.1, 1)
-            if e:IsPlayer() then
-                e.D6Vel = (e.D6Vel or Vector(0, 0, 0)) + toC:GetNormalized() * PLY_ACCEL * fall * 0.1
-            elseif e:IsNPC() or (e:GetClass() == "prop_physics" or e.D6_Collectible) then
-                local p = e:GetPhysicsObject()
-                if IsValid(p) then
-                    p:ApplyForceCenter(toC:GetNormalized() * p:GetMass() * PULL_FORCE * fall)
-                end
-                if e:IsNPC() then
-                    D6_Wep.DirectDamage(owner, well, e, DOT, energyType, vector_origin)
+            if IsValid(e) and e ~= well and e ~= owner then
+                local toC = c - e:GetPos()
+                local d   = toC:Length()
+                if d >= 16 then
+                    local fall = math.Clamp(1 - d / PULL_RANGE, 0.1, 1)
+                    if e:IsPlayer() then
+                        e.D6Vel = (e.D6Vel or Vector(0, 0, 0)) + toC:GetNormalized() * PLY_ACCEL * fall * 0.1
+                    elseif e:IsNPC() or (e:GetClass() == "prop_physics" or e.D6_Collectible) then
+                        local p = e:GetPhysicsObject()
+                        if IsValid(p) then
+                            p:ApplyForceCenter(toC:GetNormalized() * p:GetMass() * PULL_FORCE * fall)
+                        end
+                        if e:IsNPC() then
+                            D6_Wep.DirectDamage(owner, well, e, DOT, energyType, vector_origin)
+                        end
+                    end
                 end
             end
         end
@@ -126,6 +146,11 @@ function SWEP:PrimaryAttack()
     end)
 
     owner:EmitSound("weapons/physcannon/physcannon_drop.wav", 70, 100)
+    return true
+end
+
+function SWEP:PrimaryAttack()
+    return self:DeployMine()
 end
 
 function SWEP:SecondaryAttack()

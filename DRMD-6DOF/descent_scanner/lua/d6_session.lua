@@ -45,6 +45,7 @@ if SERVER then
         support = "support", anchor = "heavy_elite"}
 
     function D6_Session.SetVariant(ent, variant, target)
+        if not D6_Actors.Register(ent, target) then return false end
         ent.D6_Variant = variant
         local loadout = ent.D6_Loadout
         local visual = loadout and (loadout.appearance or roleByAI[loadout.ai]) or variant
@@ -55,6 +56,6 @@ if SERVER then
             D6_Swarm.Register(ent, art, target)
         end
         if variant == "grav" and D6_Gravity then D6_Gravity.Register(ent, target) end
-        if ent:GetClass() == "npc_cscanner" then ent:Fire("DisableFlashlight") end
+        return true
     end
 end
