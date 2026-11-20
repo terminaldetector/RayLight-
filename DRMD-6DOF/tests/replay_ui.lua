@@ -46,6 +46,7 @@ function draw.SimpleText(text,font,x,y,color,align,vertical)
 end
 
 dofile(root .. "d6_arsenal.lua")
+dofile(root .. "d6_weapon_feed.lua")
 dofile(root .. "d6_interface.lua")
 dofile(root .. "d6_hangar.lua")
 
@@ -60,10 +61,60 @@ local ply = {
     GetActiveWeapon=function() return arsenal[D6_Arsenal.Defaults[4]] end,
 }
 function LocalPlayer() return ply end
+
+-- Exercise the real feed -> HUD status contract. In Lua zero is truthy, so
+-- unlimited and utility feeds must not replace useful prompts with "0 / 0".
+do
+    local weapon, held, reloadAt
+    local oldFlight, oldEnergy, oldBalance, oldMobility, oldGame =
+        D6_FlightHUDState, D6_Energy, D6_Balance, D6_Mobility, game
+    local subject = {
+        GetActiveWeapon=function() return weapon end,
+        EyeAngles=function() return {y=0} end,
+        GetVelocity=function() return {Length=function() return 0 end} end,
+        Health=function() return 100 end, GetMaxHealth=function() return 100 end,
+        GetNWFloat=function(_,_,fallback) return fallback end,
+        GetNW2Float=function(_,_,fallback) return fallback end,
+        GetNW2Int=function(_,_,fallback) return fallback end,
+        GetNW2String=function(_,key,fallback) return mounts[tonumber(key:match("(%d)$"))] or fallback end,
+        GetNWBool=function(_,_,fallback) return fallback end,
+        GetAmmoCount=function() return 3 end,
+    }
+    D6_FlightHUDState = function() return {roll=0} end
+    D6_Energy = {Get=function() return 100 end, GetMax=function() return 100 end}
+    D6_Balance = {Tier=function() end}
+    D6_Mobility = {DashCooldown=1}
+    game = {GetMap=function() return "HUD regression" end}
+    local function status(class)
+        weapon = {
+            GetClass=function() return class end, GetOwner=function() return subject end,
+            GetNWFloat=function(_,_,fallback) return fallback end,
+            GetNW2Int=function(_,_,fallback) return math.min(fallback,2) end,
+            GetNW2Float=function() return reloadAt or 0 end,
+            GetNextPrimaryFire=function() return 0 end,
+            GetNWEntity=function(_,key) return key=="D6_RailHeld" and held or nil end,
+        }
+        return U.Snapshot(subject).weaponStatus
+    end
+    assert(status("weapon_d6_mg") == "К стрельбе готово", "continuous feed has no 0/0 series")
+    assert(status("weapon_d6_whiplash") == "ЛКМ  сцепление  /  ПКМ  притяжение", "hook guide survives zero capacity")
+    assert(status("weapon_d6_phasegate") == "ЛКМ  вход  /  ПКМ  выход", "portal guide survives zero capacity")
+    held = {}
+    assert(status("weapon_d6_gravy_railgun") == "Объект захвачен", "held-prop status survives zero capacity")
+    assert(status("weapon_d6_plasma") == "Серия   2 / 6", "capacitor shows its local series")
+    assert(status("weapon_d6_flak") == "К стрельбе готово", "series label is capacitor-only")
+    assert(status("weapon_d6_heavy") == "Боезапас   03", "finite reserve takes precedence over local capacity")
+    reloadAt = CurTime()+1.5
+    assert(status("weapon_d6_plasma") == "Перезарядка · 1.5 с", "active reload takes precedence over series")
+    D6_FlightHUDState, D6_Energy, D6_Balance, D6_Mobility, game =
+        oldFlight, oldEnergy, oldBalance, oldMobility, oldGame
+end
+
 D6_Session = {IsArena=function() return page ~= "campaign" end, CanEditWorld=function() return true end}
 D6_Art = {Draw=function() end}
 function RunConsoleCommand(cmd, slot, class)
     if cmd == "d6_mount_set" then assert(A.Assign(mounts, tonumber(slot), class)) end
+    if cmd == "d6_mine_set" then assert(A.AssignMine(mounts, slot)) end
 end
 local selection = 0
 input = {SelectWeapon = function(wep) selection = wep:GetClass() end}
@@ -122,6 +173,48 @@ local function paint(p, parentClip)
     end
 end
 
+local resourceCases = 0
+local function verifyResourceGauges(state)
+    local fills, backgrounds, labels = {}, {}, {}
+    local colors = U.colors
+    for _, cmd in ipairs(commands) do
+        if cmd.kind == "rect" then
+            for _, name in ipairs({"hull","shield","energy"}) do
+                if cmd.color == colors[name] then
+                    assert(not fills[name], "one fill per resource")
+                    fills[name] = cmd
+                end
+            end
+            if cmd.color[1]==53 and cmd.color[2]==70 and cmd.color[3]==72 then
+                backgrounds[#backgrounds+1] = cmd
+            end
+        elseif cmd.kind == "text" then
+            labels[cmd.text] = labels[cmd.text] or {}
+            labels[cmd.text][cmd.color] = true
+        end
+    end
+    local hull, shield, energy = fills.hull, fills.shield, fills.energy
+    assert(hull and shield and energy, "fixed red hull, blue shield, yellow energy fills")
+    assert(hull.y==shield.y and hull.h==shield.h and energy.y>hull.y, "defense shares one row; energy has the second")
+    local tracks = {}
+    for _, bg in ipairs(backgrounds) do
+        if bg.x==hull.x then tracks[#tracks+1] = bg end
+    end
+    assert(#tracks==2 and tracks[1].w==tracks[2].w, "exactly two main resource tracks")
+    local width = tracks[1].w
+    local total = math.max(state.hpMax+state.shieldMax,1)
+    local function near(a,b) return math.abs(a-b)<0.001 end
+    assert(near(shield.x-hull.x,width*state.hpMax/total), "shield origin follows maximum capacity, not damage")
+    assert(near(hull.w,width*math.Clamp(state.hp,0,state.hpMax)/total), "hull fill owns its fixed segment")
+    assert(near(shield.w,width*math.Clamp(state.shield,0,state.shieldMax)/total), "shield fill owns its fixed segment")
+    assert(near(energy.w,width*math.Clamp(state.energy/math.max(state.energyMax,1),0,1)), "energy fill is independent")
+    local hpLabel = string.format("%d / %d",state.hp,state.hpMax)
+    local shieldLabel = string.format("%d / %d",state.shield,state.shieldMax)
+    assert(labels[hpLabel] and labels[hpLabel][colors.hull], "hull numeric damage state remains red")
+    assert(labels[shieldLabel] and labels[shieldLabel][colors.shield], "shield numeric damage state remains blue")
+    resourceCases = resourceCases + 1
+end
+
 if page == "intro" then
     U.PaintGround(canvasW,canvasH,"ДИРЕКТИВА 04 · Разогнать протест у станции",
         "Диспетчер Альянса · Очистить площадь",2)
@@ -152,6 +245,17 @@ elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode
         state.trial, state.warning, state.charge = "Забег 38271 · Волна 3 / 5", "", 0
         state.hp,state.shield,state.energy = 89,47,65
     end
+    for _, changes in ipairs({{}, {hp=100,shield=0}, {hp=20,shield=100},
+        {hp=150,hpMax=200,shield=25}, {hp=100,shield=0,shieldMax=0,energy=0},
+        {hp=0,hpMax=0,shield=0,shieldMax=0}}) do
+        local sample = {}
+        for key, value in pairs(state) do sample[key] = value end
+        for key, value in pairs(changes) do sample[key] = value end
+        commands = {}
+        U.PaintHUD(canvasW, canvasH, sample)
+        verifyResourceGauges(sample)
+    end
+    commands = {}
     U.PaintHUD(canvasW, canvasH, state)
     if page=="rogue" then
         local scale=U.Scale(canvasW,canvasH)
@@ -185,7 +289,7 @@ else
         mineCard.DoClick()
         assert(#list.children == 2, "mine bay exposes only mine systems")
         list.children[2].DoClick()
-        assert(selection == "weapon_d6_gravmine" and mounts[5] == "weapon_d6_plasmamine", "fixed section supports alternative mines")
+        assert(selection == 0 and mounts[5] == "weapon_d6_gravmine", "mine configuration preserves the active weapon")
     end
 end
 
@@ -209,4 +313,4 @@ end
 local out = io.open(page.."-"..canvasW..".json", "w")
 out:write(json({cmds=commands,fonts=fonts,w=canvasW,h=canvasH}))
 out:close()
-print("PASS | "..page.." | "..canvasW.."×"..canvasH.." | "..#commands.." paint operations")
+print("PASS | "..page.." | "..canvasW.."×"..canvasH.." | "..#commands.." paint operations | "..resourceCases.." resource states | 8 feed statuses")

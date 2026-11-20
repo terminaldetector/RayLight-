@@ -61,7 +61,7 @@ local function SpawnMine(ply, pos)
         SpawnEnemyDrone(ply, "npc_cscanner", "mine")
     else
         -- Fallback: создаём напрямую
-        local npc = ents.Create("npc_cscanner")
+        local npc = D6_Actors.Create()
         if not IsValid(npc) then return end
         npc:SetPos(pos)
         npc:Spawn(); npc:Activate()

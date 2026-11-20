@@ -67,6 +67,16 @@ function SWEP:_Register(ent)
         if IsValid(old) then old:Remove() end
     end
     if SERVER then self:SetNWInt("D6_Deployed", #self._Deployed) end
+    ent:CallOnRemove("D6_MineBay", function(removed)
+        timer.Remove("D6_PMine_" .. removed:EntIndex())
+        if not IsValid(self) then return end
+        for i = #self._Deployed, 1, -1 do
+            if self._Deployed[i] == removed or not IsValid(self._Deployed[i]) then
+                table.remove(self._Deployed, i)
+            end
+        end
+        self:SetNWInt("D6_Deployed", #self._Deployed)
+    end)
 end
 
 local function Detonate(owner, mine)
@@ -83,19 +93,29 @@ local function Detonate(owner, mine)
     mine:Remove()
 end
 
-function SWEP:PrimaryAttack()
-    if not SERVER then return end
+-- Also called by the independent mine bay; do not rely on active-SWEP input
+-- throttling. Both paths share the weapon and owner cooldowns.
+function SWEP:DeployMine()
+    if not SERVER then return false end
     local owner = self:GetOwner()
-    if not IsValid(owner) then return end
+    if not IsValid(owner) or not owner:IsPlayer() or not owner:Alive() or owner:InVehicle() then return false end
+    local now = CurTime()
+    if now < self:GetNextPrimaryFire() or now < (owner.D6_MineNextFire or 0) then return false end
 
     local dir = D6_Wep.ShootAng(owner):Forward()
     local muzzle = D6_Wep.Muzzle(owner, { fwd = 40, rgt = 0, up = -6 }, self:GetClass())
     local pos = D6_Wep.DeployPoint(owner, muzzle + dir * 60, 12)
-    if not pos or not D6_Wep.TrySpend(self, owner, ENERGY_COST) then return end
-    self:SetNextPrimaryFire(CurTime() + COOLDOWN)
-
+    if not pos then return false end
     local mine = D6_Wep.Ordnance("mine_plasma", pos, owner, {angle = D6_Wep.AimAng(owner)})
-    if not IsValid(mine) then return end
+    if not IsValid(mine) then
+        self:SetNextPrimaryFire(now + 0.23)
+        return false
+    end
+    -- A failed spawn must not consume finite mine stock or start its feed cycle.
+    if not D6_Wep.TrySpend(self, owner, ENERGY_COST) then mine:Remove(); return false end
+    self:SetNextPrimaryFire(math.max(self:GetNextPrimaryFire(), now + COOLDOWN))
+    owner.D6_MineNextFire = self:GetNextPrimaryFire()
+    mine.D6_WeaponClass = self:GetClass()
     D6_Wep.MarkShot(self, muzzle, 0.8)
 
     self:_Register(mine)
@@ -125,6 +145,11 @@ function SWEP:PrimaryAttack()
     end)
 
     owner:EmitSound("weapons/physcannon/physcannon_drop.wav", 70, 120)
+    return true
+end
+
+function SWEP:PrimaryAttack()
+    return self:DeployMine()
 end
 
 function SWEP:SecondaryAttack()

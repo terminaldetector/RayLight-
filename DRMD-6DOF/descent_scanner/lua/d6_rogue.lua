@@ -8,8 +8,18 @@ R.Upgrades = {
     thrust = {name="Векторные сопла", note="+15% к набору скорости"},
     drive = {name="Повышенная тяга", note="+190 ед/с к крейсерскому пределу"},
     repair = {name="Резервная зарядка", note="+35 энергии, +30 корпуса и +28 щита"},
+    ammo = {name="Боекомплект", note="Пополнить снаряды, ракеты, ячейки рейла и мины"},
+    core = {name="Ионный заряд", note="Один редкий заряд BFG; предел запаса — два"},
 }
-local keys = {"cells","frame","shield","thrust","drive","repair"}
+local keys = {"cells","frame","shield","thrust","drive","repair","ammo"}
+for _, item in ipairs(D6_Arsenal.Order) do
+    if D6_Arsenal.RewardWave[item.class] then
+        R.Upgrades[item.class] = {name=item.name, note="Новый модуль на этот забег · установить в оружейном отсеке",
+            weapon=item.class}
+    end
+end
+
+R.ModuleOffers = D6_Arsenal.AvailableRewards
 
 if CLIENT then
     local frame
@@ -84,6 +94,17 @@ local function cleanup(ply, state, message)
     for _,ent in ipairs(run.enemies) do if IsValid(ent) then ent:Remove() end end
     if IsValid(ply) and IsValid(ply.D6_VaultReserve) then ply.D6_VaultReserve:Remove() end
     if not IsValid(ply) then return end
+    for class in pairs(run.modules or {}) do ply:StripWeapon(class) end
+    local retainedAmmo = {}
+    for _, item in ipairs(D6_Arsenal.Order) do
+        local policy = D6_Arsenal.Operating[item.class]
+        if policy.ammo and ply:HasWeapon(item.class) then retainedAmmo[policy.ammo] = true end
+    end
+    for class in pairs(run.modules or {}) do
+        local ammo = D6_Arsenal.Operating[class].ammo
+        if ammo and not retainedAmmo[ammo] then ply:RemoveAmmo(ply:GetAmmoCount(ammo), ammo) end
+    end
+    D6_Arsenal.EnsureOwned(ply)
     local old=run.old
     ply:SetMaxHealth(old.hp)
     ply:SetHealth(math.min(ply:Health(),old.hp))
@@ -143,7 +164,7 @@ function R.Start(ply, seed)
         or runs[ply] or D6_Trial.IsActive(ply) then return false end
     seed=math.Clamp(math.floor(tonumber(seed) or math.random(10000,999999)),1,2147483646)
     local params=ply.D6_Params or {}
-    local run={seed=seed,rng=seed,wave=0,enemies={},old={hp=ply:GetMaxHealth(),energy=D6_Energy.GetMax(ply),
+    local run={seed=seed,rng=seed,wave=0,enemies={},modules={},old={hp=ply:GetMaxHealth(),energy=D6_Energy.GetMax(ply),
         shield=ply:GetNWFloat("D6_ShieldMax",100),accel=params.accel,speed=params.maxSpeed}}
     runs[ply]=run
     wave(ply,run)
@@ -153,9 +174,13 @@ end
 local function offer(ply, run)
     D6_Supplies.VaultReserve(ply,run.wave)
     local choices=table.Copy(keys)
+    if ply:HasWeapon("weapon_d6_bfg") and ply:GetAmmoCount("d6_bfg_cell") < 2 then choices[#choices+1]="core" end
+    local modules=R.ModuleOffers(ply,run.wave)
     run.offers={}
     for i=1,3 do
-        local key=table.remove(choices,draw(run,#choices))
+        local key
+        if i==1 and #modules>0 then key=modules[draw(run,#modules)]
+        else key=table.remove(choices,draw(run,#choices)) end
         run.offers[i]=key
         ply:SetNW2String("D6_RogueCard"..i,key)
     end
@@ -163,8 +188,19 @@ local function offer(ply, run)
     net.Start("D6_RogueDraft");net.Send(ply)
 end
 
-local function useUpgrade(ply, key)
-    if key=="cells" then
+local function useUpgrade(ply, key, run)
+    local card=R.Upgrades[key]
+    if card and card.weapon then
+        if not ply:HasWeapon(card.weapon) then
+            if not IsValid(ply:Give(card.weapon,true)) then return false end
+            run.modules[card.weapon]=true
+            D6_WeaponFeed.GrantInitial(ply,card.weapon)
+        end
+    elseif key=="ammo" then
+        D6_WeaponFeed.Restock(ply,false)
+    elseif key=="core" then
+        D6_WeaponFeed.Restock(ply,true)
+    elseif key=="cells" then
         ply:SetNWFloat("D6_EnergyMax",D6_Energy.GetMax(ply)+20)
         D6_Energy.Add(ply,20)
     elseif key=="frame" then
@@ -182,15 +218,16 @@ local function useUpgrade(ply, key)
         ply:SetHealth(math.min(ply:GetMaxHealth(),ply:Health()+30))
         ply:SetNWFloat("D6_Shield",math.min(ply:GetNWFloat("D6_ShieldMax",100),ply:GetNWFloat("D6_Shield",0)+28))
     end
+    return true
 end
 
 function R.Pick(ply, index)
     local run=runs[ply]
     local key=run and run.offers and run.offers[index]
     if not key then return false end
+    if not useUpgrade(ply,key,run) then return false end
     run.offers=nil
     for i=1,3 do ply:SetNW2String("D6_RogueCard"..i,"") end
-    useUpgrade(ply,key)
     wave(ply,run)
     return true
 end

@@ -242,7 +242,7 @@ if SERVER then
     concommand.Add("d6_kill_npcs", function(ply)
         if not D6_Session.CanEditWorld(ply) then return end
         local n = 0
-        for _, e in ipairs(ents.FindByClass("npc_*")) do
+        for _, e in ipairs(D6_Actors.GetAll()) do
             if IsValid(e) and e.D6_Variant then e:Remove(); n = n + 1 end
         end
         for _, e in ipairs(ents.FindByClass("d6_ordnance")) do
