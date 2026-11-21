@@ -148,6 +148,7 @@ function Panel:SetTitle() end
 function Panel:ShowCloseButton() end
 function Panel:MakePopup() end
 function Panel:SetCursor() end
+function Panel:SetTooltip() end
 function Panel:GetVBar() return {btnGrip={}} end
 function Panel:Dock() self.docked=true end
 function Panel:DockMargin(_,_,right,bottom) self.marginR,self.marginB=right,bottom end
@@ -215,10 +216,41 @@ local function verifyResourceGauges(state)
     resourceCases = resourceCases + 1
 end
 
+-- Exercise the real support menu and its HUD without pretending to run GMod.
+-- Entity/network/render boundaries are replaced; drawing/layout functions are not.
+if page == "supports" or page == "support_cockpit" then
+    KEY_G, KEY_T, KEY_LAST = 17, 30, 107
+    function CreateClientConVar(_, value) return {GetInt=function() return tonumber(value) end} end
+    input.LookupBinding=function() return nil end
+    input.GetKeyName=function(code) return code==KEY_G and "g" or "t" end
+    input.IsKeyDown=function() return false end
+    function ply:IsPlayer() return true end
+    function ply:Alive() return true end
+    function ply:InVehicle() return false end
+    function ply:GetAmmoCount() return 3 end
+    function ply:GetNW2Float(key, fallback)
+        return key=="D6_SupportReady2" and CurTime()+1.4 or fallback
+    end
+    local supportEntities={}
+    for i=1,3 do
+        supportEntities[i]={GetOwner=function() return ply end,
+            GetNWString=function(_,key,fallback)
+                return key=="D6_SupportState" and (i==3 and "active" or "docked") or fallback
+            end}
+    end
+    function ply:GetNW2Entity(key) return supportEntities[tonumber(key:match("(%d)$"))] end
+    dofile(root .. "d6_supports.lua")
+    dofile(root .. "d6_supports_client.lua")
+    local original=ply.GetNW2Entity
+    ply.GetNW2Entity=function() return nil end
+    assert(D6_SupportUI.Snapshot(ply).slots[1].label~="ГОТОВ", "missing body is not falsely ready")
+    ply.GetNW2Entity=original
+end
+
 if page == "intro" then
     U.PaintGround(canvasW,canvasH,"ДИРЕКТИВА 04 · Разогнать протест у станции",
         "Диспетчер Альянса · Очистить площадь",2)
-elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" or page=="boss" then
+elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode" or page=="rogue" or page=="boss" or page=="support_cockpit" then
     local mountPalette = {}
     for i, class in ipairs(mounts) do mountPalette[i] = A.Families[A.Entries[class].family] end
     local state = {
@@ -227,6 +259,7 @@ elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode
         weapon="Гравирельс",weaponGroup="Ускоритель",accent=A.Families.rail.color,weaponStatus="Объект захвачен",
         charge=0.74,dash=0.63,kick=0.22,trial="Волна 4 / 4   ·   Тяжёлая группа Альянса",drift={-0.53,-0.4},damage=0,
     }
+    if page == "support_cockpit" then state.supports=D6_SupportUI.Snapshot(ply) end
     if page == "beam" then
         state.weapon, state.weaponGroup, state.weaponStatus = "Гиперлуч", "Оптика", "Гиперлуч активен"
         state.energy, state.mounts[4], state.accent, state.trial = 53, A.Families.optic, A.Families.optic.color, ""
@@ -274,6 +307,13 @@ elseif page == "cockpit" or page == "beam" or page == "flight" or page=="episode
             U.PaintUpgrade(w-38*scale,54*scale,scale,card,i==1)
         end
     end
+elseif page == "supports" then
+    D6_SupportUI.Open()
+    assert(frame and frame.w <= canvasW-20 and frame.h <= canvasH-20, "support frame fits viewport")
+    paint(frame)
+    local list
+    for _, p in ipairs(frame.children) do if p.kind=="DScrollPanel" then list=p end end
+    assert(list and #list.children==5, "five selectable support types")
 else
     D6_Hangar.Open()
     assert(frame and frame.w <= canvasW-20 and frame.h <= canvasH-20, "frame fits viewport")
@@ -285,7 +325,9 @@ else
         assert(list and #list.children == #A.Order - 2)
         list.children[1].DoClick()
         assert(mounts[4] == A.Order[1].class and mounts[1] == original, "mounts swap")
-        local mineCard = frame.children[6]
+        local mineCard
+        for _, p in ipairs(frame.children) do if p.D6_MountSlot==5 then mineCard=p end end
+        assert(mineCard, "mine bay card is present")
         mineCard.DoClick()
         assert(#list.children == 2, "mine bay exposes only mine systems")
         list.children[2].DoClick()

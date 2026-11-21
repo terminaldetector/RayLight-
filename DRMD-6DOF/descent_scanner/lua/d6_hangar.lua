@@ -79,8 +79,17 @@ function H.Open()
     close:SetPos(width-113*scale, 21*scale)
     close:SetSize(91*scale, 29*scale)
 
+    local supports = makeButton(frame, "Саппорты", function()
+        if not D6_SupportUI then return end
+        frame:Close()
+        D6_SupportUI.Open()
+    end)
+    supports:SetPos(width-156*scale, 79*scale)
+    supports:SetSize(134*scale, 28*scale)
+
     for i = 1, 5 do
         local card = frame:Add("DButton")
+        card.D6_MountSlot = i
         card:SetText("")
         card:SetCursor("hand")
         card:SetPos(22*scale, top+(i-1)*(cardH+7*scale))

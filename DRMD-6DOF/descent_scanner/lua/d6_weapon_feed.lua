@@ -127,5 +127,8 @@ function F.Restock(owner, rare)
     for ammo, pack in pairs(supplies) do
         added = added + grant(owner, ammo, pack.amount, pack.maximum)
     end
+    if not rare and D6_Supports and D6_Supports.Restock then
+        added = added + D6_Supports.Restock(owner)
+    end
     return added
 end

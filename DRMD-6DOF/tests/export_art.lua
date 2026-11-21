@@ -8,6 +8,7 @@ dofile(root .. "d6_art_geometry.lua")
 dofile(root .. "d6_art_models.lua")
 dofile(root .. "d6_art_elites.lua")
 dofile(root .. "d6_art_ordnance.lua")
+dofile(root .. "d6_support_art.lua")
 dofile(root .. "d6_drone_catalog.lua")
 
 local function json(value)
