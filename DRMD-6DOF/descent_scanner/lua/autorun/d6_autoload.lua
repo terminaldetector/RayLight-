@@ -3,7 +3,7 @@
 -- =========================================================
 
 local sharedFiles = {"d6_actors.lua", "d6_session.lua", "d6_arsenal.lua", "d6_combat_balance.lua", "d6_drone_catalog.lua", "d6_supplies.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
-local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_view_mounts.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua"}
+local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_support_art.lua", "d6_view_mounts.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua", "d6_supports_client.lua"}
 
 for _, path in ipairs(sharedFiles) do
     if SERVER then AddCSLuaFile(path) end
@@ -35,6 +35,7 @@ if SERVER then
     AddCSLuaFile("d6_energy.lua")    -- энергорезерв (Stage 6)
     AddCSLuaFile("d6_weapon_feed.lua")
     AddCSLuaFile("d6_aux_mines.lua")
+    AddCSLuaFile("d6_supports.lua")
     AddCSLuaFile("d6_shield.lua")    -- щиты/урон (Stage 7)
     AddCSLuaFile("d6_rearview.lua")  -- вид сзади (Descent-стиль)
 end
@@ -53,6 +54,7 @@ if SERVER then
     TryInclude("d6_weapon_feed.lua")
     TryInclude("d6_weapon_core.lua")
     TryInclude("d6_aux_mines.lua")
+    TryInclude("d6_supports.lua")
     TryInclude("d6_loadout.lua")
     TryInclude("d6_swarm.lua")
     TryInclude("d6_gravity.lua")
@@ -80,6 +82,7 @@ if CLIENT then
     include("d6_weapon_feed.lua")
     include("d6_weapon_core.lua")    -- Phase B: фреймворк оружия (HUD-хелперы, таксономия)
     include("d6_aux_mines.lua")
+    include("d6_supports.lua")
     include("d6_client.lua")
     include("d6_wepview.lua")        -- рендер оружий от 1-го лица
     include("d6_menu.lua")
@@ -101,6 +104,7 @@ end
 
 -- Source requires identical ammo registration in Initialize on both realms.
 hook.Add("Initialize", "D6_RegisterAmmo", function()
+    game.AddAmmoType({name="d6_support_cell", dmgtype=DMG_ENERGYBEAM, maxcarry=6})
     for _, legacy in ipairs({{"d6_concussion",6},{"d6_homing",8},{"d6_smart",4},{"d6_mega",2}}) do
         game.AddAmmoType({name=legacy[1], dmgtype=DMG_BLAST, maxcarry=legacy[2]})
     end

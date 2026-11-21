@@ -218,6 +218,8 @@ function U.PaintHUD(w, h, state)
         U.Text(state.trial, "small", dock+dockW*0.5, y-11*scale, C.orange, TEXT_ALIGN_CENTER)
     end
 
+    if D6_SupportUI and state.supports then D6_SupportUI.PaintHUD(w, h, state.supports) end
+
     crosshair(w, h, scale, state)
     if state.damage and state.damage > 0 then
         local alpha = state.damage*140
@@ -312,6 +314,7 @@ function U.Snapshot(ply)
         kick = shot > 0 and math.Clamp(1-(now-shot)*6, 0, 1) or 0,
         trial = trial, drift = drift and {drift:Dot(ang:Right()), -drift:Dot(ang:Up())},
         damage = math.Clamp(((flashUntil or 0)-now)/0.24, 0, 1),
+        supports = D6_SupportUI and D6_SupportUI.Snapshot(ply) or nil,
     }
 end
 
