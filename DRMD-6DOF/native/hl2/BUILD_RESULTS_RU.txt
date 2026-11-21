@@ -1,0 +1,77 @@
+Half-Life: Abaddon · проверка Source SDK 2013 SP
+21.11.2026 · GCC/G++ 14.2.0, Linux i386
+Официальная ветка Valve singleplayer, 77567eb4bce8d7b6b7f73e929fcde3a331c0216e.
+VPC из SDK запущен из src с аргументами /linux32 /hl2 +gamedlls /mksln abaddon_hl2.
+QEMU i386 10.0.13 использован для VPC и выполнения тестового ELF.
+Локальная SDK-сборка использует 32-битный sysroot Debian 13.
+git apply --check и git apply прошли на закреплённом исходнике Valve.
+
+SHA-256 проверенного кода
+a88d4ccb41fa6042e6c42ce68424bef15ecef966311dd6243598ec3e68e985e6  source-2013-sp.patch
+ed61e03bef17efb346ef5d250a22aa781421ea64c995291776ecf0f4f924c061  abaddon_flight_math.h
+86b39766e8bdd800529aad8e4072a6fc52045fa68392458109d34fc9abc8e550  abaddon_flight_input.h
+
+Все шесть изменённых единиц трансляции собраны по сгенерированным HL2 make-проектам
+server/hl2_player.o:      ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+server/hl_gamemovement.o: ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+client/c_basehlplayer.o:  ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+client/hl_gamemovement.o: ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+client/in_main.o:         ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+client/in_mouse.o:        ELF 32-bit LSB relocatable, Intel i386, version 1 (GNU/Linux), not stripped
+
+Исполнение проверок полёта в целевом 32-битном ELF
+PASS | zero input preserves a hover at rest
+PASS | local forward movement follows the nose
+PASS | local strafe follows right
+PASS | local rise and fall are opposite
+PASS | roll rotates vertical thrust to the side
+PASS | roll rotates strafe downwards
+PASS | pitch allows thrust straight up
+PASS | three axes normalize combined input
+PASS | half input stays proportional
+PASS | first tenth of a second applies bounded acceleration
+PASS | long frame uses the same bounded step
+PASS | frame partition preserves steady thrust
+PASS | negative or zero delta time does not move velocity
+PASS | diagonal cruise respects the 2200 SU/s cap
+PASS | throttle release keeps drift direction without gravity
+PASS | coasting is independent of tick subdivision
+PASS | counter-thrust first brakes, then reverses
+PASS | changing thrust axis preserves inertia
+18 passed, 0 failed
+
+Ответ приложения Steam SDK Base 2013 Singleplayer
+App 243730 (Source SDK Base 2013 Singleplayer) is not available from this account.
+
+Полная компоновка Linux i386
+VPC-сборка собрала 554 серверных и 494 клиентских .o.
+В локальной копии неизменённого Valve clientmode_shared.cpp строка GetLocalTeam() > 0 приведена к проверке ненулевого указателя.
+Старые ссылки Valve на конечные варианты libm разрешаются локальным объектом с переадресацией в стандартный libm.
+Компоновка обоих .so прошла с -Wl,--no-undefined.
+Обе библиотеки требуют GLIBC_2.38 и CXXABI_1.3.8. Сервер требует GLIBCXX_3.4.21, клиент GLIBCXX_3.4.
+c72031f9710c4434c797a65256b6b52dcbade99eb1f9ab1bbd30047d0fb4aa85  client.so
+4765f0a00a4ab465c7c5f7c14acefa893e134c5ffd2f01fd2a7e2ad4096556ce  server.so
+ConVarRef mat_dxlevel doesn't point to an existing ConVar
+PASS | ELF32 load and CreateInterface(ServerGameDLL009)
+PASS | ELF32 load and CreateInterface(VClient017)
+При прямой загрузке server.so без движка зарегистрировано предупреждение ConVarRef mat_dxlevel.
+Проверены загрузчик ELF32 и указатели интерфейсов. Запуск игры и кадры требуют установленного Steam SDK Base 2013 Singleplayer.
+
+Карта d6_native_flightlab
+VBSP v20, штатные VVIS и VRAD LDR. SHA-256 0bf017074f8ce7ed1de57e8a1bc10235b27d56446183bdcf4be5e878e4893060.
+9 проверок трасс и маршрутов на выделенном Garry’s Mod x64.
+PASS | ordinary spawn
+PASS | walk from spawn to landing pad
+PASS | high aperture
+PASS | side aperture
+PASS | 64 SU sleeve
+PASS | 24 SU slit rejects a standing hull
+PASS | 24 SU slit admits a point
+PASS | impact baffle stops at the leading hull face
+PASS | five mapped route labels
+
+Клиентский инструмент захвата Garry’s Mod
+PASS | компиляция d6_graphics_capture.lua штатным компилятором GLua
+PASS | модель границы захвата через texlua: сцены, тайм-аут консоли, метаданные и уникальные имена
+Steam app 4000: анонимная сессия не получила доступ к депо клиента 4001 и 4003.
+В рабочей оболочке проверен программный OpenGL 4.5 на Mesa llvmpipe.
