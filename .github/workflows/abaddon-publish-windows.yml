@@ -1,0 +1,63 @@
+name: Publish exact Abaddon Windows build
+
+on:
+  push:
+    branches: ['publish/abaddon-windows-2026-11-21']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: abaddon-release-2026-11-21
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'terminaldetector/RayLight-' && github.ref == 'refs/heads/publish/abaddon-windows-2026-11-21'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Restore the already-delivered ZIP and verify its exact bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          transport="$GITHUB_WORKSPACE/release/abaddon-2026-11-21"
+          assets="$RUNNER_TEMP/abaddon-release"
+          mkdir -p "$assets"
+          curl --fail --location --retry 3 --max-time 240 \
+            --output "$RUNNER_TEMP/previous.zip" \
+            'https://raw.githubusercontent.com/terminaldetector/RayLight-/8ecb0ab2602ded8abc114ad999fccb571868559d/Half-Life-Abaddon.zip'
+          cd "$transport"
+          cat Abaddon-Windows.zipdelta.part00 Abaddon-Windows.zipdelta.part01 \
+            Abaddon-Windows.zipdelta.part02 Abaddon-Windows.zipdelta.part03 > "$RUNNER_TEMP/Abaddon-Windows.zipdelta"
+          python3 - "$RUNNER_TEMP" "$transport" <<'PY'
+          import hashlib
+          from pathlib import Path
+          import sys
+          temp, transport = map(Path, sys.argv[1:])
+          expected = {
+              temp / 'previous.zip': 'acdea706458187907f4264c2a0550a26e2461ecfd199a48640c7f894f673b65b',
+              temp / 'Abaddon-Windows.zipdelta': '79bba6028a3331238352284bdbb5157b017dda97679cbe6b253238fe318e6ec1',
+              transport / 'libz-abaddon-linux-x64.so': '6c13931760210e8b391b63a337dfe4071346c4ad6e3827694edb7b6989bb16dd',
+          }
+          for path, wanted in expected.items():
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              if actual != wanted:
+                  raise SystemExit('Transport SHA-256 mismatch: ' + path.name)
+              print('Verified transport:', path.name, actual)
+          PY
+          ABADDON_ZLIB_PATH="$transport/libz-abaddon-linux-x64.so" \
+            python3 zip_delta.py apply "$RUNNER_TEMP/previous.zip" \
+            "$RUNNER_TEMP/Abaddon-Windows.zipdelta" \
+            "$assets/Half-Life-Abaddon-Full-Windows.zip"
+          python3 publish_release.py --verify-only "$assets"
+      - name: Upload verified assets and publish the complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 release/abaddon-2026-11-21/publish_release.py "$RUNNER_TEMP/abaddon-release"
