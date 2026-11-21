@@ -308,7 +308,7 @@ end)
 
 -- ── Think: хаотичный полёт + детонация ───────────────────
 hook.Add("Think", "D6Frags_WheatleyAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "wheatley" then continue end
 
         local myPos = npc:GetPos()
@@ -398,7 +398,7 @@ end)
 
 -- ── Think: зависание, медленный поворот, очереди ─────────
 hook.Add("Think", "D6Frags_ChopperAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "chopper" then continue end
 
         local myPos = npc:GetPos()
@@ -521,8 +521,8 @@ function SpawnManhackKamikaze(ply, customPos)
     -- npc_manhack — стандартный класс GMod, обычно доступен
     local npc = ents.Create("npc_manhack")
     if not IsValid(npc) then
-        -- Fallback: cscanner если manhack недоступен
-        npc = ents.Create("npc_cscanner")
+        -- Fallback: independent combat body if the native manhack is unavailable
+        npc = D6_Actors.Create()
         if not IsValid(npc) then return end
     end
 
@@ -557,10 +557,8 @@ end)
 
 -- ── Think: рывок на игрока, уклонение от ракет, взрыв ────
 hook.Add("Think", "D6Frags_ManhackAI", function()
-    -- Работаем с обоими классами (manhack или cscanner-fallback)
-    local candidates = {}
-    for _, e in ipairs(ents.FindByClass("npc_manhack"))   do table.insert(candidates, e) end
-    for _, e in ipairs(ents.FindByClass("npc_cscanner"))  do table.insert(candidates, e) end
+    -- Explicit D6 actors include native manhacks and the independent fallback.
+    local candidates = D6_Actors.GetAll()
 
     for _, npc in ipairs(candidates) do
         if not IsValid(npc) or npc.D6_Variant ~= "manhack_fast" then continue end
@@ -656,7 +654,7 @@ function SpawnHeavySeeker(ply, customPos)
         pos = tr.HitPos + tr.HitNormal * 70
     end
 
-    local npc = ents.Create("npc_cscanner")
+    local npc = D6_Actors.Create()
     if not IsValid(npc) then return end
 
     npc:SetPos(pos)
@@ -691,7 +689,7 @@ end)
 
 -- ── Think: позиционирование и залп ────────────────────────
 hook.Add("Think", "D6Frags_SeekerAI", function()
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if not IsValid(npc) or npc.D6_Variant ~= "seeker" then continue end
 
         local myPos = npc:GetPos()

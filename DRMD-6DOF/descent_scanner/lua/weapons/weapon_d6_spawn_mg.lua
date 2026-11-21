@@ -59,7 +59,7 @@ end
 local function SpawnMG(ply, pos)
     if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","mg")
     else
-        local npc=ents.Create("npc_cscanner"); if not IsValid(npc) then return end
+        local npc=D6_Actors.Create(); if not IsValid(npc) then return end
         npc:SetPos(pos); npc:Spawn(); npc:Activate()
         npc:SetMaxHealth(120); npc:SetHealth(120)
         npc:SetColor(Color(255,40,40)); D6_Session.SetVariant(npc, "mg")

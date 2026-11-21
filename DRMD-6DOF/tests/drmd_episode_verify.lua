@@ -9,7 +9,7 @@ local function move(ply,pos)
     ply:SetPos(pos)
 end
 local function unit(variant)
-    for _, npc in ipairs(ents.FindByClass("npc_cscanner")) do
+    for _, npc in ipairs(D6_Actors.GetAll()) do
         if npc.D6_Variant==variant and npc:Health()>0 then return npc end
     end
 end
@@ -124,7 +124,7 @@ local function guard(bot)
     move(bot,Vector(3252,0,167))
     timer.Simple(.48,function()
         local count=0
-        for _,npc in ipairs(ents.FindByClass("npc_cscanner")) do
+        for _,npc in ipairs(D6_Actors.GetAll()) do
             if npc.D6_Variant=="rocket_strider" or npc.D6_Variant=="plasma_strider" then count=count+1 end
         end
         check(78,"guard section deploys rocket and plasma Striders",bot:GetNW2Int("D6_EpisodeStage")==3 and count==2,count)
@@ -167,15 +167,19 @@ local function reactor(bot)
     check(76,"reactor BSP runs in 6DOF with native personnel and traps",bot.D6On and #ents.FindByClass("npc_combine_s")>=3
         and #ents.FindByClass("trigger_hurt")>=3 and IsValid(named("d6_reactor_core")))
     local module=named("d6_supply_module_hyperbeam")
-    local had=bot:HasWeapon("weapon_d6_hyperbeam")
+    -- The authored BSP marker retains its old name; its reward migrates to BFG.
+    local reward=D6_Arsenal.ResolveRewardClass("weapon_d6_hyperbeam")
+    local had=bot:HasWeapon("weapon_d6_bfg")
     if IsValid(module) then move(bot,module:GetPos()-Vector(0,0,28)) end
     timer.Simple(.24,function()
-        check(96,"a floating weapon pickup unlocks a module previously absent from the story loadout",
-            not had and bot:HasWeapon("weapon_d6_hyperbeam") and bot.D6_EpisodeUnlocks.weapon_d6_hyperbeam)
+        check(96,"the legacy Hyperbeam cache unlocks BFG with one finite starting cell",
+            reward=="weapon_d6_bfg" and not had and bot:HasWeapon("weapon_d6_bfg")
+            and (bot.D6_EpisodeUnlocks or {}).weapon_d6_bfg and not bot:HasWeapon("weapon_d6_hyperbeam")
+            and bot:GetAmmoCount("d6_bfg_cell")==1)
         move(bot,Vector(1130,0,217))
         timer.Simple(.59,function()
             local counts=0
-            for _,ent in ipairs(ents.FindByClass("npc_cscanner")) do
+            for _,ent in ipairs(D6_Actors.GetAll()) do
                 if ent.D6_Variant=="grav" or ent.D6_Variant=="rpg" then counts=counts+1 end
             end
             check(77,"flight through the entry volume starts the gravity swarm",bot:GetNW2Int("D6_EpisodeStage")==2 and counts>=2)
@@ -186,7 +190,7 @@ local function reactor(bot)
                 tostring(boss).." / "..tostring(support).." / "..tostring(core).." / stage "..bot:GetNW2Int("D6_EpisodeStage"))
             if not IsValid(boss) then guard(bot);return end
             boss.D6_Modules.primaryL=nil
-            for _,name in ipairs({"npc_cscanner","npc_manhack"}) do
+            for _,name in ipairs({D6_Actors.Class,"npc_manhack"}) do
                 for _,npc in ipairs(ents.FindByClass(name)) do
                     if npc~=boss and npc~=support and npc.D6_Variant then npc:Remove() end
                 end
@@ -246,7 +250,7 @@ local function vault(bot)
         local recovered=D6_Energy.Get(bot)>64
         move(bot,Vector(840,36,466))
         local started=D6_Rogue.Start(bot,38271)
-        for _,npc in ipairs(ents.FindByClass("npc_cscanner")) do
+        for _,npc in ipairs(D6_Actors.GetAll()) do
             if npc.D6_Variant then npc:Remove() end
         end
         timer.Simple(.44,function()
@@ -254,10 +258,11 @@ local function vault(bot)
                 recovered and started and IsValid(bot.D6_VaultReserve) and bot:GetNW2String("D6_RogueState")=="draft")
             concommand.Run(bot,"d6_rogue_stop",{},"")
             local ammo=named("d6_supply_ammo_1")
-            bot:SetAmmo(0,"d6_homing")
+            bot:SetAmmo(0,"d6_shell")
             if IsValid(ammo) then move(bot,ammo:GetPos()-Vector(0,0,28)) end
             timer.Simple(.37,function()
-                check(98,"the elevated ammunition cache adds real launcher ammunition",bot:GetAmmoCount("d6_homing")==4)
+                check(98,"the elevated ammunition cache adds four finite mortar shells",
+                    bot:HasWeapon("weapon_d6_heavy") and bot:GetAmmoCount("d6_shell")==4)
                 MsgN("[DRMD MAP QA] COMPLETE VAULT")
             end)
         end)

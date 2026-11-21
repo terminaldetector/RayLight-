@@ -90,7 +90,7 @@ if SERVER then
         d6_npc_mine = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","mine")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(50); n:SetHealth(50)
@@ -102,7 +102,7 @@ if SERVER then
         d6_npc_mg = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","mg")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(120); n:SetHealth(120)
@@ -114,7 +114,7 @@ if SERVER then
         d6_npc_rpg = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","rpg")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(150); n:SetHealth(150)
@@ -126,7 +126,7 @@ if SERVER then
         d6_npc_grav = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","grav")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(150); n:SetHealth(150)
@@ -138,7 +138,7 @@ if SERVER then
         d6_npc_laser = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","laser")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(150); n:SetHealth(150)
@@ -150,7 +150,7 @@ if SERVER then
         d6_npc_heavy = function(ply)
             if SpawnEnemyDrone then SpawnEnemyDrone(ply,"npc_cscanner","heavy")
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(450); n:SetHealth(450); n:SetModelScale(1.4,0)
@@ -164,7 +164,7 @@ if SERVER then
                 local tr=ply:GetEyeTrace()
                 SpawnHeavySeeker(ply, tr.HitPos+tr.HitNormal*30)
             else
-                local n=ents.Create("npc_cscanner"); if not IsValid(n) then return end
+                local n=D6_Actors.Create(); if not IsValid(n) then return end
                 local tr=ply:GetEyeTrace()
                 n:SetPos(tr.HitPos+tr.HitNormal*30); n:Spawn(); n:Activate()
                 n:SetMaxHealth(200); n:SetHealth(200); n:SetModelScale(1.6,0)

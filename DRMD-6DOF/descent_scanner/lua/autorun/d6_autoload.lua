@@ -2,8 +2,8 @@
 -- d6_autoload.lua — Автозагрузка мода Descent 6DOF
 -- =========================================================
 
-local sharedFiles = {"d6_session.lua", "d6_arsenal.lua", "d6_combat_balance.lua", "d6_drone_catalog.lua", "d6_supplies.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
-local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua"}
+local sharedFiles = {"d6_actors.lua", "d6_session.lua", "d6_arsenal.lua", "d6_combat_balance.lua", "d6_drone_catalog.lua", "d6_supplies.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
+local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_view_mounts.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua"}
 
 for _, path in ipairs(sharedFiles) do
     if SERVER then AddCSLuaFile(path) end
@@ -33,6 +33,8 @@ if SERVER then
     AddCSLuaFile("d6_weapon_registry.lua")
     AddCSLuaFile("d6_nav.lua")       -- nav graph debug overlay
     AddCSLuaFile("d6_energy.lua")    -- энергорезерв (Stage 6)
+    AddCSLuaFile("d6_weapon_feed.lua")
+    AddCSLuaFile("d6_aux_mines.lua")
     AddCSLuaFile("d6_shield.lua")    -- щиты/урон (Stage 7)
     AddCSLuaFile("d6_rearview.lua")  -- вид сзади (Descent-стиль)
 end
@@ -47,8 +49,11 @@ end
 
 if SERVER then
     TryInclude("d6_core.lua")
-    TryInclude("d6_weapon_core.lua") -- Phase B: фреймворк оружия (после core, до оружий)
     TryInclude("d6_energy.lua")      -- Stage 6: до оружий/щитов/модулей
+    TryInclude("d6_weapon_feed.lua")
+    TryInclude("d6_weapon_core.lua")
+    TryInclude("d6_aux_mines.lua")
+    TryInclude("d6_loadout.lua")
     TryInclude("d6_swarm.lua")
     TryInclude("d6_gravity.lua")
     TryInclude("d6_ai.lua")
@@ -71,90 +76,48 @@ end
 
 if CLIENT then
     include("d6_core.lua")
+    include("d6_energy.lua")
+    include("d6_weapon_feed.lua")
     include("d6_weapon_core.lua")    -- Phase B: фреймворк оружия (HUD-хелперы, таксономия)
+    include("d6_aux_mines.lua")
     include("d6_client.lua")
     include("d6_wepview.lua")        -- рендер оружий от 1-го лица
     include("d6_menu.lua")
     include("d6_ang_patch.lua")
     include("d6_weapon_registry.lua")
     include("d6_nav.lua")            -- nav graph client debug
-    include("d6_energy.lua")         -- энергорезерв (геттеры для HUD/меню)
     include("d6_shield.lua")         -- щиты (геттеры для cockpit)
     include("d6_rearview.lua")
     for _, path in ipairs(clientFiles) do include(path) end
     include("d6_rogue.lua")
 end
 
--- ── Реестр: категории оружий Descent (Waves D–G) ─────────
--- Регистрируем явные категории ДО авто-детекта (InitPostEntity),
--- чтобы реестр/TAB-меню показывали правильные группы, а не
--- «Auto-detected». autoGive=false — выдача идёт через D6_COMBAT.
+-- Only the curated catalogue participates in normal equipment selection.
 if D6_RegisterWeapon then
-    local function reg(class, cat) D6_RegisterWeapon(class, { category = cat, autoGive = false }) end
-    -- Cat D — Anti-Swarm
-    reg("weapon_d6_bfg",        "Anti-Swarm")
-    reg("weapon_d6_flak",       "Anti-Swarm")
-    reg("weapon_d6_frag",       "Anti-Swarm")
-    reg("weapon_d6_shockwave",  "Anti-Swarm")
-    -- Cat E — Area Control
-    reg("weapon_d6_plasmamine", "Area Control")
-    reg("weapon_d6_gravmine",   "Area Control")
-    reg("weapon_d6_energytrap", "Area Control")
-    reg("weapon_d6_darkfield",  "Area Control")
-    -- Cat F — Mobility
-    reg("weapon_d6_telefrag",   "Mobility")
-    reg("weapon_d6_whiplash",   "Mobility")
-    reg("weapon_d6_warp",       "Mobility")
-    -- Cat G — Ultimate
-    reg("weapon_d6_overdrive",  "Ultimate")
-    reg("weapon_d6_reactor",    "Ultimate")
-    reg("weapon_d6_darklance",  "Ultimate")
-    reg("weapon_d6_hyperbeam",  "Ultimate")
+    for _, item in ipairs(D6_Arsenal.Order) do
+        D6_RegisterWeapon(item.class, {category = D6_Arsenal.Families[item.family].label, autoGive = false})
+    end
 end
 
--- =========================================================
--- СЕРВЕР: авто-выдача оружий
--- =========================================================
-if SERVER then
-
-    -- Cat B: limited-ammo secondary weapons
-    game.AddAmmoType({ name = "d6_concussion", dmgtype = DMG_BLAST, maxcarry = 6  })
-    game.AddAmmoType({ name = "d6_homing",     dmgtype = DMG_BLAST, maxcarry = 8  })
-    game.AddAmmoType({ name = "d6_smart",      dmgtype = DMG_BLAST, maxcarry = 4  })
-    game.AddAmmoType({ name = "d6_mega",       dmgtype = DMG_BLAST, maxcarry = 2  })
-
-    local function giveLoadout(ply,all)
-        local count = 0
-        local restricted=not all and game.GetMap()==D6_Mission.Reactor
-        for _, item in ipairs(D6_Arsenal.Order) do
-            if restricted and D6_Balance.Tier(item.class)~=1 and not D6_Arsenal.Slot(ply,item.class)
-                and not (ply.D6_EpisodeUnlocks and ply.D6_EpisodeUnlocks[item.class]) then continue end
-            if restricted and item.class=="weapon_d6_gravmine"
-                and not (ply.D6_EpisodeUnlocks and ply.D6_EpisodeUnlocks[item.class]) then continue end
-            if not IsValid(ply:GetWeapon(item.class)) and IsValid(ply:Give(item.class, true)) then
-                count = count + 1
-            end
-        end
-        if restricted then return count end
-        for class, data in pairs(D6_Weapons or {}) do
-            if data.autoGive and not IsValid(ply:GetWeapon(class)) then
-                if IsValid(ply:Give(class, true)) then
-                    for ammoType, amount in pairs(data.ammoOnGive) do ply:GiveAmmo(amount, ammoType, true) end
-                    count = count + 1
-                end
-            end
-        end
-        ply:GiveAmmo(4, "d6_concussion", true)
-        ply:GiveAmmo(6, "d6_homing", true)
-        ply:GiveAmmo(2, "d6_smart", true)
-        ply:GiveAmmo(1, "d6_mega", true)
-        return count
+-- Source requires identical ammo registration in Initialize on both realms.
+hook.Add("Initialize", "D6_RegisterAmmo", function()
+    for _, legacy in ipairs({{"d6_concussion",6},{"d6_homing",8},{"d6_smart",4},{"d6_mega",2}}) do
+        game.AddAmmoType({name=legacy[1], dmgtype=DMG_BLAST, maxcarry=legacy[2]})
     end
-    D6_Session.GiveLoadout = giveLoadout
+    local registered = {}
+    for _, item in ipairs(D6_Arsenal.Order) do
+        local policy = D6_Arsenal.Operating[item.class]
+        if policy.ammo and not registered[policy.ammo] then
+            game.AddAmmoType({name=policy.ammo, dmgtype=DMG_GENERIC, maxcarry=policy.maxAmmo})
+            registered[policy.ammo] = true
+        end
+    end
+end)
 
+if SERVER then
     concommand.Add("d6_give_weapons", function(ply)
         if not D6_Session.IsArena() or not D6_Session.CanEditWorld(ply) then return end
-        local count = giveLoadout(ply,true)
+        local count = D6_Session.GiveLoadout(ply,true)
         ply:PrintMessage(HUD_PRINTTALK, "[Abaddon] Выдано систем: " .. count)
     end)
 
@@ -162,8 +125,8 @@ if SERVER then
         if not IsValid(ply) or not ply.D6On then return end
         local active = ply:GetActiveWeapon()
         local slot = IsValid(active) and D6_Arsenal.Slot(ply, active:GetClass()) or 0
-        for step = 1, #D6_Arsenal.Mounts do
-            local class = D6_Arsenal.Get(ply, (slot + step - 1) % #D6_Arsenal.Mounts + 1)
+        for step = 1, 4 do
+            local class = D6_Arsenal.Get(ply, (slot + step - 1) % 4 + 1)
             if IsValid(ply:GetWeapon(class)) then ply:SelectWeapon(class); return end
         end
     end)

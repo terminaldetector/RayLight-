@@ -20,7 +20,10 @@ B.Reactor={
     arc_elite={hull=1010,shield=184,armor=148,wave=12},
 }
 
-function B.Tier(class) return B.WeaponTier[class] end
+function B.Tier(class)
+    local policy = D6_Arsenal.Operating[class]
+    return policy and policy.tier or B.WeaponTier[class]
+end
 
 function B.Damage(attacker,inflictor,target,value)
     if not IsValid(attacker) or not D6_Session.IsArena() then return value end

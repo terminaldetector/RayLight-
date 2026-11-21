@@ -5,6 +5,7 @@ S.Types={
     battery={name="Энергобанк",color=Color(99,220,232)},
     repair={name="Ремкомплект",color=Color(167,226,134)},
     ammo={name="Боезапас",color=Color(244,180,100)},
+    core={name="Ионный заряд",color=Color(188,245,139)},
     module={name="Оружейный модуль",color=Color(171,151,245)},
 }
 
@@ -33,16 +34,15 @@ function S.Collect(cache,ply)
         ply:SetHealth(math.min(ply:GetMaxHealth(),ply:Health()+36))
         ply:SetNWFloat("D6_Shield",math.min(max,shield+28))
     elseif kind=="ammo" then
-        local additions=0
-        for name,count in pairs({d6_concussion=3,d6_homing=4,d6_smart=2,d6_mega=1}) do
-            additions=additions+ply:GiveAmmo(count,name,true)
-        end
-        if additions<=0 then return end
+        if D6_WeaponFeed.Restock(ply,false)<=0 then return end
+    elseif kind=="core" then
+        if D6_WeaponFeed.Restock(ply,true)<=0 then return end
     elseif kind=="module" then
-        local class=cache.D6_Module
-        if not D6_Arsenal.Entries[class] or ply:HasWeapon(class) or not IsValid(ply:Give(class,true)) then return end
+        local class=D6_Arsenal.ResolveRewardClass(cache.D6_Module)
+        if not class or ply:HasWeapon(class) or not IsValid(ply:Give(class,true)) then return end
         ply.D6_EpisodeUnlocks=ply.D6_EpisodeUnlocks or {}
         ply.D6_EpisodeUnlocks[class]=true
+        D6_WeaponFeed.GrantInitial(ply,class)
         return "Новый модуль · "..D6_Arsenal.Entries[class].name
     else
         return

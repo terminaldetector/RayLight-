@@ -22,7 +22,7 @@ local TAB = "DRMD Workshop"
 local function DefaultProfile()
     return {
         base   = "custom",
-        entity = "npc_cscanner",
+        entity = "d6_combat_drone",
         ai     = "pressure",
         model  = { model = "", skin = 0, bodygroups = {}, scale = 1.2,
                    collisionScale = 1.0 },
@@ -271,8 +271,8 @@ hook.Add("PopulateToolMenu", "D6_NPCWS_UI", function()
         panel:Help("Базовая сущность и внешний вид.")
 
         local entCombo = panel:ComboBox("Базовая сущность")
-        entCombo:AddChoice("npc_cscanner (полная поддержка)", "npc_cscanner",
-            (WP.entity or "npc_cscanner") == "npc_cscanner")
+        entCombo:AddChoice("d6_combat_drone (боевой корпус)", D6_Actors.Class,
+            D6_Actors.ResolveClass(WP.entity) == D6_Actors.Class)
         entCombo:AddChoice("npc_manhack (полная поддержка)", "npc_manhack",
             WP.entity == "npc_manhack")
         entCombo:AddChoice("npc_combinegunship (эксперимент)", "npc_combinegunship",

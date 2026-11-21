@@ -59,7 +59,7 @@ end
 local function SpawnSeeker(ply, pos)
     if SpawnHeavySeeker then SpawnHeavySeeker(ply, pos)
     else
-        local npc=ents.Create("npc_cscanner"); if not IsValid(npc) then return end
+        local npc=D6_Actors.Create(); if not IsValid(npc) then return end
         npc:SetPos(pos); npc:Spawn(); npc:Activate()
         npc:SetMaxHealth(200); npc:SetHealth(200); npc:SetModelScale(1.6,0)
         npc:SetColor(Color(180,0,255)); D6_Session.SetVariant(npc, "seeker")

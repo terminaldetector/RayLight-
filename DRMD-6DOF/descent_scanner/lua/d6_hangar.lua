@@ -7,7 +7,7 @@ local openFrame
 function H.PaintHeader(w, h, scale, arena)
     U.Panel(0, 0, w, h, C.bg)
     U.Box(22*scale, 19*scale, 3*scale, 15*scale, C.aqua)
-    U.Text("ABADDON  /  КОНФИГУРАЦИЯ СКАНЕРА", "small", 35*scale, 18*scale, C.aqua)
+    U.Text("ABADDON  /  КОНФИГУРАЦИЯ КОРПУСА", "small", 35*scale, 18*scale, C.aqua)
     U.Text("Оружейный отсек", "title", 20*scale, 37*scale)
     U.Text(arena and "Профиль арены" or "Профиль кампании Half-Life 2", "small", 22*scale, 87*scale, C.muted)
     U.Line(22*scale, 113*scale, w-22*scale, 113*scale, C.edge)
@@ -96,7 +96,7 @@ function H.Open()
             reloadList()
         end
         card.DoDoubleClick = function()
-            RunConsoleCommand("d6_mount_select", tostring(i))
+            if i < 5 then RunConsoleCommand("d6_mount_select", tostring(i)) end
             frame:Close()
         end
     end
@@ -145,7 +145,8 @@ function H.Open()
 
     reloadList = function()
         entries:Clear()
-        title:SetText(section == 5 and "Минный отсек · секция 5" or "Оружие для секции " .. section)
+        local mineKey = D6_Mines and D6_Mines.KeyLabel and D6_Mines.KeyLabel() or "C"
+        title:SetText(section == 5 and ("Минный отсек · сброс " .. mineKey) or "Оружие для секции " .. section)
         for _, item in ipairs(A.Order) do
             if (section == 5) == (item.family == "mine") then
                 local row = entries:Add("DButton")
@@ -161,8 +162,7 @@ function H.Open()
                 row.DoClick = function()
                     if not IsValid(ply:GetWeapon(item.class)) then return end
                     if section == 5 then
-                        input.SelectWeapon(ply:GetWeapon(item.class))
-                        frame:Close()
+                        if D6_Session.IsArena() then RunConsoleCommand("d6_mine_set", item.class) end
                     elseif D6_Session.IsArena() then
                         RunConsoleCommand("d6_mount_set", tostring(section), item.class)
                     end
@@ -172,8 +172,8 @@ function H.Open()
     end
     reloadList()
 
-    local use = makeButton(frame, "Выбрать секцию", function()
-        RunConsoleCommand("d6_mount_select", tostring(section))
+    local use = makeButton(frame, "К полёту", function()
+        if section < 5 then RunConsoleCommand("d6_mount_select", tostring(section)) end
         frame:Close()
     end)
     use:SetPos(rightX, height-55*scale)

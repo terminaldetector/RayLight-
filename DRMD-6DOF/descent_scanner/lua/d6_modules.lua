@@ -22,7 +22,7 @@ local _D6ModCacheT = 0
 local function RefreshModCache()
     local ct = CurTime()
     if ct - _D6ModCacheT > 0.10 then
-        _D6ModCache  = ents.FindByClass("npc_cscanner")
+        _D6ModCache  = D6_Actors.GetAll()
         _D6ModCacheT = ct
     end
 end
@@ -547,7 +547,7 @@ D6_RegisterModule("GravityUnit", {
 -- }
 function D6_BuildDrone(loadout, pos, targetPly)
     -- NPC Workshop: базовая сущность настраивается профилем
-    local npc = ents.Create(loadout.entity or "npc_cscanner")
+    local npc = D6_Actors.Create(loadout.entity)
     if not IsValid(npc) then return nil end
 
     npc:SetPos(pos)
@@ -592,7 +592,19 @@ function D6_BuildDrone(loadout, pos, targetPly)
         D6_Wep.RegisterEnforcerHull(npc,hull)
     else
         local size = math.floor(12 * (loadout.scale or 1.0) * (loadout.collisionScale or 1.0))
-        npc:SetCollisionBounds(Vector(-size, -size, math.floor(-size * 0.8)), Vector(size, size, math.floor(size * 1.4)))
+        local mins = Vector(-size, -size, math.floor(-size * 0.8))
+        local maxs = Vector(size, size, math.floor(size * 1.4))
+        if npc:GetClass() == D6_Actors.Class then
+            -- SetCollisionBounds alone does not resize a SOLID_VPHYSICS body.
+            -- The procedural chassis owns its actual box; native Workshop NPCs
+            -- retain their existing collision setup below.
+            npc:PhysicsInitBox(mins, maxs)
+            npc:SetMoveType(MOVETYPE_VPHYSICS)
+            npc:SetSolid(SOLID_VPHYSICS)
+            npc:SetCollisionBounds(mins/(loadout.scale or 1), maxs/(loadout.scale or 1))
+        else
+            npc:SetCollisionBounds(mins, maxs)
+        end
     end
     npc:SetMaxHealth(loadout.hp or 100)
     npc:SetHealth(loadout.hp or 100)
@@ -847,7 +859,7 @@ hook.Add("Think", "D6_RoleDispatch", function()
     if ft <= 0 then return end
 
     for _, npc in ipairs(_D6ModCache) do
-        if not IsValid(npc) or not npc.D6_AI then continue end
+        if not IsValid(npc) or npc.D6_Dead or npc:Health() <= 0 or not npc.D6_AI then continue end
         local phys = RolePhys(npc)
         if not phys then continue end
 

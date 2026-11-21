@@ -77,6 +77,9 @@ local function verifyMobility(bot, ground, done)
 end
 
 local function verifyHyper(bot, ground, done)
+    -- Retained legacy SWEP regression only; this is not part of either loadout.
+    local beam = bot:Give("weapon_d6_hyperbeam", true)
+    if not IsValid(beam) then check("43 · legacy Hyperbeam fixture available", false); done(); return end
     bot:SetMoveType(MOVETYPE_NONE)
     bot:SetPos(ground + Vector(0,-530,400))
     bot:SetEyeAngles(Angle(0,0,34))
@@ -97,7 +100,6 @@ local function verifyHyper(bot, ground, done)
         return npc
     end
     local first, second = target(220), target(380)
-    local beam = bot:GetWeapon("weapon_d6_hyperbeam")
     bot:SelectWeapon(beam:GetClass())
     timer.Simple(0.14, function()
         local input = IN_ATTACK
@@ -132,6 +134,7 @@ local function verifyHyper(bot, ground, done)
                     first:Remove()
                     second:Remove()
                     hook.Remove("StartCommand", "DRMDQAOptics")
+                    bot:StripWeapon("weapon_d6_hyperbeam")
                     done()
                 end)
             end)
@@ -140,17 +143,32 @@ local function verifyHyper(bot, ground, done)
 end
 
 local function removeTestDrones()
-    for _,ent in ipairs(ents.FindByClass("npc_cscanner")) do if ent.D6_Variant then ent:Remove() end end
+    for _,ent in ipairs(D6_Actors.GetAll()) do if ent.D6_Variant then ent:Remove() end end
 end
 
 local function verifyRogue(bot,ground,done)
+    -- The earlier mechanics fixtures explicitly requested all curated modules.
+    -- Return this fresh QA bot to the five starters before either seeded run.
+    -- Do not erase EpisodeUnlocks: that would hide progression persistence bugs.
+    local initialInventory = {}
+    local starterCount = 0
+    for _, item in ipairs(D6_Arsenal.Order) do
+        if not D6_Arsenal.Starting[item.class] then bot:StripWeapon(item.class) end
+        if bot:HasWeapon(item.class) then starterCount=starterCount+1 end
+    end
+    for _, item in ipairs(D6_Arsenal.LegacyOrder) do
+        initialInventory[item.class] = bot:HasWeapon(item.class)
+    end
+    D6_Arsenal.EnsureOwned(bot)
+    bot:SelectWeapon(D6_Arsenal.Defaults[1])
     bot:SetMoveType(MOVETYPE_WALK)
     bot:SetPos(ground+Vector(0,-1230,220))
     bot:SetMaxHealth(100)
     bot:SetHealth(100)
     local start=D6_Rogue.Start(bot,38271)
     check("61 · seeded roguelike starts actual enemies and excludes a concurrent trial",start
-        and bot:GetNW2Int("D6_RogueWave")==1 and bot:GetNW2Int("D6_RogueSeed")==38271 and not D6_Trial.Start(bot))
+        and starterCount==5 and bot:GetNW2Int("D6_RogueWave")==1
+        and bot:GetNW2Int("D6_RogueSeed")==38271 and not D6_Trial.Start(bot))
     removeTestDrones()
     timer.Simple(.45,function()
         local cards, firstDeck={},{}
@@ -158,10 +176,16 @@ local function verifyRogue(bot,ground,done)
             firstDeck[i]=bot:GetNW2String("D6_RogueCard"..i,"")
             cards[firstDeck[i]]=true
         end
-        check("62 · clearing a run wave offers three distinct upgrades",bot:GetNW2String("D6_RogueState")=="draft"
-            and not cards[""] and table.Count(cards)==3)
+        local module = D6_Rogue.Upgrades[firstDeck[1]]
+        local second, third = D6_Rogue.Upgrades[firstDeck[2]], D6_Rogue.Upgrades[firstDeck[3]]
+        check("62 · a wave offers one eligible new module and two distinct nonweapon upgrades",
+            bot:GetNW2String("D6_RogueState")=="draft" and not cards[""] and table.Count(cards)==3
+            and module and module.weapon and table.HasValue(D6_Rogue.ModuleOffers(bot,1),module.weapon)
+            and second and not second.weapon and third and not third.weapon)
         local picked=D6_Rogue.Pick(bot,1)
-        check("63 · choosing a card starts the next wave and prevents another selection",picked
+        check("63 · choosing the temporary module grants it and starts exactly one next wave",picked
+            and module and module.weapon and bot:HasWeapon(module.weapon)
+            and not (bot.D6_EpisodeUnlocks or {})[module.weapon]
             and not D6_Rogue.Pick(bot,2) and bot:GetNW2Int("D6_RogueWave")==2)
         bot:KillSilent()
         timer.Simple(.37,function()
@@ -172,12 +196,16 @@ local function verifyRogue(bot,ground,done)
                 bot:GodEnable()
                 bot:SetPos(ground+Vector(0,-1230,220))
                 bot.D6Vel=Vector()
-                local same=D6_Rogue.Start(bot,38271)
+                local sameInventory=true
+                for class, owned in pairs(initialInventory) do
+                    if bot:HasWeapon(class)~=owned then sameInventory=false end
+                end
+                local same=D6_Rogue.Start(bot,38271) and sameInventory
                 local n=1
                 local eliteSeen=false
                 local function clearWave()
                     if n==4 then
-                        for _,ent in ipairs(ents.FindByClass("npc_cscanner")) do
+                        for _,ent in ipairs(D6_Actors.GetAll()) do
                             if ent.D6_Variant=="arc_elite" then eliteSeen=true end
                         end
                     end
@@ -187,7 +215,7 @@ local function verifyRogue(bot,ground,done)
                             for i,key in ipairs(firstDeck) do same=same and bot:GetNW2String("D6_RogueCard"..i)==key end
                         end
                         if n==5 or not D6_Rogue.Pick(bot,1) then
-                            check("68 · replaying a seed repeats its draft and five waves finish with the new elite",same and eliteSeen
+                            check("68 · the same inventory and seed repeat the draft and five waves finish with the new elite",same and eliteSeen
                                 and n==5 and bot:GetNW2String("D6_RogueState")=="won" and not D6_Rogue.IsActive(bot),n)
                             done()
                             return
@@ -310,11 +338,26 @@ local function verifyAssetsAndSwarm(bot,ground,done)
     bot:SetEyeAngles(Angle(0,0,0))
     bot.D6AngSynced=Angle()
     local picks={plasmamine="mine_plasma",gravmine="mine_gravity",darkfield="node_dark",energytrap="node_snare"}
+    -- These are independent model/physics fixtures, not a mine cadence test.
+    -- Only here, clear the shared bay lock between the two fixture deployments;
+    -- retain the latest resulting lock afterwards. The mine suite checks cadence.
+    local bayReady=bot.D6_MineNextFire or 0
     for key in pairs(picks) do
         bot:SetNWFloat("D6_Energy",100)
-        local weapon=bot:GetWeapon("weapon_d6_"..key)
-        if IsValid(weapon) then weapon:PrimaryAttack() end
+        local class="weapon_d6_"..key
+        local legacy=key=="darkfield" or key=="energytrap"
+        local weapon=legacy and bot:Give(class,true) or bot:GetWeapon(class)
+        if IsValid(weapon) then
+            local ready=weapon:GetNextPrimaryFire()
+            if not legacy then bot.D6_MineNextFire=0; weapon:SetNextPrimaryFire(0) end
+            weapon:PrimaryAttack()
+            if not legacy then
+                weapon:SetNextPrimaryFire(math.max(ready,weapon:GetNextPrimaryFire()))
+                bayReady=math.max(bayReady,bot.D6_MineNextFire or 0,weapon:GetNextPrimaryFire())
+            end
+        end
     end
+    bot.D6_MineNextFire=bayReady
     local used={}
     for _,ent in ipairs(ents.FindByClass("d6_ordnance")) do
         if ent:GetOwner()~=bot then continue end
@@ -349,7 +392,8 @@ local function verifyAssetsAndSwarm(bot,ground,done)
         local tier=D6_Balance.Tier(item.class)
         if tier then tiers[tier]=true else mapped=false end
     end
-    check("82 · all 29 weapons are classified into three active damage tiers",mapped and table.Count(tiers)==3)
+    check("82 · all 12 curated classes are classified into three active damage tiers",
+        #D6_Arsenal.Order==12 and mapped and table.Count(tiers)==3)
     local layout=true
     for _, section in pairs(D6_Campaign.Maps) do if #D6_Campaign.Layout(bot,section)~=3 then layout=false end end
     check("54 · all three campaign profiles resolve safe exhibit positions on real test geometry",layout and table.Count(D6_Campaign.Maps)==3)
@@ -363,6 +407,8 @@ local function verifyAssetsAndSwarm(bot,ground,done)
         check("57 · a recovery cloud charges and heals the player on contact",not IsValid(cloud)
             and bot:Health()>=72 and D6_Energy.Get(bot)>59)
         for _,ent in pairs(used) do if IsValid(ent) then ent:Remove() end end
+        bot:StripWeapon("weapon_d6_darkfield")
+        bot:StripWeapon("weapon_d6_energytrap")
         local anchor=source+Vector(1090,37,110)
         local carrier=SpawnEnemyDrone(bot,"npc_cscanner","grav",anchor)
         local gun=SpawnEnemyDrone(bot,"npc_cscanner","mg",anchor+Vector(60,210,18))
@@ -445,8 +491,8 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
         check("03 · Half-Life 2 map detection", D6_Session.Resolve("d1_trainstation_01", "sandbox", "auto") == "campaign"
             and D6_Session.Resolve("d3_citadel_04", "sandbox", "auto") == "campaign"
             and D6_Session.Resolve("ep2_outland_12", "sandbox", "auto") == "campaign")
-        check("04 · all 29 weapons and SCK registered",
-            #D6_Arsenal.Order == 29 and weapons.GetStored("swep_construction_kit") ~= nil, #D6_Arsenal.Order)
+        check("04 · all 12 curated classes and the explicit SCK tool registered",
+            #D6_Arsenal.Order == 12 and weapons.GetStored("swep_construction_kit") ~= nil, #D6_Arsenal.Order)
         for _, item in ipairs(D6_Arsenal.Order) do
             if not weapons.GetStored(item.class) then check("missing SWEP", false, item.class) end
         end
@@ -483,6 +529,27 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
                 IsValid(bot:GetActiveWeapon()) and bot:GetActiveWeapon():GetClass() == D6_Arsenal.Defaults[1])
             check("06 · no workshop and stock tools auto-granted",
                 not IsValid(bot:GetWeapon("swep_construction_kit")) and not IsValid(bot:GetWeapon("weapon_d6_spawn_mg")))
+            local starters, starterOnly=0,true
+            for _, item in ipairs(D6_Arsenal.LegacyOrder) do
+                local owned=bot:HasWeapon(item.class)
+                if owned then starters=starters+1 end
+                if owned~=(D6_Arsenal.Starting[item.class]==true) then starterOnly=false end
+            end
+            check("102 · normal activation gives exactly five starters and no retired or earned modules",
+                starterOnly and starters==5,starters)
+            check("103 · starter ordnance is finite and no advanced ammunition is gifted",
+                bot:GetAmmoCount("d6_shell")==4 and bot:GetAmmoCount("d6_mine")==2
+                and bot:GetAmmoCount("d6_rocket")==0 and bot:GetAmmoCount("d6_rail_cell")==0
+                and bot:GetAmmoCount("d6_bfg_cell")==0)
+            -- The remaining broad mechanics fixtures require the explicit debug kit.
+            D6_Session.GiveLoadout(bot,true)
+            local allCurated,noRetired=true,true
+            for _, item in ipairs(D6_Arsenal.LegacyOrder) do
+                if D6_Arsenal.Playable[item.class] then
+                    if not bot:HasWeapon(item.class) then allCurated=false end
+                elseif bot:HasWeapon(item.class) then noRetired=false end
+            end
+            check("104 · explicit debug give supplies all 12 curated classes but no retired weapons",allCurated and noRetired)
             concommand.Run(bot, "6dof_flightassist", {}, "")
             check("23 · control panel can disable stabilization on the first press", bot.D6_FlightAssist == false)
             concommand.Run(bot, "6dof_flightassist", {}, "")
@@ -506,13 +573,18 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
             bot:SetPos(org + Vector(0,0,100))
             bot:SetNWFloat("D6_Energy", 100)
             local pod = bot:GetWeapon("weapon_d6_rockets")
+            local rocketStock=bot:GetAmmoCount("d6_rocket")
             bot.D6AngSynced = Angle(0,0,0)
             pod:PrimaryAttack()
-            check("09 · rockets use energy and publish recoil",
-                bot:GetNWFloat("D6_Energy", 100) < 90 and pod:GetNWFloat("D6_ShotAt", -1) > 0)
+            check("09 · a rocket trigger cycle spends finite stock and energy and publishes recoil",
+                bot:GetNWFloat("D6_Energy", 100) < 90 and pod:GetNWFloat("D6_ShotAt", -1) > 0
+                and bot:GetAmmoCount("d6_rocket")==rocketStock-1
+                and D6_WeaponFeed.Status(pod).remaining==2)
             local after = bot:GetNWFloat("D6_Energy", 100)
             pod:PrimaryAttack()
-            check("10 · delegated rocket cooldown gate", near(bot:GetNWFloat("D6_Energy", 100), after, 0.01))
+            check("10 · rocket cooldown denies a duplicate energy and ammunition charge",
+                near(bot:GetNWFloat("D6_Energy", 100), after, 0.01)
+                and bot:GetAmmoCount("d6_rocket")==rocketStock-1)
 
             bot:SetNWFloat("D6_Energy", 100)
             concommand.Run(bot, "6dof_dash", {}, "")
@@ -581,13 +653,15 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
                 bot:SetEyeAngles(Angle(0,0,0))
                 bot.D6AngSynced = Angle(0,0,0)
                 bot:SetNWFloat("D6_Energy", 100)
-                local warp = bot:GetWeapon("weapon_d6_warp")
+                -- Explicit compatibility fixture; warp is not a curated reward.
+                local warp = bot:Give("weapon_d6_warp",true)
                 local before = bot:GetPos()
                 bot.D6Vel = Vector(0,360,0)
                 warp:PrimaryAttack()
                 check("26 · warp reaches a clear destination and preserves a flight impulse",
                     bot:GetPos():DistToSqr(before) > 100^2 and near(bot.D6Vel.x, 800, 0.1) and near(bot.D6Vel.y, 360, 0.1)
                     and bot:GetNWFloat("D6_Energy") < 95)
+                bot:StripWeapon("weapon_d6_warp")
                 bot:SetPos(org + Vector(0,0,120))
                 bot.D6Vel = Vector()
 
@@ -637,12 +711,12 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
                         bot:GodEnable()
                         D6_Trial.Start(bot)
                         timer.Simple(0.4, function()
-                            for _, enemy in ipairs(ents.FindByClass("npc_cscanner")) do
+                            for _, enemy in ipairs(D6_Actors.GetAll()) do
                                 if enemy.D6_Variant == "assault" or enemy.D6_Variant == "interceptor" then enemy:Remove() end
                             end
                             timer.Simple(3.4, function()
                                 check("31 · clearing a group advances to the next encounter wave", bot:GetNW2Int("D6_TrialWave", 0) == 2)
-                                for _, enemy in ipairs(ents.FindByClass("npc_cscanner")) do
+                                for _, enemy in ipairs(D6_Actors.GetAll()) do
                                     if enemy.D6_Variant == "grav" or enemy.D6_Variant == "mg" or enemy.D6_Variant == "rpg" then
                                         enemy:Remove()
                                     end
@@ -652,7 +726,7 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
                                 end
                                 timer.Simple(3.4, function()
                                     local seen = {}
-                                    for _, enemy in ipairs(ents.FindByClass("npc_cscanner")) do
+                                    for _, enemy in ipairs(D6_Actors.GetAll()) do
                                         local variant = enemy:GetNW2String("D6_ArtVariant")
                                         if D6_Session.Resistance[variant] then seen[variant] = true end
                                     end
@@ -660,12 +734,12 @@ hook.Add("InitPostEntity", "DRMDCloudVerify", function()
                                         bot:GetNW2Int("D6_TrialWave", 0) == 3
                                         and seen.resistance_scout and seen.resistance_raider and seen.resistance_hauler,
                                         bot:GetNW2Int("D6_TrialWave", 0) .. " / " .. table.Count(seen))
-                                    for _, enemy in ipairs(ents.FindByClass("npc_cscanner")) do
+                                    for _, enemy in ipairs(D6_Actors.GetAll()) do
                                         if D6_Session.Resistance[enemy:GetNW2String("D6_ArtVariant")] then enemy:Remove() end
                                     end
                                     timer.Simple(3.4, function()
                                         local elite
-                                        for _, enemy in ipairs(ents.FindByClass("npc_cscanner")) do
+                                        for _, enemy in ipairs(D6_Actors.GetAll()) do
                                             if enemy:GetNW2String("D6_ArtVariant") == "heavy_elite" then elite = enemy end
                                         end
                                         check("47 · elite enforcement drone deploys in the final wave",
