@@ -20,7 +20,8 @@ if SERVER then AddCSLuaFile() end
 SWEP.PrintName       = "Грави-Рельса"
 SWEP.Author          = "Half-Life: Abaddon"
 SWEP.Instructions    = "ЛКМ — захват/рельса   ПКМ — пылесос/дробовик"
-SWEP.Category        = "Descent"
+SWEP.Category        = "Half-Life: Abaddon / Оружие"
+SWEP.ScriptedEntityType = "d6_weapon"
 SWEP.Slot            = 4
 SWEP.SlotPos         = 1
 SWEP.Spawnable       = true

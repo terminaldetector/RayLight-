@@ -2,6 +2,8 @@ if not CLIENT then return end
 D6_Art = {}
 local A, G = D6_Art, D6_ArtGeometry
 local arsenal = D6_Arsenal
+local viewSpread = CreateClientConVar("d6_view_mount_spread", "1.125", true, false,
+    "Разведение боковых пушек в кабине: 1 — прежний вид, 1.125 — на 12.5% шире.", 1, 1.5)
 local meshCache = {}
 local finishes = {}
 for _, finish in pairs(G.finishes) do
@@ -356,7 +358,7 @@ hook.Add("PostDrawTranslucentRenderables", "D6_ArtViewMount", function(depth, sk
         for _, mount in ipairs(mounts) do
             if not mount.customActive then
                 local position, scale = D6_ViewMounts.Pose(origin, angles, mount.slot,
-                    ScrW()/math.max(ScrH(), 1), (drift.yaw or 0)*0.12, bob)
+                    ScrW()/math.max(ScrH(), 1), (drift.yaw or 0)*0.12, bob, viewSpread:GetFloat())
                 drawMount(mount.item, mount.weapon, position, angles, scale, false, mount.active)
             end
         end

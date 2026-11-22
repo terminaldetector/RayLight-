@@ -2,7 +2,8 @@ if SERVER then AddCSLuaFile() end
 
 SWEP.Base = "weapon_base"
 SWEP.PrintName = "Фазовая пушка"
-SWEP.Category = "Half-Life: Abaddon"
+SWEP.Category = "Half-Life: Abaddon / Оружие"
+SWEP.ScriptedEntityType = "d6_weapon"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.Slot = 4

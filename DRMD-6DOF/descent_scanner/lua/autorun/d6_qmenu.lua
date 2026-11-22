@@ -73,6 +73,10 @@ hook.Add("PopulateToolMenu", "D6_QMenu", function()
         CmdButton(panel, "Сброс крена (выровнять дрон)", "d6_level")
 
         panel:Help("")
+        panel:Help("Обзор и оружие")
+        panel:CheckBox("Показывать задний обзор", "d6_rearview")
+        panel:NumSlider("Разведение боковых пушек", "d6_view_mount_spread", 1, 1.5, 3)
+        panel:ControlHelp("1 — прежний вид; 1.125 — стандарт. Прямой вызов оружия и юнитов: Q → Abaddon.")
         panel:Help("Параметры полёта")
 
         if not (D6Menu and D6Menu.Cfg and D6Menu.Settings) then

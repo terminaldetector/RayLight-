@@ -3,7 +3,7 @@
 -- =========================================================
 
 local sharedFiles = {"d6_actors.lua", "d6_session.lua", "d6_arsenal.lua", "d6_combat_balance.lua", "d6_drone_catalog.lua", "d6_supplies.lua", "d6_campaign.lua", "d6_mission.lua", "d6_gates.lua"}
-local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_support_art.lua", "d6_view_mounts.lua", "d6_art_render.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua", "d6_supports_client.lua"}
+local clientFiles = {"d6_art_geometry.lua", "d6_art_models.lua", "d6_art_elites.lua", "d6_art_ordnance.lua", "d6_support_art.lua", "d6_view_mounts.lua", "d6_art_render.lua", "d6_spawnmenu_icons.lua", "d6_interface.lua", "d6_hangar.lua", "d6_bestiary.lua", "d6_supports_client.lua"}
 
 for _, path in ipairs(sharedFiles) do
     if SERVER then AddCSLuaFile(path) end
