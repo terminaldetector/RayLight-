@@ -1,0 +1,73 @@
+name: Publish synchronized Abaddon agent-two HL2 source handoff
+on:
+  push:
+    branches:
+      - docs/abaddon-agent2-sync-2026-11-23
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: abaddon-agent2-sync-hl2-2026-11-23
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.repository == 'terminaldetector/RayLight-' && github.ref == 'refs/heads/docs/abaddon-agent2-sync-2026-11-23'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Package original 21 Markdown documents and actual HL2/reactor source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/agent2-sync-2026-11-23/package_sync.py --out "$RUNNER_TEMP/abaddon-agent2-sync"
+      - name: Publish as a separate handoff prerelease, not the playable latest game
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=abaddon-agent2-sync-hl2-2026-11-23
+          ROOT="$RUNNER_TEMP/abaddon-agent2-sync"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release already exists; verifying exact assets."
+          else
+            gh release create "$TAG" \
+              "$ROOT/Abaddon-Agent2-SYNC-HL2-2026-11-23.zip" \
+              "$ROOT/HL2_NATIVE_PORT_SOURCE.zip" \
+              "$ROOT/REACTOR_BRANCH_CHANGED_FILES.zip" \
+              "$ROOT/README_RU.md" \
+              "$ROOT/SHA256SUMS.txt" \
+              "$ROOT/BUILD_SUMMARY.json" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Half-Life: Abaddon | Agent 2 SYNC + native HL2 sources" \
+              --notes-file handoff/agent2-sync-2026-11-23/00_SYNC_FIRST_RU.md \
+              --prerelease --latest=false
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$RUNNER_TEMP/release.json"
+          python3 - "$ROOT" "$RUNNER_TEMP/release.json" <<'PY'
+          import hashlib,json,sys
+          from pathlib import Path
+          folder,record=Path(sys.argv[1]),json.loads(Path(sys.argv[2]).read_text())
+          wanted=["Abaddon-Agent2-SYNC-HL2-2026-11-23.zip","HL2_NATIVE_PORT_SOURCE.zip",
+                  "REACTOR_BRANCH_CHANGED_FILES.zip","README_RU.md","SHA256SUMS.txt","BUILD_SUMMARY.json"]
+          found={a["name"]:a for a in record["assets"]}
+          if record.get("draft") or not record.get("prerelease") or set(found)!=set(wanted):
+              raise SystemExit("Release status/assets mismatch")
+          for name in wanted:
+              data=(folder/name).read_bytes()
+              a=found[name]; expected="sha256:"+hashlib.sha256(data).hexdigest()
+              if a["size"]!=len(data) or a.get("digest")!=expected:
+                  raise SystemExit("SHA-256 verification failed: "+name)
+              print("Verified",name,len(data),expected)
+          print("Published",record["html_url"])
+          PY
