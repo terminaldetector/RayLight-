@@ -1,0 +1,87 @@
+name: Abaddon Agent2 HL2 sync handoff
+
+on:
+  push:
+    branches:
+      - docs/abaddon-agent2-2026-11-23
+    paths:
+      - "handoff/agent2-sync-2026-11-23/**"
+      - ".github/workflows/abaddon-agent2-hl2-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: abaddon-agent2-sync-2026-11-23
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    if: github.repository == 'terminaldetector/RayLight-' && github.ref == 'refs/heads/docs/abaddon-agent2-2026-11-23'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Syntax checks for non-destructive helper and packager
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            handoff/agent2-sync-2026-11-23/scripts/sync_agent_worktree.py \
+            handoff/agent2-sync-2026-11-23/build_sync_bundle.py
+
+      - name: Package actual HL2 native files, reactor deltas and 21-MD handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/agent2-sync-2026-11-23/build_sync_bundle.py \
+            --out "$RUNNER_TEMP/abaddon-agent2-sync"
+          cd "$RUNNER_TEMP/abaddon-agent2-sync"
+          sha256sum -c Abaddon-Agent2-HL2-SYNC-2026-11-23.zip.sha256
+          python3 - <<'PY'
+          import json, zipfile
+          path="Abaddon-Agent2-HL2-SYNC-2026-11-23.zip"
+          with zipfile.ZipFile(path) as z:
+              items=set(z.namelist())
+              assert z.testzip() is None
+              assert "HL2_NATIVE_PORT/DRMD-6DOF/native/hl2/maps/d6_native_flightlab.bsp" in items
+              assert "HL2_NATIVE_PORT/DRMD-6DOF/native/hl2/source-2013-sp.patch" in items
+              assert "BRANCH_DELTAS/NATIVE/DRMD-6DOF/descent_scanner/lua/d6_reactor.lua" in items
+              assert "ORIGINAL_HANDOFF/00_START_HERE_RU.md" in items
+              report=json.loads(z.read("SYNC_REPORT.json"))
+              assert report["native_includes_reactor"]
+              assert len(report["common_changed_paths"]) >= 8
+              print("Verified actual native BSP, SDK patch, reactor code, original handoff and overlap matrix")
+          PY
+
+      - name: Publish new handoff release without touching older versions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="abaddon-agent2-hl2-sync-2026-11-23"
+          if gh release view "$TAG" --repo terminaldetector/RayLight- >/dev/null 2>&1; then
+            echo "Release already exists. No overwrites performed."
+            exit 0
+          fi
+          dir="$RUNNER_TEMP/abaddon-agent2-sync"
+          gh release create "$TAG" \
+            "$dir/Abaddon-Agent2-HL2-SYNC-2026-11-23.zip" \
+            "$dir/Abaddon-Agent2-HL2-SYNC-2026-11-23.zip.sha256" \
+            "$dir/MERGE_PREVIEW.json" \
+            "handoff/agent2-sync-2026-11-23/00_SYNC_FIRST_RU.md" \
+            "handoff/agent2-sync-2026-11-23/01_NATIVE_HL2_STATUS_RU.md" \
+            "handoff/agent2-sync-2026-11-23/02_SYNC_CONTRACT_RU.md" \
+            --repo terminaldetector/RayLight- \
+            --target d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d \
+            --title "Abaddon: Agent 2 / HL2 native + sync handoff" \
+            --notes-file handoff/agent2-sync-2026-11-23/RELEASE_NOTES_RU.md
+          gh release view "$TAG" --repo terminaldetector/RayLight- --json tagName,assets,url \
+            --jq '{tag:.tagName,url:.url,assets:[.assets[].name]}'
