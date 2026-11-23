@@ -1,837 +1,767 @@
+//go:build windows
+
 package main
 
+// A native Windows launcher. Only the Go standard library and Windows APIs are
+// required; Steam supplies the game clients. No elevated process is requested.
 import (
+	"encoding/json"
 	"fmt"
-	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
+	"sync"
+	"syscall"
+	"time"
 	"unsafe"
-
-	"abaddon/launcher/core"
-)
-
-const (
-	canvasWidth  = 832
-	canvasHeight = 579
-
-	idGMod = 100 + iota
-	idContent
-	idHL2
-	idSteam
-	idSteamBrowse
-	idGame
-	idGameBrowse
-	idNative
-	idNativeBrowse
-	idDisplay
-	idWidth
-	idHeight
-	idMap
-	idProfile
-	idConsole
-	idIntro
-	idLog
-	idDetect
-	idInstall
-	idRollback
-	idSave
-	idLaunch
 )
 
 var (
-	app             *launcher
-	wndProcCallback = syscallWindowProc()
-	toneBackground  = color(17, 23, 29)
-	tonePanel       = color(27, 36, 44)
-	toneField       = color(18, 26, 32)
-	toneEdge        = color(59, 77, 88)
-	toneText        = color(231, 240, 243)
-	toneMuted       = color(170, 186, 194)
-	toneAccent      = color(118, 225, 214)
-	toneNote        = color(253, 188, 133)
+	user32                     = syscall.NewLazyDLL("user32.dll")
+	kernel32                   = syscall.NewLazyDLL("kernel32.dll")
+	gdi32                      = syscall.NewLazyDLL("gdi32.dll")
+	shell32                    = syscall.NewLazyDLL("shell32.dll")
+	ole32                      = syscall.NewLazyDLL("ole32.dll")
+	advapi32                   = syscall.NewLazyDLL("advapi32.dll")
+	createWindow               = user32.NewProc("CreateWindowExW")
+	sendMessage                = user32.NewProc("SendMessageW")
+	setWindowText              = user32.NewProc("SetWindowTextW")
+	getWindowText              = user32.NewProc("GetWindowTextW")
+	messageBox                 = user32.NewProc("MessageBoxW")
+	mainWindow, instance, font uintptr
+	controls                   = map[int]uintptr{}
+	uiScale                    = 1.0
+	bundleRoot                 string
+	buildRevision              = "development"
+	prefs                      preferences
+	detected                   []Installation
+	steamRoots                 []string
+	busy                       bool
+	smokeUI                    bool
+	workResult                 string
+	workErr                    error
+	resultMu                   sync.Mutex
 )
 
-type choice struct{ label, value string }
+const (
+	idTarget       = 101
+	idPath         = 102
+	idDetect       = 103
+	idBrowse       = 104
+	idMap          = 105
+	idGraphics     = 106
+	idResolution   = 107
+	idWindowed     = 108
+	idConsole      = 109
+	idStatus       = 110
+	idModeInfo     = 111
+	idMaterial     = 112
+	idNativeLabel  = 113
+	idNativePath   = 114
+	idBrowseNative = 115
+	idInstallRun   = 201
+	idInstall      = 202
+	idRun          = 203
+	idRollback     = 204
+	idOpen         = 205
+	idDiagnostics  = 206
+	wmFinished     = 0x8001
+)
 
-var displays = []choice{
-	{"В окне", "windowed"},
-	{"На весь экран", "fullscreen"},
-	{"Без рамки", "borderless"},
+type point struct{ X, Y int32 }
+type winMessage struct {
+	Window         uintptr
+	Message        uint32
+	WParam, LParam uintptr
+	Time           uint32
+	Point          point
+	Private        uint32
 }
-var profiles = []choice{
-	{"Автоматический", "auto"},
-	{"Кампания", "campaign"},
-	{"Арена", "arena"},
+type windowClass struct {
+	Size, Style                        uint32
+	WndProc                            uintptr
+	ClassExtra, WindowExtra            int32
+	Instance, Icon, Cursor, Background uintptr
+	MenuName, ClassName                *uint16
+	SmallIcon                          uintptr
 }
-var gmodMaps = []string{
-	"d6_city17_drain", "d6_reactor_escape", "d6_rogue_reactor",
-	"d6_relay_vault", "gm_flatgrass",
+type browseInfo struct {
+	Owner, Root        uintptr
+	DisplayName, Title *uint16
+	Flags              uint32
+	Callback, Param    uintptr
+	Image              int32
 }
-var sourceMaps = []string{"d6_native_flightlab"}
-var contentMaps = []string{"d6_city17_drain", "d6_reactor_escape"}
 
-type jobResult struct {
-	cfg      core.Config
-	detected core.Detection
-	builds   map[core.Profile]core.BuildInfo
-	start    bool
-	note     string
-	err      error
+func wide(s string) *uint16 { p, _ := syscall.UTF16PtrFromString(s); return p }
+func send(h uintptr, m uint32, w, l uintptr) uintptr {
+	r, _, _ := sendMessage.Call(h, uintptr(m), w, l)
+	return r
+}
+func textOf(h uintptr) string {
+	n, _, _ := user32.NewProc("GetWindowTextLengthW").Call(h)
+	b := make([]uint16, n+1)
+	getWindowText.Call(h, uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)))
+	return syscall.UTF16ToString(b)
+}
+func setText(h uintptr, s string) { setWindowText.Call(h, uintptr(unsafe.Pointer(wide(s)))) }
+func status(s string)             { setText(controls[idStatus], strings.ReplaceAll(s, "\n", "\r\n")) }
+func choice(id int) int           { return int(int32(send(controls[id], 0x0147, 0, 0))) }
+func setChoice(id, index int)     { send(controls[id], 0x014E, uintptr(index), 0) }
+func checked(id int) bool         { return send(controls[id], 0x00F0, 0, 0) == 1 }
+func check(id int, v bool) {
+	n := uintptr(0)
+	if v {
+		n = 1
+	}
+	send(controls[id], 0x00F1, n, 0)
+}
+func scaled(n int) uintptr { return uintptr(int(float64(n) * uiScale)) }
+
+func control(class, title string, id, x, y, w, h int, style uintptr) uintptr {
+	handle, _, e := createWindow.Call(0, uintptr(unsafe.Pointer(wide(class))), uintptr(unsafe.Pointer(wide(title))),
+		0x50000000|style, scaled(x), scaled(y), scaled(w), scaled(h), mainWindow, uintptr(id), instance, 0)
+	if handle == 0 {
+		panic(fmt.Sprintf("CreateWindow %d: %v", id, e))
+	}
+	if id != 0 {
+		controls[id] = handle
+	}
+	send(handle, 0x0030, font, 1)
+	return handle
+}
+func combo(id, x, y, w int, items []string, editable bool) {
+	style := uintptr(0x00200000 | 0x00010000 | 3)
+	if editable {
+		style = 0x00200000 | 0x00010000 | 2
+	}
+	h := control("COMBOBOX", "", id, x, y, w, 240, style)
+	for _, s := range items {
+		send(h, 0x0143, 0, uintptr(unsafe.Pointer(wide(s))))
+	}
+	setChoice(id, 0)
+}
+func label(s string, x, y, w, h int) { control("STATIC", s, 0, x, y, w, h, 0) }
+
+func selectedTarget() Target {
+	switch choice(idTarget) {
+	case 1:
+		return TargetHL2
+	case 2:
+		return TargetHL2Native
+	}
+	return TargetGMod
+}
+func selectedOptions() LaunchOptions {
+	maps := targetMaps(selectedTarget())
+	graphics := []string{"default", "balanced", "high"}
+	mi, gi := choice(idMap), choice(idGraphics)
+	if mi < 0 || mi >= len(maps) {
+		mi = 0
+	}
+	if gi < 0 || gi >= len(graphics) {
+		gi = 0
+	}
+	o := LaunchOptions{Map: maps[mi].name, Graphics: graphics[gi], Windowed: checked(idWindowed), Console: checked(idConsole)}
+	switch choice(idResolution) {
+	case 1:
+		o.Width, o.Height = 1280, 720
+	case 2:
+		o.Width, o.Height = 1920, 1080
+	case 3:
+		o.Width, o.Height = 2560, 1440
+	}
+	return o
+}
+func rememberTarget() {
+	switch prefs.Target {
+	case TargetHL2:
+		prefs.HL2Path = textOf(controls[idPath])
+	case TargetHL2Native:
+		prefs.SDKPath = textOf(controls[idPath])
+		prefs.NativeModPath = textOf(controls[idNativePath])
+	default:
+		prefs.GModPath = textOf(controls[idPath])
+	}
+	saved := targetPreferences{
+		MapIndex: choice(idMap), GraphicsIndex: choice(idGraphics), ResolutionIndex: choice(idResolution),
+		Windowed: checked(idWindowed), Console: checked(idConsole),
+	}
+	prefs.Profiles[prefs.Target] = saved
+	prefs.targetPreferences = saved
 }
 
-type launcher struct {
-	window, instance                                     uintptr
-	controls                                             map[int]uintptr
-	checkbox                                             map[int]bool
-	scale                                                float64
-	regular, heading, title, caption                     uintptr
-	background, panel, field, edge, button, activeButton uintptr
-	titleLabel, captionLabel, engineLabel, nativeLabel   uintptr
-	profileLabel, statusLabel, buildLabel                uintptr
-	statusInk                                            uintptr
-	cfg                                                  core.Config
-	detection                                            core.Detection
-	builds                                               map[core.Profile]core.BuildInfo
-	busy, updating                                       bool
-	result                                               chan jobResult
+func setTargetControls() {
+	native := prefs.Target == TargetHL2Native
+	showNative, showMaterial, install := uintptr(0), uintptr(5), uintptr(1)
+	if native {
+		showNative, showMaterial, install = 5, 0, 0
+	}
+	showWindow := user32.NewProc("ShowWindow")
+	showWindow.Call(controls[idMaterial], showMaterial)
+	for _, id := range []int{idNativeLabel, idNativePath, idBrowseNative} {
+		showWindow.Call(controls[id], showNative)
+	}
+	for _, id := range []int{idInstallRun, idInstall, idRollback} {
+		user32.NewProc("EnableWindow").Call(controls[id], install)
+	}
+	if native {
+		refreshNativeAvailability()
+	} else {
+		user32.NewProc("EnableWindow").Call(controls[idRun], 1)
+	}
+}
+func refreshNativeAvailability() {
+	if busy || prefs.Target != TargetHL2Native || controls[idRun] == 0 {
+		return
+	}
+	i, err := resolveInstallation()
+	if err == nil {
+		_, err = validateNativeLaunch(i)
+	}
+	var enabled uintptr
+	statusLine := "Экспериментальный Flight Lab. Требуются Steam SDK Base 2013 SP и Win32-мод. См. «Диагностика»."
+	if err == nil {
+		enabled = 1
+		statusLine = "Экспериментальный Flight Lab. SDK, модули Win32 и карта полигона найдены."
+	}
+	user32.NewProc("EnableWindow").Call(controls[idRun], enabled)
+	setText(controls[idModeInfo], statusLine)
+}
+func chooseTarget() {
+	t := selectedTarget()
+	prefs.Target = t
+	send(controls[idPath], 0x014B, 0, 0)
+	for _, i := range detected {
+		if i.Target == t {
+			send(controls[idPath], 0x0143, 0, uintptr(unsafe.Pointer(wide(i.Root))))
+		}
+	}
+	path := prefs.GModPath
+	if t == TargetHL2 {
+		path = prefs.HL2Path
+	} else if t == TargetHL2Native {
+		path = prefs.SDKPath
+	}
+	if path != "" {
+		setText(controls[idPath], path)
+	} else if send(controls[idPath], 0x0146, 0, 0) > 0 {
+		setChoice(idPath, 0)
+	}
+	modPath := prefs.NativeModPath
+	if t == TargetHL2Native && modPath == "" {
+		for _, i := range detected {
+			if i.Target == t && strings.EqualFold(i.Root, textOf(controls[idPath])) {
+				modPath = i.NativeRoot
+				break
+			}
+		}
+	}
+	setText(controls[idNativePath], modPath)
+	send(controls[idMap], 0x014B, 0, 0)
+	for _, option := range targetMaps(t) {
+		send(controls[idMap], 0x0143, 0, uintptr(unsafe.Pointer(wide(option.label))))
+	}
+	saved := prefs.Profiles[t]
+	for id, value := range map[int]int{idMap: saved.MapIndex, idGraphics: saved.GraphicsIndex, idResolution: saved.ResolutionIndex} {
+		if n := int(send(controls[id], 0x0146, 0, 0)); value < 0 || value >= n {
+			value = 0
+		}
+		setChoice(id, value)
+	}
+	check(idWindowed, saved.Windowed)
+	check(idConsole, saved.Console)
+	info := "GMod: 6DOF, оружие, мины и 3 саппорта Granada. Запуск через установленный клиент."
+	if t == TargetHL2 {
+		info = "HL2 · content-only: просмотр карт и моделей через клиент Half-Life 2."
+	}
+	setText(controls[idModeInfo], info)
+	setTargetControls()
+}
+func detect() {
+	steamRoots = windowsSteamRoots()
+	detected = DiscoverInstallations(steamRoots)
+	chooseTarget()
+	if len(detected) == 0 {
+		status("Steam-игры не найдены автоматически. Выберите папку игры кнопкой «Обзор» или вставьте путь вручную.")
+	} else {
+		status(fmt.Sprintf("Найдено установок: %d. Проверьте выбранный путь. Если библиотек несколько, пути доступны в списке.", len(detected)))
+	}
+}
+func browse(id int) {
+	display := make([]uint16, 32768)
+	field := idPath
+	label := "Выберите папку GarrysMod или Half-Life 2"
+	if id == idBrowseNative {
+		field, label = idNativePath, "Выберите папку мода abaddon_native"
+	} else if selectedTarget() == TargetHL2Native {
+		label = "Выберите папку Source SDK Base 2013 Singleplayer"
+	}
+	bi := browseInfo{Owner: mainWindow, DisplayName: &display[0], Title: wide(label), Flags: 0x0041}
+	item, _, _ := shell32.NewProc("SHBrowseForFolderW").Call(uintptr(unsafe.Pointer(&bi)))
+	if item == 0 {
+		return
+	}
+	defer ole32.NewProc("CoTaskMemFree").Call(item)
+	buf := make([]uint16, 32768)
+	ok, _, _ := shell32.NewProc("SHGetPathFromIDListW").Call(item, uintptr(unsafe.Pointer(&buf[0])))
+	if ok != 0 {
+		setText(controls[field], syscall.UTF16ToString(buf))
+		rememberTarget()
+	}
+}
+func prefsDir() string {
+	p := os.Getenv("LOCALAPPDATA")
+	if p == "" {
+		p, _ = os.UserConfigDir()
+	}
+	return filepath.Join(p, "AbaddonLauncher")
+}
+func loadPreferences() {
+	prefs = defaultPreferences()
+	if b, e := os.ReadFile(filepath.Join(prefsDir(), "settings.json")); e == nil {
+		prefs = decodePreferences(b)
+	}
+}
+func savePreferences() error {
+	rememberTarget()
+	if smokeUI {
+		return nil
+	}
+	if e := os.MkdirAll(prefsDir(), 0700); e != nil {
+		return e
+	}
+	b, err := json.MarshalIndent(prefs, "", "  ")
+	if err != nil {
+		return err
+	}
+	return writeAtomic(filepath.Join(prefsDir(), "settings.json"), b, "")
+}
+func setBusy(v bool) {
+	busy = v
+	enabled := uintptr(1)
+	if v {
+		enabled = 0
+	}
+	for id, h := range controls {
+		if id != idStatus && id != idModeInfo {
+			user32.NewProc("EnableWindow").Call(h, enabled)
+		}
+	}
+	if !v {
+		setTargetControls()
+	}
+}
+func resolveInstallation() (Installation, error) {
+	i, e := ValidateInstallation(strings.TrimSpace(textOf(controls[idPath])), selectedTarget())
+	if e != nil {
+		return i, e
+	}
+	for _, d := range detected {
+		if strings.EqualFold(d.Root, i.Root) && d.Target == i.Target {
+			i.SteamRoot = d.SteamRoot
+			break
+		}
+	}
+	if i.Target == TargetHL2Native {
+		i.NativeRoot = strings.TrimSpace(textOf(controls[idNativePath]))
+	}
+	// A manually selected copy must not silently launch a different Steam copy.
+	// Only a matching appmanifest discovered above can establish SteamRoot.
+	return i, nil
+}
+func logResult(s string) {
+	if smokeUI {
+		return
+	}
+	_ = os.MkdirAll(prefsDir(), 0700)
+	f, e := os.OpenFile(filepath.Join(prefsDir(), "launcher.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if e == nil {
+		defer f.Close()
+		fmt.Fprintf(f, "%s %s\n", time.Now().Format(time.RFC3339), s)
+	}
+}
+func action(id int) {
+	if smokeUI {
+		status("UI smoke: установка, откат и запуск игры отключены.")
+		return
+	}
+	if busy {
+		return
+	}
+	preferenceErr := savePreferences()
+	i, e := resolveInstallation()
+	if id == idDiagnostics {
+		m, err := LoadManifest(bundleRoot)
+		msg := fmt.Sprintf("Цель: %s\nСборка: %s\nМатериалы: штатные Source; полноценный PBR отсутствует.\nГрафический клиент игры: здесь не проверен.", selectedTarget(), buildRevision)
+		if e != nil {
+			msg += "\nУстановка: " + e.Error()
+		} else {
+			msg += "\nУстановка подтверждена: " + i.Root
+			if i.Target == TargetHL2Native {
+				if modRoot, nativeErr := validateNativeLaunch(i); nativeErr != nil {
+					msg += "\nFlight Lab: " + nativeErr.Error()
+				} else {
+					msg += "\nFlight Lab: модули Win32 и карта найдены в " + modRoot
+				}
+			}
+		}
+		if err != nil {
+			msg += "\nПакет: " + err.Error()
+		} else {
+			msg += fmt.Sprintf("\nManifest: %s / %s; %d файлов.", m.Channel, m.Revision, len(m.Files))
+		}
+		if preferenceErr != nil {
+			msg += "\nНастройки не сохранены: " + preferenceErr.Error()
+		}
+		msg += "\nДиагностика локальная; ничего не отправляется в сеть."
+		status(msg)
+		return
+	}
+	if e != nil {
+		status("Папка игры не подтверждена: " + e.Error())
+		return
+	}
+	if id == idOpen {
+		shell32.NewProc("ShellExecuteW").Call(mainWindow, uintptr(unsafe.Pointer(wide("open"))), uintptr(unsafe.Pointer(wide(i.GameDir))), 0, 0, 1)
+		return
+	}
+	if activeGame() {
+		status("Закройте HL2 / Garry’s Mod перед установкой, откатом или запуском нового сеанса.")
+		return
+	}
+	if id == idRollback {
+		r, _, _ := messageBox.Call(mainWindow, uintptr(unsafe.Pointer(wide("Вернуть предыдущую установленную сборку? Текущая копия останется в резерве."))), uintptr(unsafe.Pointer(wide("Откат Abaddon"))), 0x00000004|0x00000020)
+		if r != 6 {
+			return
+		}
+	}
+	o := selectedOptions()
+	setBusy(true)
+	status("Проверка пакета и выбранной установки…")
+	go func() {
+		var msg string
+		var err error
+		switch id {
+		case idInstall, idInstallRun:
+			var dest string
+			dest, err = InstallBundle(bundleRoot, i)
+			if err == nil {
+				msg = "Установлено: " + dest
+			}
+		case idRollback:
+			var dest string
+			dest, err = RollbackInstallation(i)
+			if err == nil {
+				msg = "Восстановлено: " + dest
+			}
+		case idRun:
+			msg = "Запуск установленной копии."
+		}
+		if err == nil && (id == idRun || id == idInstallRun) {
+			var executable string
+			var args []string
+			executable, args, err = ConfigureLaunch(i, o)
+			if err == nil {
+				c := exec.Command(executable, args...)
+				c.Dir = i.Root
+				err = c.Start()
+				if err == nil {
+					_ = c.Process.Release()
+					msg += "\nКоманда запуска передана клиенту. Состояние игры проверяйте в её окне."
+				}
+			}
+		}
+		if err != nil {
+			msg = "Операция не завершена: " + err.Error()
+		}
+		if preferenceErr != nil {
+			msg += "\nВыбор параметров не сохранён: " + preferenceErr.Error()
+		}
+		logResult(msg)
+		resultMu.Lock()
+		workResult, workErr = msg, err
+		resultMu.Unlock()
+		user32.NewProc("PostMessageW").Call(mainWindow, wmFinished, 0, 0)
+	}()
+}
+
+func wndProc(hwnd uintptr, msg uint32, w, l uintptr) uintptr {
+	switch msg {
+	case 0x0111: // WM_COMMAND
+		id, event := int(w&0xffff), int((w>>16)&0xffff)
+		if id == idTarget && event == 1 {
+			rememberTarget()
+			chooseTarget()
+			return 0
+		}
+		if (id == idPath && (event == 1 || event == 5)) || (id == idNativePath && event == 0x0300) {
+			refreshNativeAvailability()
+		}
+		if event == 0 {
+			switch id {
+			case idDetect:
+				rememberTarget()
+				detect()
+			case idBrowse, idBrowseNative:
+				browse(id)
+				refreshNativeAvailability()
+			case idInstallRun, idInstall, idRun, idRollback, idOpen, idDiagnostics:
+				action(id)
+			}
+		}
+	case wmFinished:
+		resultMu.Lock()
+		s := workResult
+		resultMu.Unlock()
+		setBusy(false)
+		status(s)
+		return 0
+	case 0x0113: // WM_TIMER, CI smoke only
+		if smokeUI {
+			user32.NewProc("DestroyWindow").Call(hwnd)
+			return 0
+		}
+	case 0x0010: // WM_CLOSE
+		if busy {
+			status("Дождитесь завершения установки или отката.")
+			return 0
+		}
+		if err := savePreferences(); err != nil {
+			messageBox.Call(hwnd, uintptr(unsafe.Pointer(wide("Параметры лаунчера не сохранены: "+err.Error()))), uintptr(unsafe.Pointer(wide("Abaddon Launcher"))), 0x30)
+		}
+		user32.NewProc("DestroyWindow").Call(hwnd)
+		return 0
+	case 0x0002: // WM_DESTROY
+		user32.NewProc("PostQuitMessage").Call(0)
+		return 0
+	}
+	r, _, _ := user32.NewProc("DefWindowProcW").Call(hwnd, uintptr(msg), w, l)
+	return r
+}
+
+func buildUI() error {
+	user32.NewProc("SetProcessDPIAware").Call()
+	dc, _, _ := user32.NewProc("GetDC").Call(0)
+	dpi, _, _ := gdi32.NewProc("GetDeviceCaps").Call(dc, 88)
+	user32.NewProc("ReleaseDC").Call(0, dc)
+	if dpi > 0 {
+		uiScale = float64(dpi) / 96
+	}
+	// Fit the complete compact form within the current work area at high DPI.
+	var workArea struct{ Left, Top, Right, Bottom int32 }
+	if ok, _, _ := user32.NewProc("SystemParametersInfoW").Call(0x0030, 0, uintptr(unsafe.Pointer(&workArea)), 0); ok != 0 {
+		for _, fit := range []float64{float64(workArea.Right-workArea.Left-24) / 800, float64(workArea.Bottom-workArea.Top-24) / 650} {
+			if fit > 0 && fit < uiScale {
+				uiScale = fit
+			}
+		}
+	}
+	instance, _, _ = kernel32.NewProc("GetModuleHandleW").Call(0)
+	cursor, _, _ := user32.NewProc("LoadCursorW").Call(0, 32512)
+	icon, _, _ := user32.NewProc("LoadIconW").Call(0, 32512)
+	wc := windowClass{WndProc: syscall.NewCallback(wndProc), Instance: instance, Cursor: cursor, Icon: icon, SmallIcon: icon, Background: 6, ClassName: wide("AbaddonLauncherWindow")}
+	wc.Size = uint32(unsafe.Sizeof(wc))
+	if r, _, e := user32.NewProc("RegisterClassExW").Call(uintptr(unsafe.Pointer(&wc))); r == 0 {
+		return e
+	}
+	mainWindow, _, _ = createWindow.Call(0, uintptr(unsafe.Pointer(wc.ClassName)), uintptr(unsafe.Pointer(wide("Half-Life: Abaddon — Launcher"))), 0x00CA0000, 0x80000000, 0x80000000, scaled(800), scaled(650), 0, 0, instance, 0)
+	if mainWindow == 0 {
+		return fmt.Errorf("не удалось создать окно")
+	}
+	height := int32(-float64(15) * uiScale)
+	font, _, _ = gdi32.NewProc("CreateFontW").Call(uintptr(height), 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(wide("Segoe UI"))))
+	defer gdi32.NewProc("DeleteObject").Call(font)
+	label("HALF-LIFE: ABADDON", 20, 16, 750, 26)
+	label("Локальная установка и запуск · "+buildRevision, 20, 45, 750, 24)
+	label("Клиент", 20, 84, 120, 24)
+	combo(idTarget, 145, 80, 425, []string{"Garry’s Mod — игровая сборка", "Half-Life 2 — карты и модели", "HL2 · Flight Lab (эксперимент)"}, false)
+	control("BUTTON", "Найти игры", idDetect, 585, 79, 175, 29, 0x00010000)
+	control("STATIC", "", idModeInfo, 20, 116, 740, 34, 0)
+	label("Папка игры", 20, 160, 120, 24)
+	combo(idPath, 145, 156, 485, nil, true)
+	control("BUTTON", "Обзор…", idBrowse, 640, 155, 120, 29, 0x00010000)
+	label("Старт", 20, 203, 120, 24)
+	combo(idMap, 145, 199, 615, nil, false)
+	label("Графика", 20, 246, 120, 24)
+	combo(idGraphics, 145, 242, 615, []string{"Настройки игры — не менять", "Сбалансированный — тени 1024, фильтрация 8×", "Высокий — тени 2048, фильтрация 16×"}, false)
+	control("STATIC", "Материалы: штатные Source. PBR отсутствует. Профиль не добавляет недостающие тени или отражения.", idMaterial, 20, 278, 740, 40, 0)
+	control("STATIC", "Папка мода", idNativeLabel, 20, 282, 120, 24, 0)
+	control("EDIT", "", idNativePath, 145, 277, 485, 29, 0x00810080)
+	control("BUTTON", "Обзор…", idBrowseNative, 640, 276, 120, 29, 0x00010000)
+	label("Разрешение", 20, 326, 120, 24)
+	combo(idResolution, 145, 322, 250, []string{"Из настроек игры", "1280 × 720", "1920 × 1080", "2560 × 1440"}, false)
+	control("BUTTON", "В окне", idWindowed, 420, 321, 145, 29, 0x00010003)
+	control("BUTTON", "Консоль", idConsole, 590, 321, 165, 29, 0x00010003)
+	control("BUTTON", "Установить и запустить", idInstallRun, 20, 370, 285, 36, 0x00010001)
+	control("BUTTON", "Только установить", idInstall, 318, 370, 215, 36, 0x00010000)
+	control("BUTTON", "Запустить", idRun, 546, 370, 214, 36, 0x00010000)
+	control("BUTTON", "Откатить установку", idRollback, 20, 417, 240, 32, 0x00010000)
+	control("BUTTON", "Папка игры", idOpen, 273, 417, 240, 32, 0x00010000)
+	control("BUTTON", "Диагностика", idDiagnostics, 526, 417, 234, 32, 0x00010000)
+	control("EDIT", "", idStatus, 20, 465, 740, 130, 0x00800000|0x00200000|0x00000804|0x00000040)
+	switch prefs.Target {
+	case TargetHL2:
+		setChoice(idTarget, 1)
+	case TargetHL2Native:
+		setChoice(idTarget, 2)
+	}
+	detect()
+	if smokeUI {
+		for _, id := range []int{idTarget, idPath, idNativePath, idBrowseNative, idMap, idGraphics, idResolution, idStatus, idInstallRun, idRollback} {
+			if controls[id] == 0 {
+				return fmt.Errorf("missing control %d", id)
+			}
+		}
+		for index, target := range []Target{TargetGMod, TargetHL2, TargetHL2Native} {
+			setChoice(idTarget, index)
+			chooseTarget()
+			if selectedTarget() != target || choice(idGraphics) < 0 || choice(idMap) < 0 {
+				return fmt.Errorf("invalid profile controls for %s", target)
+			}
+		}
+		setChoice(idTarget, 0)
+		chooseTarget()
+		for _, id := range []int{idInstallRun, idInstall, idRun, idRollback, idOpen} {
+			user32.NewProc("EnableWindow").Call(controls[id], 0)
+		}
+		user32.NewProc("SetTimer").Call(mainWindow, 1, 300, 0)
+	}
+	user32.NewProc("ShowWindow").Call(mainWindow, 1)
+	user32.NewProc("UpdateWindow").Call(mainWindow)
+	var m winMessage
+	for {
+		r, _, e := user32.NewProc("GetMessageW").Call(uintptr(unsafe.Pointer(&m)), 0, 0, 0)
+		if int32(r) == -1 {
+			return e
+		}
+		if r == 0 {
+			break
+		}
+		// Native dialog navigation gives tab, arrows and access to every control.
+		handled, _, _ := user32.NewProc("IsDialogMessageW").Call(mainWindow, uintptr(unsafe.Pointer(&m)))
+		if handled == 0 {
+			user32.NewProc("TranslateMessage").Call(uintptr(unsafe.Pointer(&m)))
+			user32.NewProc("DispatchMessageW").Call(uintptr(unsafe.Pointer(&m)))
+		}
+	}
+	return nil
+}
+
+func registryString(hive uintptr, subkey, name string, view uintptr) string {
+	var key uintptr
+	r, _, _ := advapi32.NewProc("RegOpenKeyExW").Call(hive, uintptr(unsafe.Pointer(wide(subkey))), 0, 0x20019|view, uintptr(unsafe.Pointer(&key)))
+	if r != 0 {
+		return ""
+	}
+	defer advapi32.NewProc("RegCloseKey").Call(key)
+	var typ, size uint32
+	r, _, _ = advapi32.NewProc("RegQueryValueExW").Call(key, uintptr(unsafe.Pointer(wide(name))), 0, uintptr(unsafe.Pointer(&typ)), 0, uintptr(unsafe.Pointer(&size)))
+	if r != 0 || size == 0 || size > 65536 || (typ != 1 && typ != 2) {
+		return ""
+	}
+	b := make([]uint16, size/2+1)
+	r, _, _ = advapi32.NewProc("RegQueryValueExW").Call(key, uintptr(unsafe.Pointer(wide(name))), 0, uintptr(unsafe.Pointer(&typ)), uintptr(unsafe.Pointer(&b[0])), uintptr(unsafe.Pointer(&size)))
+	if r != 0 {
+		return ""
+	}
+	return syscall.UTF16ToString(b)
+}
+func windowsSteamRoots() []string {
+	var paths []string
+	paths = append(paths, registryString(0x80000001, `Software\Valve\Steam`, "SteamPath", 0))
+	for _, view := range []uintptr{0x0200, 0x0100} {
+		paths = append(paths, registryString(0x80000002, `SOFTWARE\Valve\Steam`, "InstallPath", view))
+	}
+	for _, env := range []string{"ProgramFiles(x86)", "ProgramFiles"} {
+		if p := os.Getenv(env); p != "" {
+			paths = append(paths, filepath.Join(p, "Steam"))
+		}
+	}
+	seen := map[string]bool{}
+	var result []string
+	for _, p := range paths {
+		if p != "" && !seen[strings.ToLower(p)] {
+			seen[strings.ToLower(p)] = true
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+type processEntry struct {
+	Size, Usage, ProcessID             uint32
+	DefaultHeapID                      uintptr
+	ModuleID, Threads, ParentProcessID uint32
+	Priority                           int32
+	Flags                              uint32
+	Exe                                [260]uint16
+}
+
+func activeGame() bool {
+	h, _, _ := kernel32.NewProc("CreateToolhelp32Snapshot").Call(2, 0)
+	if h == ^uintptr(0) {
+		return false
+	}
+	defer kernel32.NewProc("CloseHandle").Call(h)
+	p := processEntry{}
+	p.Size = uint32(unsafe.Sizeof(p))
+	r, _, _ := kernel32.NewProc("Process32FirstW").Call(h, uintptr(unsafe.Pointer(&p)))
+	for r != 0 {
+		name := strings.ToLower(syscall.UTF16ToString(p.Exe[:]))
+		if name == "gmod.exe" || name == "hl2.exe" || name == "garrysmod.exe" {
+			return true
+		}
+		r, _, _ = kernel32.NewProc("Process32NextW").Call(h, uintptr(unsafe.Pointer(&p)))
+	}
+	return false
 }
 
 func main() {
 	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	if err := run(len(os.Args) == 2 && os.Args[1] == "--self-test-ui"); err != nil {
-		if len(os.Args) == 2 && os.Args[1] == "--self-test-ui" {
-			fmt.Fprintln(os.Stderr, err)
-		} else {
-			windowTitle(0, err.Error())
+	_, _, _ = ole32.NewProc("CoInitializeEx").Call(0, 2)
+	defer ole32.NewProc("CoUninitialize").Call()
+	executable, e := os.Executable()
+	if e != nil {
+		os.Exit(1)
+	}
+	bundleRoot = filepath.Dir(executable)
+	for _, arg := range os.Args[1:] {
+		if arg == "--smoke-ui" {
+			smokeUI = true
+		}
+	}
+	if !smokeUI {
+		mutex, _, err := kernel32.NewProc("CreateMutexW").Call(0, 0, uintptr(unsafe.Pointer(wide(`Local\AbaddonLauncher_v1`))))
+		if mutex == 0 {
+			messageBox.Call(0, uintptr(unsafe.Pointer(wide("Не удалось создать блокировку лаунчера."))), uintptr(unsafe.Pointer(wide("Abaddon Launcher"))), 0x10)
+			os.Exit(1)
+		}
+		defer kernel32.NewProc("CloseHandle").Call(mutex)
+		if err == syscall.Errno(183) {
+			messageBox.Call(0, uintptr(unsafe.Pointer(wide("Лаунчер уже открыт. Используйте существующее окно."))), uintptr(unsafe.Pointer(wide("Abaddon Launcher"))), 0x40)
+			return
+		}
+	}
+	if smokeUI {
+		p, e := os.MkdirTemp("", "abaddon-ui-smoke-")
+		if e != nil {
+			os.Exit(2)
+		}
+		defer os.RemoveAll(p)
+		_ = os.Setenv("LOCALAPPDATA", p)
+	}
+	if m, err := LoadManifest(bundleRoot); err == nil {
+		buildRevision = m.Revision[:12]
+	}
+	loadPreferences()
+	if e = buildUI(); e != nil {
+		logResult(e.Error())
+		if !smokeUI {
+			messageBox.Call(0, uintptr(unsafe.Pointer(wide(e.Error()))), uintptr(unsafe.Pointer(wide("Abaddon Launcher"))), 0x10)
 		}
 		os.Exit(1)
 	}
-}
-
-func run(smoke bool) error {
-	procSetDPIAware.Call()
-	instance, _, _ := procModule.Call(0)
-	cursor, _, _ := procLoadCursor.Call(0, 32512)
-	icon, _, _ := procLoadIcon.Call(0, 32512)
-	name := utf("AbaddonNativeLauncher")
-	class := windowClass{
-		size: uint32(unsafe.Sizeof(windowClass{})), callback: wndProcCallback,
-		instance: instance, icon: icon, smallIcon: icon, cursor: cursor, name: name,
-	}
-	atom, _, err := procRegisterClass.Call(uintptr(unsafe.Pointer(&class)))
-	if atom == 0 {
-		return fmt.Errorf("Не удалось зарегистрировать окно лаунчера. %v", err)
-	}
-
-	cfg := core.DefaultConfig()
-	var loadErr error
-	if !smoke {
-		cfg, loadErr = core.LoadConfig()
-		if loadErr != nil {
-			cfg = core.DefaultConfig()
-		}
-	}
-	a := &launcher{
-		instance: instance, cfg: cfg, controls: make(map[int]uintptr),
-		checkbox: make(map[int]bool), result: make(chan jobResult, 1),
-	}
-	app = a
-	defer func() { app = nil }()
-	work := rect{Right: 1280, Bottom: 760}
-	procSysParams.Call(0x0030, 0, uintptr(unsafe.Pointer(&work)), 0)
-	a.scale = 1
-	if procSystemDPI.Find() == nil {
-		dpi, _, _ := procSystemDPI.Call()
-		if dpi != 0 {
-			a.scale = float64(dpi) / 96
-		}
-	}
-	a.scale = math.Min(a.scale, math.Min(
-		float64(work.Right-work.Left-20)/canvasWidth,
-		float64(work.Bottom-work.Top-54)/canvasHeight))
-	if a.scale <= 0 {
-		a.scale = 1
-	}
-	frame := rect{Right: a.px(canvasWidth), Bottom: a.px(canvasHeight)}
-	const style = wsCaption | wsSysMenu | wsMinimizeBox | wsClipChildren
-	const extendedStyle = wsExControlParent
-	procAdjustRect.Call(uintptr(unsafe.Pointer(&frame)), style, 0, extendedStyle)
-	width, height := frame.Right-frame.Left, frame.Bottom-frame.Top
-	x, y := (work.Left+work.Right-width)/2, (work.Top+work.Bottom-height)/2
-	window, _, err := procCreateWindow.Call(extendedStyle, uintptr(unsafe.Pointer(name)),
-		uintptr(unsafe.Pointer(utf("Half-Life: Abaddon — лаунчер"))), style,
-		uintptr(x), uintptr(y), uintptr(width), uintptr(height), 0, 0, instance, 0)
-	if window == 0 {
-		return fmt.Errorf("Не удалось открыть окно лаунчера. %v", err)
-	}
-	a.window = window
-	defer a.release()
-	defer procDestroyWindow.Call(window)
-	a.initialize()
-	if smoke {
-		return a.smoke()
-	}
-	show(window, true)
-	procFocus.Call(a.controls[idLaunch])
-	a.detect()
-	if loadErr != nil {
-		a.status("Сохранённые настройки не прочитались. Загружены значения по умолчанию.", toneNote)
-	}
-	var msg message
-	for {
-		result, _, err := procGetMessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
-		switch int32(result) {
-		case -1:
-			return fmt.Errorf("Ошибка обработки окна лаунчера. %v", err)
-		case 0:
-			return nil
-		}
-		handled, _, _ := procDialogMessage.Call(window, uintptr(unsafe.Pointer(&msg)))
-		if handled == 0 {
-			procTranslate.Call(uintptr(unsafe.Pointer(&msg)))
-			procDispatch.Call(uintptr(unsafe.Pointer(&msg)))
-		}
-	}
-}
-
-func (a *launcher) px(value int) int32 { return int32(math.Round(float64(value) * a.scale)) }
-func (a *launcher) box(x, y, width, height int) rect {
-	return rect{a.px(x), a.px(y), a.px(x + width), a.px(y + height)}
-}
-func (a *launcher) child(class, title string, id, x, y, width, height int,
-	flags, extendedStyle, typeface uintptr) uintptr {
-	handle, _, _ := procCreateWindow.Call(extendedStyle,
-		uintptr(unsafe.Pointer(utf(class))), uintptr(unsafe.Pointer(utf(title))),
-		wsChild|wsVisible|flags, uintptr(a.px(x)), uintptr(a.px(y)),
-		uintptr(a.px(width)), uintptr(a.px(height)), a.window, uintptr(id), a.instance, 0)
-	if id != 0 {
-		a.controls[id] = handle
-	}
-	send(handle, wmSetFont, typeface, 1)
-	return handle
-}
-func (a *launcher) label(title string, x, y, width, height int, typeface uintptr) uintptr {
-	return a.child("STATIC", title, 0, x, y, width, height, 0, 0, typeface)
-}
-func (a *launcher) buttonControl(title string, id, x, y, width, height int) uintptr {
-	return a.child("BUTTON", title, id, x, y, width, height,
-		bsOwnerDraw|wsTabStop, 0, a.regular)
-}
-func (a *launcher) edit(id, x, y, width, height int, number bool) uintptr {
-	flags, limit := uintptr(wsTabStop|esAutoHScroll), uintptr(32767)
-	if number {
-		flags, limit = flags|esNumber, 5
-	}
-	handle := a.child("EDIT", "", id, x, y, width, height, flags, wsExClientEdge, a.regular)
-	send(handle, emSetLimitText, limit, 0)
-	return handle
-}
-func (a *launcher) combo(id, x, y, width int, editable bool) uintptr {
-	flags := uintptr(wsTabStop | wsVScroll | cbsDropDownList)
-	if editable {
-		flags = wsTabStop | wsVScroll | cbsDropDown | cbsAutoHScroll
-	}
-	handle := a.child("COMBOBOX", "", id, x, y, width, 184, flags, 0, a.regular)
-	procCtlTheme.Call(handle, uintptr(unsafe.Pointer(utf("DarkMode_Explorer"))), 0)
-	return handle
-}
-func (a *launcher) setOptions(id int, options []choice) {
-	handle := a.controls[id]
-	send(handle, cbResetContent, 0, 0)
-	for _, option := range options {
-		sendText(handle, cbAddString, 0, option.label)
-	}
-}
-func (a *launcher) pick(id int, options []choice, value string) {
-	for i, option := range options {
-		if option.value == value {
-			send(a.controls[id], cbSetCurSel, uintptr(i), 0)
-			return
-		}
-	}
-	send(a.controls[id], cbSetCurSel, 0, 0)
-}
-func (a *launcher) value(id int, options []choice) string {
-	i := send(a.controls[id], cbGetCurSel, 0, 0)
-	if i >= uintptr(len(options)) {
-		return options[0].value
-	}
-	return options[i].value
-}
-
-func (a *launcher) initialize() {
-	a.regular, a.heading = font(a.px(14), 400), font(a.px(18), 600)
-	a.title, a.caption = font(a.px(31), 600), font(a.px(13), 400)
-	a.background, a.panel, a.field = brush(toneBackground), brush(tonePanel), brush(toneField)
-	a.edge = brush(toneEdge)
-	a.button, a.activeButton = brush(color(37, 51, 61)), brush(toneAccent)
-	a.titleLabel = a.label("Half-Life: Abaddon", 26, 21, 560, 44, a.title)
-
-	a.buttonControl("Garry’s Mod", idGMod, 26, 82, 178, 35)
-	a.buttonControl("HL2 · карты", idContent, 212, 82, 178, 35)
-	a.buttonControl("HL2 · Flight Lab", idHL2, 398, 82, 178, 35)
-
-	a.label("Пути к игре", 44, 145, 331, 26, a.heading)
-	a.captionLabel = a.label("Пустое поле использует автопоиск Steam.", 44, 173, 355, 20, a.caption)
-	a.label("Steam", 44, 210, 314, 19, a.regular)
-	a.edit(idSteam, 44, 231, 332, 29, false)
-	a.buttonControl("…", idSteamBrowse, 384, 231, 34, 29)
-	a.engineLabel = a.label("", 44, 276, 314, 19, a.regular)
-	a.edit(idGame, 44, 297, 332, 29, false)
-	a.buttonControl("…", idGameBrowse, 384, 297, 34, 29)
-	a.nativeLabel = a.label("Папка мода abaddon_native", 44, 342, 314, 19, a.regular)
-	a.edit(idNative, 44, 363, 332, 29, false)
-	a.buttonControl("…", idNativeBrowse, 384, 363, 34, 29)
-
-	a.label("Параметры запуска", 474, 145, 310, 26, a.heading)
-	a.label("Режим экрана", 474, 184, 140, 19, a.regular)
-	a.label("Разрешение", 624, 184, 164, 19, a.regular)
-	a.combo(idDisplay, 474, 206, 140, false)
-	a.edit(idWidth, 624, 206, 67, 28, true)
-	a.label("×", 695, 210, 13, 19, a.regular)
-	a.edit(idHeight, 712, 206, 77, 28, true)
-	a.label("Карта", 474, 248, 311, 19, a.regular)
-	a.combo(idMap, 474, 270, 315, true)
-
-	a.profileLabel = a.label("Профиль аддона", 474, 310, 315, 19, a.regular)
-	a.combo(idProfile, 474, 332, 315, false)
-	a.buttonControl("Консоль", idConsole, 474, 376, 94, 28)
-	a.buttonControl("Без роликов", idIntro, 575, 376, 108, 28)
-	a.buttonControl("Журнал", idLog, 690, 376, 99, 28)
-
-	a.statusLabel = a.label("", 44, 446, 745, 40, a.regular)
-	a.buildLabel = a.label("", 44, 489, 745, 22, a.caption)
-	a.buttonControl("Найти автоматически", idDetect, 26, 527, 185, 33)
-	a.buttonControl("Установить пакет…", idInstall, 219, 527, 154, 33)
-	a.buttonControl("Откатить", idRollback, 381, 527, 91, 33)
-	a.buttonControl("Сохранить", idSave, 550, 527, 115, 33)
-	a.buttonControl("Запустить", idLaunch, 673, 527, 133, 33)
-
-	a.setOptions(idDisplay, displays)
-	a.setOptions(idProfile, profiles)
-	a.setForm()
-}
-
-func (a *launcher) release() {
-	for _, object := range []uintptr{a.regular, a.heading, a.title, a.caption,
-		a.background, a.panel, a.field, a.edge, a.button, a.activeButton} {
-		if object != 0 {
-			procDelete.Call(object)
-		}
-	}
-}
-
-func (a *launcher) activeOptions() *core.Options {
-	switch a.cfg.Selected {
-	case core.HL2:
-		return &a.cfg.HL2
-	case core.HL2Content:
-		return &a.cfg.HL2Content
-	default:
-		return &a.cfg.GMod
-	}
-}
-
-func (a *launcher) setForm() {
-	a.updating = true
-	defer func() { a.updating = false }()
-	options := a.activeOptions()
-	hl2 := a.cfg.Selected == core.HL2
-	setText(a.controls[idSteam], a.cfg.SteamPath)
-	maps, gamePath, label := gmodMaps, a.cfg.GModPath, "Папка Garry’s Mod"
-	if hl2 {
-		maps, gamePath, label = sourceMaps, a.cfg.SDKPath, "Папка Source SDK Base 2013"
-	} else if a.cfg.Selected == core.HL2Content {
-		maps, gamePath, label = contentMaps, a.cfg.ContentPath, "Папка Half-Life 2 · App 220"
-	}
-	setText(a.engineLabel, label)
-	setText(a.controls[idGame], gamePath)
-	setText(a.controls[idNative], a.cfg.NativePath)
-	for _, widget := range []uintptr{a.nativeLabel, a.controls[idNative], a.controls[idNativeBrowse]} {
-		show(widget, hl2)
-	}
-	show(a.profileLabel, a.cfg.Selected == core.GMod)
-	show(a.controls[idProfile], a.cfg.Selected == core.GMod)
-	show(a.controls[idInstall], !hl2)
-	show(a.controls[idRollback], !hl2)
-	for _, id := range []int{idGMod, idContent, idHL2} {
-		repaint(a.controls[id])
-	}
-	mapList := a.controls[idMap]
-	send(mapList, cbResetContent, 0, 0)
-	for _, mapName := range maps {
-		sendText(mapList, cbAddString, 0, mapName)
-	}
-	setText(mapList, options.Map)
-	a.pick(idDisplay, displays, options.Display)
-	a.pick(idProfile, profiles, options.GameProfile)
-	setText(a.controls[idWidth], strconv.Itoa(options.Width))
-	setText(a.controls[idHeight], strconv.Itoa(options.Height))
-	a.checkbox[idConsole] = options.Console
-	a.checkbox[idIntro] = options.SkipIntro
-	a.checkbox[idLog] = options.DebugLog
-	for _, id := range []int{idConsole, idIntro, idLog} {
-		repaint(a.controls[id])
-	}
-	a.updateDetection()
-}
-
-func (a *launcher) readPaths() {
-	a.cfg.SteamPath = strings.TrimSpace(getText(a.controls[idSteam]))
-	path := strings.TrimSpace(getText(a.controls[idGame]))
-	switch a.cfg.Selected {
-	case core.HL2:
-		a.cfg.SDKPath = path
-		a.cfg.NativePath = strings.TrimSpace(getText(a.controls[idNative]))
-	case core.HL2Content:
-		a.cfg.ContentPath = path
-	default:
-		a.cfg.GModPath = path
-	}
-}
-
-func (a *launcher) readForm() error {
-	a.readPaths()
-	width, widthErr := strconv.Atoi(strings.TrimSpace(getText(a.controls[idWidth])))
-	height, heightErr := strconv.Atoi(strings.TrimSpace(getText(a.controls[idHeight])))
-	if widthErr != nil || heightErr != nil {
-		return fmt.Errorf("Укажите ширину и высоту экрана целыми числами.")
-	}
-	if (width != 0 || height != 0) && (width < 640 || width > 7680 || height < 480 || height > 4320) {
-		return fmt.Errorf("Разрешение от 640 × 480 до 7680 × 4320. Два нуля оставляют настройки игры.")
-	}
-	options := a.activeOptions()
-	options.Width, options.Height = width, height
-	options.Map = strings.TrimSpace(getText(a.controls[idMap]))
-	options.Display = a.value(idDisplay, displays)
-	options.Console = a.checkbox[idConsole]
-	options.SkipIntro = a.checkbox[idIntro]
-	options.DebugLog = a.checkbox[idLog]
-	if a.cfg.Selected == core.GMod {
-		options.GameProfile = a.value(idProfile, profiles)
-	}
-	return nil
-}
-
-func (a *launcher) status(message string, ink uintptr) {
-	a.statusInk = ink
-	setText(a.statusLabel, message)
-	repaint(a.statusLabel)
-}
-func (a *launcher) updateDetection() {
-	auto := a.detection.GModPath
-	state := a.detection.GMod
-	if a.cfg.Selected == core.HL2 {
-		auto, state = a.detection.SDKPath, a.detection.HL2
-	} else if a.cfg.Selected == core.HL2Content {
-		auto, state = a.detection.ContentPath, a.detection.HL2Content
-	}
-	statusInk := toneNote
-	if state.Ready {
-		statusInk = toneAccent
-	}
-	if state.Message == "" {
-		state.Message, statusInk = "Выберите «Найти автоматически» для проверки установок Steam.", toneMuted
-	}
-	a.status(state.Message, statusInk)
-	build := a.builds[a.cfg.Selected]
-	caption := "Версия отображается после установки пакета."
-	if len(build.Revision) >= 10 {
-		caption = fmt.Sprintf("Сборка %s · %s · %s", build.Channel, build.Revision[:10], build.Status)
-	} else if a.cfg.Selected == core.HL2 {
-		caption = "Экспериментальный полигон полёта Source SDK."
-	} else if a.cfg.Selected == core.HL2Content {
-		caption = "Режим content-only · карты, модели и материалы Half-Life 2."
-	}
-	setText(a.buildLabel, caption)
-	for id, value := range map[int]string{
-		idSteam:  a.detection.SteamPath,
-		idGame:   auto,
-		idNative: a.detection.NativePath,
-	} {
-		if value == "" {
-			value = "Определить автоматически"
-		}
-		sendText(a.controls[id], emSetCueBanner, 1, value)
-	}
-}
-
-func (a *launcher) setBusy(busy bool) {
-	a.busy = busy
-	enable(a.controls[idDetect], !busy)
-	enable(a.controls[idLaunch], !busy)
-	enable(a.controls[idInstall], !busy)
-	enable(a.controls[idRollback], !busy)
-}
-
-func (result *jobResult) refresh() {
-	result.detected = core.Detect(result.cfg)
-	result.builds = make(map[core.Profile]core.BuildInfo)
-	for _, profile := range []core.Profile{core.GMod, core.HL2Content} {
-		if build, err := core.InstalledBuild(result.cfg, profile); err == nil {
-			result.builds[profile] = build
-		}
-	}
-}
-
-func (a *launcher) runJob(job func() jobResult) {
-	window, result := a.window, a.result
-	go func() {
-		result <- job()
-		procPostMessage.Call(window, wmResult, 0, 0)
-	}()
-}
-
-func (a *launcher) begin(start bool) {
-	if a.busy {
-		return
-	}
-	a.readPaths()
-	a.setBusy(true)
-	if start {
-		a.status("Проверка пути и запуск через Steam…", toneMuted)
-	} else {
-		a.status("Поиск Steam, клиента и файлов мода…", toneMuted)
-	}
-	snapshot := a.cfg
-	a.runJob(func() jobResult {
-		var completed jobResult
-		completed.cfg, completed.start = snapshot, start
-		if start {
-			plan, err := core.BuildLaunch(snapshot, snapshot.Selected)
-			if err == nil {
-				err = plan.Start()
-			}
-			completed.err = err
-		} else {
-			completed.refresh()
-		}
-		return completed
-	})
-}
-func (a *launcher) detect() { a.begin(false) }
-
-func (a *launcher) packageAction(rollback bool) {
-	if a.busy || a.cfg.Selected == core.HL2 {
-		return
-	}
-	a.readPaths()
-	snapshot := a.cfg
-	profile := snapshot.Selected
-	destination, err := core.PackageDestination(snapshot, profile)
-	if err != nil {
-		a.status(err.Error(), toneNote)
-		return
-	}
-	game := "Garry’s Mod"
-	if profile == core.HL2Content {
-		game = "Half-Life 2 · карты"
-	}
-	var archive string
-	prompt := "Вернуть предыдущий пакет для «" + game + "»?"
-	if !rollback {
-		if executable, err := os.Executable(); err == nil {
-			archive = filepath.Join(filepath.Dir(executable), "Abaddon-Game.zip")
-		}
-		if _, err := os.Stat(archive); os.IsNotExist(err) {
-			folder := chooseFolder(a.window, "Выберите папку с Abaddon-Game.zip.", filepath.Dir(archive))
-			if folder == "" {
-				return
-			}
-			archive = filepath.Join(folder, "Abaddon-Game.zip")
-		}
-		build, err := core.BundleInfo(archive, profile)
-		if err != nil {
-			a.status("Пакет недоступен. "+err.Error(), toneNote)
-			return
-		}
-		prompt = fmt.Sprintf("Установить сборку %s · %s для «%s»?", build.Channel, build.Revision[:10], game)
-	}
-	if !confirmAction(a.window, prompt+"\n\n"+destination) {
-		return
-	}
-	a.setBusy(true)
-	a.status("Проверка файлов пакета…", toneMuted)
-	a.runJob(func() jobResult {
-		completed := jobResult{cfg: snapshot, note: "Пакет установлен."}
-		if rollback {
-			_, completed.err = core.RollbackBundle(snapshot, profile)
-			completed.note = "Предыдущий пакет восстановлен."
-		} else {
-			_, completed.err = core.InstallBundle(snapshot, profile, archive)
-		}
-		completed.refresh()
-		return completed
-	})
-}
-
-func (a *launcher) onResult() {
-	select {
-	case completed := <-a.result:
-		a.setBusy(false)
-		if completed.start {
-			if completed.err != nil {
-				a.status(completed.err.Error(), toneNote)
-			} else {
-				a.status("Команда запуска передана Steam.", toneAccent)
-			}
-			return
-		}
-		a.readPaths()
-		cfg := completed.cfg
-		if a.cfg.SteamPath != cfg.SteamPath || a.cfg.GModPath != cfg.GModPath ||
-			a.cfg.SDKPath != cfg.SDKPath || a.cfg.NativePath != cfg.NativePath || a.cfg.ContentPath != cfg.ContentPath {
-			a.status("Пути изменены. Повторите проверку кнопкой автопоиска.", toneNote)
-			return
-		}
-		a.detection = completed.detected
-		a.builds = completed.builds
-		a.updateDetection()
-		if completed.err != nil {
-			a.status(completed.err.Error(), toneNote)
-		} else if completed.note != "" {
-			a.status(completed.note, toneAccent)
-		}
-	default:
-	}
-}
-
-func (a *launcher) selectEngine(profile core.Profile) {
-	if a.cfg.Selected == profile || a.busy {
-		return
-	}
-	if err := a.readForm(); err != nil {
-		a.status(err.Error(), toneNote)
-		return
-	}
-	a.cfg.Selected = profile
-	a.setForm()
-}
-
-func (a *launcher) browse(id int) {
-	field, initial, heading := idSteam, a.detection.SteamPath, "Выберите папку Steam."
-	switch id {
-	case idGameBrowse:
-		field, initial, heading = idGame, a.detection.GModPath, "Выберите папку Garry’s Mod."
-		if a.cfg.Selected == core.HL2 {
-			initial, heading = a.detection.SDKPath, "Выберите папку Source SDK Base 2013 Singleplayer."
-		} else if a.cfg.Selected == core.HL2Content {
-			initial, heading = a.detection.ContentPath, "Выберите папку Half-Life 2."
-		}
-	case idNativeBrowse:
-		field, initial, heading = idNative, a.detection.NativePath, "Выберите папку установленного abaddon_native."
-	}
-	if manual := getText(a.controls[field]); manual != "" {
-		initial = manual
-	}
-	if strings.EqualFold(filepath.Ext(initial), ".exe") {
-		initial = filepath.Dir(initial)
-	}
-	if chosen := chooseFolder(a.window, heading, initial); chosen != "" {
-		setText(a.controls[field], chosen)
-		a.detect()
-	}
-}
-
-func (a *launcher) command(wParam uintptr) {
-	id, notification := int(wParam&0xffff), int((wParam>>16)&0xffff)
-	if a.updating {
-		return
-	}
-	if (id == idSteam || id == idGame || id == idNative) && notification == enChange {
-		a.status("Пути изменены. Автопоиск перепроверит установки.", toneMuted)
-		return
-	}
-	if notification != 0 {
-		return
-	}
-	switch id {
-	case idGMod:
-		a.selectEngine(core.GMod)
-	case idHL2:
-		a.selectEngine(core.HL2)
-	case idContent:
-		a.selectEngine(core.HL2Content)
-	case idSteamBrowse, idGameBrowse, idNativeBrowse:
-		a.browse(id)
-	case idConsole, idIntro, idLog:
-		a.checkbox[id] = !a.checkbox[id]
-		repaint(a.controls[id])
-	case idDetect:
-		a.detect()
-	case idInstall:
-		a.packageAction(false)
-	case idRollback:
-		a.packageAction(true)
-	case idSave, idLaunch:
-		if err := a.readForm(); err != nil {
-			a.status(err.Error(), toneNote)
-			return
-		}
-		if err := core.SaveConfig(a.cfg); err != nil {
-			a.status(err.Error(), toneNote)
-			return
-		}
-		if id == idSave {
-			a.status("Настройки профилей сохранены.", toneAccent)
-		} else {
-			a.begin(true)
-		}
-	}
-}
-
-func (a *launcher) paint() {
-	var paint paintState
-	dc, _, _ := procBeginPaint.Call(a.window, uintptr(unsafe.Pointer(&paint)))
-	defer procEndPaint.Call(a.window, uintptr(unsafe.Pointer(&paint)))
-	var client rect
-	procClientRect.Call(a.window, uintptr(unsafe.Pointer(&client)))
-	fill(dc, client, a.background)
-	fill(dc, a.box(26, 132, 409, 288), a.panel)
-	stroke(dc, a.box(26, 132, 409, 288), a.edge)
-	fill(dc, a.box(456, 132, 350, 288), a.panel)
-	stroke(dc, a.box(456, 132, 350, 288), a.edge)
-	fill(dc, a.box(26, 435, 780, 77), a.field)
-	fill(dc, a.box(26, 435, 3, 77), a.activeButton)
-}
-
-func (a *launcher) drawItem(draw *drawState) uintptr {
-	if a.controls[int(draw.id)] != draw.window {
-		return 0
-	}
-	switch int(draw.id) {
-	case idGMod, idContent, idHL2, idSteamBrowse, idGameBrowse, idNativeBrowse, idConsole, idIntro, idLog,
-		idDetect, idInstall, idRollback, idSave, idLaunch:
-	default:
-		return 0
-	}
-	dc, area, id := draw.dc, draw.rect, int(draw.id)
-	ink, base := toneText, a.button
-	highlight := id == idLaunch || id == idGMod && a.cfg.Selected == core.GMod ||
-		id == idHL2 && a.cfg.Selected == core.HL2 || id == idContent && a.cfg.Selected == core.HL2Content
-	if highlight {
-		ink, base = toneBackground, a.activeButton
-	}
-	if draw.state&odsDisabled != 0 {
-		ink, base = toneMuted, a.panel
-	} else if draw.state&odsSelected != 0 {
-		ink, base = toneAccent, a.field
-	}
-	fill(dc, area, base)
-	stroke(dc, area, a.edge)
-	oldFont, _, _ := procSelect.Call(dc, a.regular)
-	defer procSelect.Call(dc, oldFont)
-	oldText, _, _ := procTextColor.Call(dc, ink)
-	defer procTextColor.Call(dc, oldText)
-	oldMode, _, _ := procBkMode.Call(dc, 1)
-	defer procBkMode.Call(dc, oldMode)
-	flags := uintptr(dtCenter | dtVCenter | dtSingleLine | dtNoPrefix | dtEndEllipsis)
-	if id == idConsole || id == idIntro || id == idLog {
-		box := rect{
-			Left: area.Left + a.px(7), Top: area.Top + a.px(9),
-			Right: area.Left + a.px(17), Bottom: area.Top + a.px(19),
-		}
-		if a.checkbox[id] {
-			fill(dc, box, a.activeButton)
-		} else {
-			stroke(dc, box, a.edge)
-		}
-		area.Left += a.px(16)
-	}
-	textAt(dc, getText(draw.window), area, flags)
-	if draw.state&odsFocus != 0 {
-		focus := draw.rect
-		focus.Left += 3
-		focus.Right -= 3
-		focus.Top += 3
-		focus.Bottom -= 3
-		procDrawFocus.Call(dc, uintptr(unsafe.Pointer(&focus)))
-	}
-	return 1
-}
-
-func (a *launcher) smoke() error {
-	for id := idGMod; id <= idLaunch; id++ {
-		if a.controls[id] == 0 {
-			return fmt.Errorf("Нет элемента окна %d.", id)
-		}
-	}
-	for _, profile := range []core.Profile{core.GMod, core.HL2Content, core.HL2, core.GMod} {
-		a.selectEngine(profile)
-		if a.cfg.Selected != profile {
-			return fmt.Errorf("Переключение профиля %s не прошло.", profile)
-		}
-		if err := a.readForm(); err != nil || a.activeOptions().Map == "" || a.activeOptions().Width < 1 {
-			return fmt.Errorf("Не удалось прочитать параметры профиля %s.", profile)
-		}
-	}
-	setText(a.controls[idWidth], "1280")
-	setText(a.controls[idGame], `C:\Steam library\GarrysMod`)
-	a.selectEngine(core.HL2)
-	setText(a.controls[idWidth], "1920")
-	setText(a.controls[idGame], `D:\Steam library\Source SDK`)
-	a.selectEngine(core.HL2Content)
-	setText(a.controls[idWidth], "1024")
-	setText(a.controls[idGame], `E:\Steam library\Half-Life 2`)
-	a.selectEngine(core.GMod)
-	if a.cfg.Selected != core.GMod || getText(a.controls[idWidth]) != "1280" ||
-		getText(a.controls[idGame]) != `C:\Steam library\GarrysMod` ||
-		a.cfg.HL2.Width != 1920 || a.cfg.SDKPath != `D:\Steam library\Source SDK` ||
-		a.cfg.HL2Content.Width != 1024 || a.cfg.ContentPath != `E:\Steam library\Half-Life 2` {
-		return fmt.Errorf("Профили не сохранили независимые параметры в памяти.")
-	}
-	return nil
-}
-
-func windowProc(window uintptr, event uint32, wParam, lParam uintptr) uintptr {
-	if app != nil && app.window == window && window != 0 {
-		a := app
-		switch event {
-		case wmPaint:
-			a.paint()
-			return 0
-		case wmEraseBackground:
-			return 1
-		case wmCommand:
-			a.command(wParam)
-			return 0
-		case wmResult:
-			a.onResult()
-			return 0
-		case wmDrawItem:
-			if lParam != 0 {
-				return a.drawItem((*drawState)(unsafe.Pointer(lParam)))
-			}
-		case wmColorEdit, wmColorList:
-			procTextColor.Call(wParam, toneText)
-			procBkColor.Call(wParam, toneField)
-			return a.field
-		case wmColorStatic:
-			if lParam == a.statusLabel {
-				procTextColor.Call(wParam, a.statusInk)
-				procBkColor.Call(wParam, toneField)
-				return a.field
-			}
-			ink, background, fill := toneText, tonePanel, a.panel
-			if lParam == a.titleLabel {
-				background, fill = toneBackground, a.background
-			} else if lParam == a.captionLabel {
-				ink = toneMuted
-			}
-			procTextColor.Call(wParam, ink)
-			procBkColor.Call(wParam, background)
-			procBkMode.Call(wParam, 1)
-			return fill
-		case wmDestroy:
-			a.window = 0
-			procPostQuit.Call(0)
-			return 0
-		}
-	}
-	result, _, _ := procDefWindow.Call(window, uintptr(event), wParam, lParam)
-	return result
 }

@@ -5,7 +5,7 @@
 --   как в оригинальном Descent.
 --
 --   Управление:
---     V         — переключить (только в D6-режиме)
+--     свободная V — переключить (только в D6-режиме)
 --     concommand d6_rearview_toggle  — то же самое
 --     convar     d6_rearview  0/1    — прямое управление
 --
@@ -32,13 +32,15 @@ local COL_SCAN    = Color(119, 230, 217,  10)  -- строчная развёр�
 -- ── ConVar и RT ──────────────────────────────────────────
 
 local cv = CreateClientConVar("d6_rearview", "0", true, false,
-    "Вид сзади в стиле Descent (0/1)")
+    "Показывать окно заднего вида (0/1); при выключении камера не рендерится.", 0, 1)
 
 local rv_rt   = nil
 local rv_mat  = nil
 local rv_busy = false    -- защита от рекурсии при render.RenderView
+local rt_attempted = false
 
 local function InitRT()
+    rt_attempted = true
     rv_rt = GetRenderTargetEx(
         "d6_rearview_rt", RT_W, RT_H,
         RT_SIZE_NO_CHANGE,
@@ -60,7 +62,9 @@ local function InitRT()
         })
 end
 
-hook.Add("InitPostEntity", "D6_RearView_Init", InitRT)
+-- Allocate only when the enabled camera is first used. Remove the old eager
+-- hook too, so Lua Auto Refresh does not leave a second initialization path.
+hook.Remove("InitPostEntity", "D6_RearView_Init")
 
 -- ── Рендер в RT ──────────────────────────────────────────
 -- PreDrawEffects вызывается во время 3D-прохода. Внутри
@@ -69,12 +73,14 @@ hook.Add("InitPostEntity", "D6_RearView_Init", InitRT)
 hook.Add("PreDrawEffects", "D6_RearView_Render", function()
     if rv_busy then return end
     if not cv:GetBool() then return end
-    if not rv_rt or not rv_mat then return end
 
     local ply = LocalPlayer()
     if not IsValid(ply)
     or not ply:GetNWBool("D6On", false)
     or not ply:Alive() then return end
+
+    if not rt_attempted then InitRT() end
+    if not rv_rt or not rv_mat then return end
 
     -- Угол «назад»: разворот по рысканью на 180°,
     -- тангаж и крен сохраняются (корабль не переворачивается).
@@ -162,10 +168,15 @@ hook.Add("HUDPaint", "D6_RearView_HUD", function()
         1, Color(0, 0, 0, 220))
 
     -- Подсказка клавиши (маленький текст справа снизу)
-    draw.SimpleTextOutlined("[V]", "DermaDefault",
-        dx + DISP_W - 4, dy + DISP_H - 11,
-        Color(0, 180, 100, 160), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER,
-        1, Color(0, 0, 0, 120))
+    local shortcut = input.LookupBinding("d6_rearview_toggle")
+    local vBinding = input.LookupKeyBinding(KEY_V)
+    if not shortcut and (not vBinding or vBinding == "") then shortcut = "V" end
+    if shortcut then
+        draw.SimpleTextOutlined("[" .. string.upper(shortcut) .. "]", "DermaDefault",
+            dx + DISP_W - 4, dy + DISP_H - 11,
+            Color(0, 180, 100, 160), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER,
+            1, Color(0, 0, 0, 120))
+    end
 end)
 
 -- ── Команды ──────────────────────────────────────────────
@@ -177,12 +188,26 @@ concommand.Add("d6_rearview_toggle", function()
         color_white, new == "1" and "ВКЛ" or "ВЫКЛ")
 end)
 
--- Клавиша V (только когда игрок в D6-режиме)
-hook.Add("PlayerButtonDown", "D6_RearView_Key", function(ply, key)
-    if key ~= KEY_V then return end
-    if not IsValid(ply) or ply ~= LocalPlayer() then return end
-    if not ply:GetNWBool("D6On", false) then return end
+-- PlayerButtonDown is not called clientside in singleplayer. Poll one press
+-- edge instead, without rebinding the user's keys or toggling while typing.
+-- An explicit bind owns the command. V is only a fallback when unbound;
+-- in Sandbox it normally belongs to noclip and must remain untouched.
+hook.Remove("PlayerButtonDown", "D6_RearView_Key")
+local wasDown = false
+hook.Add("Think", "D6_RearView_Key", function()
+    local down = input.IsKeyDown(KEY_V)
+    local pressed = down and not wasDown
+    wasDown = down -- consume presses while a menu is open as well
+    if not pressed or input.LookupBinding("d6_rearview_toggle") then return end
+    local vBinding = input.LookupKeyBinding(KEY_V)
+    if vBinding and vBinding ~= "" then return end
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply:Alive() or not ply:GetNWBool("D6On", false)
+    or ply:InVehicle() or ply:IsTyping()
+    or gui.IsGameUIVisible() or gui.IsConsoleVisible()
+    or vgui.CursorVisible() or IsValid(vgui.GetKeyboardFocus())
+    or (system.HasFocus and not system.HasFocus()) then return end
     RunConsoleCommand("d6_rearview_toggle")
 end)
 
-print("[D6] d6_rearview.lua OK  (V = вид сзади)")
+print("[D6] d6_rearview.lua OK  (d6_rearview_toggle = вид сзади)")

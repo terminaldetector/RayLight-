@@ -326,37 +326,89 @@ if SERVER then
         if not clearance.Hit then return dest end
     end
 
-    hook.Add("Tick", "D6_ProjectileSweep", function()
-        local dt = engine.TickInterval()
-        for ent, state in pairs(tracked) do
-            if not IsValid(ent) or not ent.D6_Impact then
-                tracked[ent] = nil
-            else
-                local from = state.last
-                if state.steer then state.velocity = state.steer(ent, from, state.velocity, dt) end
-                local to = state.velocity and from + state.velocity*dt or ent:GetPos()
-                local tr = D6_Wep.CombatTrace({
-                    start = from, endpos = to, mask = MASK_SHOT, mins = -state.extents, maxs = state.extents,
-                    filter = state.filter,
-                })
-                local dest, velocity
-                if state.velocity then
-                    dest, velocity = D6_Gates.MoveShot(ent, from, to, state.extents.x, state.velocity, tr.Fraction)
-                end
+    -- One segment arbitrates map collision, portals and support devices. A support
+    -- never wins through a wall or an earlier portal; failed/empty devices are inert.
+    -- collision is supplied only from the deferred VPhysics contact wrapper below.
+    function D6_Wep.StepProjectile(ent, state, dt, collision)
+        if ent.D6_SupportImpactPending and not collision then return end
+        local from = state.last
+        if state.steer and not collision then state.velocity = state.steer(ent, from, state.velocity, dt) end
+        local to = collision and collision.HitPos or (state.velocity and from + state.velocity*dt or ent:GetPos())
+        local tr = D6_Wep.CombatTrace({
+            start = from, endpos = to, mask = MASK_SHOT, mins = -state.extents, maxs = state.extents,
+            filter = state.filter,
+        })
+        local supports = D6_Supports
+        local supportHit = not tr.StartSolid and supports and supports.TraceProjectile
+            and supports.TraceProjectile(ent, from, to, state.extents.x, tr.Fraction)
+        local maxFraction = supportHit and math.min(tr.Fraction, supportHit.fraction) or tr.Fraction
+        local physical = not state.velocity and ent:GetPhysicsObject()
+        local incoming = state.velocity or (collision and collision.OurOldVelocity)
+            or (IsValid(physical) and physical:GetVelocity()) or ent:GetVelocity()
+        local dest, velocity
+        -- Physical projectiles retain their native integration; swept projectiles
+        -- retain their existing portal path and compare its entry to the support.
+        if state.velocity and not tr.StartSolid then
+            dest, velocity = D6_Gates.MoveShot(ent, from, to, state.extents.x, state.velocity, maxFraction)
+        end
+        if dest then
+            state.velocity, state.last = velocity, dest
+            ent:SetPos(dest)
+            ent:SetAngles(velocity:Angle())
+            return "portal"
+        end
+        if supportHit and supportHit.fraction < tr.Fraction then
+            local action = supports.HandleProjectile(ent, supportHit, incoming)
+            if action and action.kind == "consume" then
+                -- Interception absorbs the round: do not also run its splash callback.
+                ent.D6_Impact, ent.D6_PhysicsImpact = nil, nil
+                ent:Remove()
+                return "consume"
+            elseif action and action.kind == "redirect" and action.velocity:LengthSqr() > 0 then
+                -- Direction may change, but energy/damage/ownership are not duplicated.
+                velocity = action.velocity:GetNormalized()*incoming:Length()
+                dest = action.pos or supportHit.pos
+                ent.D6_SupportReflected = true
+                state.last, state.steer = dest, nil
+                if state.velocity then state.velocity = velocity end
+                ent:SetPos(dest)
+                ent:SetAngles(velocity:Angle())
+                if IsValid(physical) then physical:SetVelocity(velocity); physical:Wake() end
+                return "redirect"
+            end
+            -- The device can become empty/ineligible between query and handling.
+            -- In that case a portal farther along the original segment still wins.
+            if state.velocity then
+                dest, velocity = D6_Gates.MoveShot(ent, from, to, state.extents.x, state.velocity, tr.Fraction)
                 if dest then
                     state.velocity, state.last = velocity, dest
                     ent:SetPos(dest)
                     ent:SetAngles(velocity:Angle())
-                elseif tr.Hit then
-                    ent.D6_Impact(tr.Entity, tr.HitPos, tr.HitNormal)
-                else
-                    if state.velocity then
-                        ent:SetPos(to)
-                        if state.steer then ent:SetAngles(state.velocity:Angle()) end
-                    end
-                    state.last = to
+                    return "portal"
                 end
             end
+        end
+        if tr.Hit then
+            ent.D6_Impact(tr.Entity, tr.HitPos, tr.HitNormal)
+            return "impact"
+        elseif collision then
+            -- Some native contacts do not appear in the swept mask. Preserve them.
+            ent.D6_Impact(collision.HitEntity, collision.HitPos, collision.HitNormal)
+            return "impact"
+        end
+        if state.velocity then
+            ent:SetPos(to)
+            if state.steer then ent:SetAngles(state.velocity:Angle()) end
+        end
+        state.last = to
+        return "move"
+    end
+
+    hook.Add("Tick", "D6_ProjectileSweep", function()
+        local dt = engine.TickInterval()
+        for ent, state in pairs(tracked) do
+            if not IsValid(ent) or not ent.D6_Impact then tracked[ent] = nil
+            else D6_Wep.StepProjectile(ent, state, dt) end
         end
     end)
 
@@ -381,9 +433,15 @@ if SERVER then
         local radius = math.Clamp(cfg.physRadius or 3, 1, 16)
         local p = ents.Create("d6_projectile")
         if not IsValid(p) then return end
+        p.D6_SourceSupport = cfg.sourceSupport
+        p.D6_SupportShot = IsValid(cfg.sourceSupport) or cfg.support == true
         local gun=cfg.weapon
-        if not IsValid(gun) and IsValid(owner) and owner:IsPlayer() then gun=owner:GetActiveWeapon() end
-        if IsValid(gun) then p.D6_WeaponClass=gun:GetClass() end
+        if not IsValid(gun) and not p.D6_SupportShot and IsValid(owner) and owner:IsPlayer() then gun=owner:GetActiveWeapon() end
+        -- Balance must see an explicit neutral identity: nil falls back to the
+        -- owner's active SWEP and would change support damage when guns switch.
+        if p.D6_SupportShot then p.D6_WeaponClass="d6_support"
+        elseif IsValid(gun) then p.D6_WeaponClass=gun:GetClass() end
+        if D6_Supports and D6_Supports.TagProjectile then D6_Supports.TagProjectile(p,owner) end
         if not cfg.swept then p.D6_PhysRadius = radius end
         p.D6_DamageClass = cfg.dmgClass
         local projectileArt = cfg.art or cfg.dmgClass or "kinetic"
@@ -444,6 +502,27 @@ if SERVER then
             filter = function(ent) return ent ~= owner and ent ~= p and not ent.D6_IsProjectile end,
         }
         tracked[p] = state
+        if p.D6_PhysicsImpact then
+            local nativeImpact = p.D6_PhysicsImpact
+            p.D6_PhysicsImpact = function(projectile, data)
+                if not projectile.D6_Impact or projectile.D6_SupportImpactPending then return end
+                if data.HitEntity == owner or (IsValid(data.HitEntity) and data.HitEntity.D6_IsProjectile) then return end
+                local supports = D6_Supports
+                local supportHit = supports and supports.TraceProjectile
+                    and supports.TraceProjectile(projectile, state.last, data.HitPos, radius, 1)
+                if not supportHit then nativeImpact(projectile, data); return end
+                -- PhysicsCollide must not remove/move bodies. Defer the arbitration,
+                -- retaining the pre-impact velocity instead of a native bounce.
+                projectile.D6_SupportImpactPending = true
+                local collision = {HitEntity=IsValid(data.HitEntity) and data.HitEntity or game.GetWorld(), HitPos=data.HitPos,
+                    HitNormal=data.HitNormal, OurOldVelocity=data.OurOldVelocity}
+                timer.Simple(0, function()
+                    if not IsValid(projectile) or not projectile.D6_Impact then return end
+                    projectile.D6_SupportImpactPending = nil
+                    D6_Wep.StepProjectile(projectile, state, 0, collision)
+                end)
+            end
+        end
         if IsValid(weapon) then
             local tr = D6_Wep.CombatTrace({start = owner:GetShootPos(), endpos = cfg.pos, mask = MASK_SHOT,
                 mins = -extents, maxs = extents, filter = state.filter})

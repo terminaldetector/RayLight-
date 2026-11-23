@@ -11,7 +11,8 @@ AddCSLuaFile()
 
 SWEP.PrintName      = "РЕЛЬСА МК2"
 SWEP.Author         = "Half-Life: Abaddon"
-SWEP.Category       = "Descent"
+SWEP.Category       = "Half-Life: Abaddon / Оружие"
+SWEP.ScriptedEntityType = "d6_weapon"
 SWEP.Slot           = 4
 SWEP.SlotPos        = 1
 SWEP.Spawnable      = true
@@ -150,6 +151,20 @@ function SWEP:Think()
     end
 end
 
+-- Only an owner's armed resonator can consume a rail. Map cover and earlier
+-- entities retain priority; a denied trigger leaves the ordinary trace intact.
+local function RailTrace(owner, from, to, filter)
+    local tr = D6_Wep.CombatTrace({start=from, endpos=to, filter=filter, mask=MASK_SHOT})
+    local supports = D6_Supports
+    if not tr.StartSolid and supports and supports.TraceRail and supports.HitRail then
+        local hit = supports.TraceRail(owner, from, to, tr.Fraction)
+        if hit and hit.fraction < tr.Fraction and supports.HitRail(owner, hit) then
+            return {Hit=true, HitPos=hit.pos, HitNormal=-(to-from):GetNormalized(), D6_Support=true}
+        end
+    end
+    return tr
+end
+
 -- ─── Penetrating trace: up to maxHits entities in a line ──
 local function PenetratingTrace(src, dir, range, owner, maxHits)
     local results   = {}
@@ -158,12 +173,7 @@ local function PenetratingTrace(src, dir, range, owner, maxHits)
 
     for _ = 1, maxHits do
         if curPos:DistToSqr(src) > range * range then break end
-        local tr = D6_Wep.CombatTrace({
-            start  = curPos,
-            endpos = src + dir * range,
-            filter = filterEnt,
-            mask   = MASK_SHOT,
-        })
+        local tr = RailTrace(owner, curPos, src + dir * range, filterEnt)
         if not tr.Hit then
             table.insert(results, { hitPos = src + dir * range, entity = nil })
             break
@@ -188,12 +198,7 @@ function SWEP:_DoQuickShot(owner)
     local dir = sa:Forward()
     local src = D6_Wep.MuzzleFor(owner, self:GetClass(), 1, MUZZLE)
 
-    local tr = D6_Wep.CombatTrace({
-        start  = src,
-        endpos = src + dir * RAIL_RANGE,
-        filter = owner,
-        mask   = MASK_SHOT,
-    })
+    local tr = RailTrace(owner, src, src + dir * RAIL_RANGE, owner)
     local hitPos = tr.HitPos
 
     if IsValid(tr.Entity) then

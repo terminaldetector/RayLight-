@@ -1,0 +1,44 @@
+name: Abaddon Windows launcher
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'DRMD-6DOF/launcher/**'
+      - 'DRMD-6DOF/tools/package_windows.py'
+      - '.github/workflows/abaddon-windows.yml'
+  pull_request:
+    paths:
+      - 'DRMD-6DOF/launcher/**'
+      - '.github/workflows/abaddon-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Installation and launch contract tests
+        working-directory: DRMD-6DOF/launcher
+        run: go test -v ./...
+      - name: Build native Windows executable
+        working-directory: DRMD-6DOF/launcher
+        run: go build -trimpath '-ldflags=-H=windowsgui -s -w' -o '${{ runner.temp }}/AbaddonLauncher.exe' .
+      - name: Real Win32 window smoke
+        shell: pwsh
+        run: |
+          $exe = Join-Path '${{ runner.temp }}' 'AbaddonLauncher.exe'
+          $process = Start-Process $exe -ArgumentList '--smoke-ui' -PassThru
+          if (-not $process.WaitForExit(20000)) { $process.Kill(); throw 'UI smoke timed out' }
+          if ($process.ExitCode -ne 0) { throw "UI smoke failed: $($process.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AbaddonLauncher-Windows-x64
+          path: '${{ runner.temp }}/AbaddonLauncher.exe'

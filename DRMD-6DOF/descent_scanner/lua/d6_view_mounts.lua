@@ -29,15 +29,18 @@ function V.Collect(ply, arsenal, hasOverride)
     return mounts
 end
 
-function V.Pose(origin, angles, slot, aspect, drift, bob)
+function V.Pose(origin, angles, slot, aspect, drift, bob, spread)
     local view = V.Slots[slot]
     if not view then return end
     -- Keep upper/lower mounts inside the shorter vertical field of ultrawide
     -- displays without moving their simulation sockets or covering the reticle.
     local vertical = math.min(1, (16/9) / math.max(aspect or 16/9, 0.1))
+    -- Move only the side mounts away from the centre. Upper/lower mounts,
+    -- weapon scale, simulation sockets and projectile origins stay unchanged.
+    local horizontal = math.Clamp(tonumber(spread) or 1.125, 1, 1.5)
     local p = view.pos
     local position = origin + angles:Forward()*p[1]
-        + angles:Right()*(p[2] + math.Clamp(drift or 0, -0.6, 0.6))
+        + angles:Right()*(p[2]*horizontal + math.Clamp(drift or 0, -0.6, 0.6))
         + angles:Up()*(p[3]*vertical + (bob or 0))
     return position, view.scale*math.max(0.72, vertical)
 end

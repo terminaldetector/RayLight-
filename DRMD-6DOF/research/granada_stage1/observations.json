@@ -1,0 +1,212 @@
+[
+  {
+    "frames": 480,
+    "keys": "",
+    "absolute_frame": 480,
+    "image": "rom-000480-title.png",
+    "label": "title"
+  },
+  {
+    "frames": 3,
+    "keys": "START",
+    "absolute_frame": 483,
+    "image": "rom-000483-start.png",
+    "label": "start"
+  },
+  {
+    "frames": 240,
+    "keys": "",
+    "absolute_frame": 723,
+    "image": "rom-000723-level-start.png",
+    "label": "level-start"
+  },
+  {
+    "frames": 3,
+    "keys": "START",
+    "absolute_frame": 726,
+    "image": "rom-000726-skip-intro.png",
+    "label": "skip-intro"
+  },
+  {
+    "frames": 240,
+    "keys": "",
+    "absolute_frame": 966,
+    "image": "rom-000966-menu.png",
+    "label": "menu"
+  },
+  {
+    "frames": 3,
+    "keys": "START",
+    "absolute_frame": 969,
+    "image": "rom-000969-begin-game.png",
+    "label": "begin-game"
+  },
+  {
+    "frames": 180,
+    "keys": "",
+    "absolute_frame": 1149,
+    "image": "rom-001149-first-stage.png",
+    "label": "first-stage"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A",
+    "absolute_frame": 1209,
+    "image": "rom-001209-up-fire-1.png",
+    "label": "up-fire-1"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A",
+    "absolute_frame": 1269,
+    "image": "rom-001269-up-fire-2.png",
+    "label": "up-fire-2"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A",
+    "absolute_frame": 1329,
+    "image": "rom-001329-up-fire-3.png",
+    "label": "up-fire-3"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A",
+    "absolute_frame": 1389,
+    "image": "rom-001389-up-fire-4.png",
+    "label": "up-fire-4"
+  },
+  {
+    "frames": 60,
+    "keys": "",
+    "absolute_frame": 1449,
+    "image": "rom-001449-idle-1.png",
+    "label": "idle-1"
+  },
+  {
+    "frames": 60,
+    "keys": "",
+    "absolute_frame": 1509,
+    "image": "rom-001509-idle-2.png",
+    "label": "idle-2"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A+C",
+    "absolute_frame": 1569,
+    "image": "rom-001569-north-blaster-1.png",
+    "label": "north-blaster-1"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A+C",
+    "absolute_frame": 1629,
+    "image": "rom-001629-north-blaster-2.png",
+    "label": "north-blaster-2"
+  },
+  {
+    "frames": 60,
+    "keys": "RIGHT+A+C",
+    "absolute_frame": 1689,
+    "image": "rom-001689-east-blaster-1.png",
+    "label": "east-blaster-1"
+  },
+  {
+    "frames": 60,
+    "keys": "RIGHT+A+C",
+    "absolute_frame": 1749,
+    "image": "rom-001749-east-blaster-2.png",
+    "label": "east-blaster-2"
+  },
+  {
+    "frames": 60,
+    "keys": "",
+    "absolute_frame": 1809,
+    "image": "rom-001809-hold-1.png",
+    "label": "hold-1"
+  },
+  {
+    "frames": 60,
+    "keys": "",
+    "absolute_frame": 1869,
+    "image": "rom-001869-hold-2.png",
+    "label": "hold-2"
+  },
+  {
+    "frames": 30,
+    "keys": "",
+    "absolute_frame": 1899,
+    "image": "rom-001899-still-enemies-1.png",
+    "label": "still-enemies-1"
+  },
+  {
+    "frames": 30,
+    "keys": "",
+    "absolute_frame": 1929,
+    "image": "rom-001929-still-enemies-2.png",
+    "label": "still-enemies-2"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+RIGHT+A+C",
+    "absolute_frame": 1989,
+    "image": "rom-001989-approach-battery.png",
+    "label": "approach-battery"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+RIGHT+A+C",
+    "absolute_frame": 2049,
+    "image": "rom-002049-attack-battery.png",
+    "label": "attack-battery"
+  },
+  {
+    "frames": 60,
+    "keys": "RIGHT+A+C",
+    "absolute_frame": 2109,
+    "image": "rom-002109-pass-battery.png",
+    "label": "pass-battery"
+  },
+  {
+    "frames": 60,
+    "keys": "UP+A+C",
+    "absolute_frame": 2169,
+    "image": "rom-002169-north-east.png",
+    "label": "north-east"
+  },
+  {
+    "frames": 12,
+    "keys": "DOWN+A",
+    "absolute_frame": 2181,
+    "image": "rom-002181-aim-battery.png",
+    "label": "aim-battery"
+  },
+  {
+    "frames": 3,
+    "keys": "DOWN+A+C",
+    "absolute_frame": 2184,
+    "image": "rom-002184-blast-battery.png",
+    "label": "blast-battery"
+  },
+  {
+    "frames": 35,
+    "keys": "UP+B+A",
+    "absolute_frame": 2219,
+    "image": "rom-002219-reverse-fire.png",
+    "label": "reverse-fire"
+  },
+  {
+    "frames": 3,
+    "keys": "A+B+C",
+    "absolute_frame": 2222,
+    "image": "rom-002222-blast-battery-again.png",
+    "label": "blast-battery-again"
+  },
+  {
+    "frames": 90,
+    "keys": "A+B",
+    "absolute_frame": 2312,
+    "image": "rom-002312-observe-result.png",
+    "label": "observe-result"
+  }
+]

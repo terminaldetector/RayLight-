@@ -41,5 +41,6 @@ function D6_Session.GiveLoadout(ply, all)
         end
     end
     A.EnsureOwned(ply)
+    if D6_Supports then D6_Supports.GrantInitial(ply, all == true) end
     return count
 end

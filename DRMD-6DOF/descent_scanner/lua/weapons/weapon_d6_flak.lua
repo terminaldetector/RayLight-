@@ -13,7 +13,8 @@ AddCSLuaFile()
 
 SWEP.PrintName      = "ФЛАК-ПУШКА"
 SWEP.Author         = "Half-Life: Abaddon"
-SWEP.Category       = "Descent"
+SWEP.Category       = "Half-Life: Abaddon / Оружие"
+SWEP.ScriptedEntityType = "d6_weapon"
 SWEP.Slot           = 3
 SWEP.SlotPos        = 1
 SWEP.Spawnable      = true

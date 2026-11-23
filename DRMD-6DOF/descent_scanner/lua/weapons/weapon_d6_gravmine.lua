@@ -14,7 +14,8 @@ AddCSLuaFile()
 
 SWEP.PrintName      = "ГРАВИ-МИНА"
 SWEP.Author         = "Half-Life: Abaddon"
-SWEP.Category       = "Descent"
+SWEP.Category       = "Half-Life: Abaddon / Оружие"
+SWEP.ScriptedEntityType = "d6_weapon"
 SWEP.Slot           = 5
 SWEP.SlotPos        = 1
 SWEP.Spawnable      = true
