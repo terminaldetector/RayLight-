@@ -22,16 +22,30 @@
 | Саппорты на отдельном GMod x64 | 40/40 проверок штатной диагностики и 11/11 сценариев с живыми игровыми сущностями. Призма перенаправила снаряд в настоящего бойца Альянса, сохранив владельца. |
 | Lua | 8 наборов модульных проверок прошли, включая саппорты, геометрию, выстрелы, боеприпасы, мины, крепления и захват. |
 | HUD | 42 прогона в трёх разрешениях и 9 дополнительных прогонов реактора с активной панелью Granada. |
-| Нативная математика | 18/18 повторно пройдены на x86-64 с UBSan и на Linux i386 под QEMU. Исходные SHA SDK overlay и BSP совпадают с проверенной сборкой. |
-| Лаунчер | 14 тестов Go и 11 подтестов прошли. Собран PE32+ Windows x64 с графическим интерфейсом. Проверка окна на Windows включена в CI интеграционного PR. |
+| Нативный C++ | 18/18 тестов повторно пройдены на x86-64 с UBSan и на Linux i386 под QEMU. Повторно загружены обе ранее собранные библиотеки ELF32 через `CreateInterface`. SHA исходников SDK overlay и BSP совпадают с проверенной сборкой. |
+| Лаунчер | 14 тестов Go и 11 подтестов прошли. Windows CI собрала x64 EXE, открыла окно и проверила переключение трёх профилей. [Первый прогон PR](https://github.com/terminaldetector/RayLight-/actions/runs/45235110515) |
 | Графические клиенты | Запуск Steam-клиентов Garry’s Mod и SDK Base 2013 Singleplayer остаётся непроверенным из-за доступа к клиентским депо. |
 
 Режим **HL2 · карты** монтирует BSP, модели и материалы в установленный Half-Life 2. Режим **Flight Lab** — отдельный эксперимент, для которого нужна собранная пара Win32 `client.dll` и `server.dll`. Нативный слой пока охватывает полёт и геометрию стенда.
 
 ```yaml
+game_main_sha: d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d
+reactor_sha: 28656ac7f2a4c989d208a066b78f6c280cfcd5e1
+native_flight_sha: 5849463a3d3417a16d3cb98e32f8b13e83557bb9
+agent_original_branch: feat/abaddon-launcher
+agent_original_head: 9314adc01bfc537b93ef13c1d8e92656e20659ab
+agent_head_before_checkpoint: 5849463a3d3417a16d3cb98e32f8b13e83557bb9
 status: SYNC_DONE
 agent_uncommitted_work_preserved: true
+integration_branch: integration/abaddon-agent2-sync
+resolved_conflicts:
+  - DRMD-6DOF/descent_scanner/lua/autorun/d6_autoload.lua
+  - DRMD-6DOF/tests/replay_ui.lua
+  - DRMD-6DOF/launcher/go.mod
+  - DRMD-6DOF/launcher/main_windows.go
 unresolved_conflicts: []
+gmod_tests: "119/119 карты и режимы, 51/51 саппорты"
+native_build_and_test: "18/18 математика, повторная загрузка ранее собранных Linux i386 client.so и server.so"
 live_hl2_run: not-run
 ```
 
