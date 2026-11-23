@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "project": "Half-Life: Abaddon",
+  "repository": "https://github.com/terminaldetector/RayLight-",
+  "prepared_date": "2026-11-23",
+  "timezone": "Europe/Moscow",
+  "source_revision": "d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d",
+  "source_file_count": 606,
+  "source_markdown_count": 14,
+  "game_release": {
+    "tag": "abaddon-2026-11-22-ui-hotfix",
+    "url": "https://github.com/terminaldetector/RayLight-/releases/tag/abaddon-2026-11-22-ui-hotfix",
+    "full_zip": "https://github.com/terminaldetector/RayLight-/releases/download/abaddon-2026-11-22-ui-hotfix/Half-Life-Abaddon-Full-Windows.zip",
+    "full_zip_size": 71574974,
+    "full_zip_sha256": "30080c375faed7c9464940a4de6fcfde723612d9494d1c2abd2096ca62c3358e",
+    "ci": "https://github.com/terminaldetector/RayLight-/actions/runs/45020410407"
+  },
+  "scope": "Documentation and context handoff; no gameplay changes or new game build",
+  "included": [
+    "seven integration guides",
+    "all fourteen source Markdown documents",
+    "selected Granada observation evidence",
+    "historical repository test report",
+    "full source file path/size/hash inventory"
+  ],
+  "external_large_assets": [
+    "all source code",
+    "compiled MDL and companions",
+    "materials/textures",
+    "BSP/VMF",
+    "BLEND/GLB",
+    "historical capture PNG files"
+  ],
+  "not_included": [
+    "Granada ROM",
+    "emulator savestate",
+    "emulator dependencies",
+    "credentials"
+  ],
+  "verification_limits": [
+    "GMod UI/gameplay of the 22 November hotfix has not been run here",
+    "published CI confirms packaging and release integrity, not gameplay",
+    "Granada direct observation covers only early Stage 1, not all supports or bosses"
+  ],
+  "user_decision_provenance": [
+    "visible project conversation 21–23 November 2026",
+    "project-specific conversation context recovered for 20–21 November 2026",
+    "tracked project docs; implementation claims checked against pinned source"
+  ],
+  "entrypoint": "00_START_HERE_RU.md"
+}

@@ -1,0 +1,3035 @@
+{
+  "revision": "d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d",
+  "files": [
+    {
+      "path": ".github/workflows/abaddon-windows.yml",
+      "size": 1444,
+      "sha256": "0bd04498ab316290d00de44edd69783524cd316d6c83680c3b1bda65d0cb2407"
+    },
+    {
+      "path": "DRMD-6DOF/ABADDON_QUICKFIX_2026-11-22_RU.md",
+      "size": 8174,
+      "sha256": "d78c5303e1f17ddabdd41f23e43b275252f3c5edc7ba54053a2a894f57e01b6e"
+    },
+    {
+      "path": "DRMD-6DOF/COMBAT_IMPLEMENTATION_RU.md",
+      "size": 46497,
+      "sha256": "0e95d0767ebabbb8217ca09929c995f52c49e2c4271ab108dc6adf66ad27f339"
+    },
+    {
+      "path": "DRMD-6DOF/DRONE_ART_TASK_RU.md",
+      "size": 18926,
+      "sha256": "7e2869d230bf421f6ac5ea977babb1d3670fc03869265f1958f40536053d3a4c"
+    },
+    {
+      "path": "DRMD-6DOF/GRANADA_SUPPORTS_RU.md",
+      "size": 33279,
+      "sha256": "658b6dc1230e9e5a8054b2575aafa3f5bc661f6720695d223c87c8a313a6a446"
+    },
+    {
+      "path": "DRMD-6DOF/GRANADA_SUPPORT_AI_RESEARCH_RU.md",
+      "size": 41104,
+      "sha256": "245f24894e0bb6c8b0635b0613b86d9cbfd2c8ce33b267718e3fb4137066c767"
+    },
+    {
+      "path": "DRMD-6DOF/INSTALL_RU.md",
+      "size": 17066,
+      "sha256": "9f541f22a2ed4f39bbd0c04aaf02f30f84dfed36248cc8fb290e39533aa96508"
+    },
+    {
+      "path": "DRMD-6DOF/MAPS_RU.md",
+      "size": 5240,
+      "sha256": "5a288c03a05c446e4641a09ff42a0ee421e8a47a0200e91fb973f560d4649b1b"
+    },
+    {
+      "path": "DRMD-6DOF/README.md",
+      "size": 32893,
+      "sha256": "ebd9d04dbbd57f2eeb2e9559fb11992b836d227bb27fad94c0d614316e5545ec"
+    },
+    {
+      "path": "DRMD-6DOF/WEAPON_WORKSHOP_README.md",
+      "size": 12712,
+      "sha256": "91a4f2f433c1fdb9c8a7d60e653dd3312ae9ea934883db12fcdaba0a61e35b89"
+    },
+    {
+      "path": "DRMD-6DOF/WINDOWS_LAUNCHER_HANDOFF_RU.md",
+      "size": 22430,
+      "sha256": "9cf6545f42c1d41eec0848db00deb2e1f8ba59848c352e77318f48332d3e3b33"
+    },
+    {
+      "path": "DRMD-6DOF/art/elites/README.md",
+      "size": 3052,
+      "sha256": "13d323b724d321ea663641455b1d65b6da1fce53f20601deed059372c1d4a088"
+    },
+    {
+      "path": "DRMD-6DOF/art/elites/arc-elite.blend",
+      "size": 6983718,
+      "sha256": "ca1791e469bf7833df2bce64f71aad19345362255e33b76a954f9cbdf428aab3"
+    },
+    {
+      "path": "DRMD-6DOF/art/elites/arc-elite.glb",
+      "size": 8173688,
+      "sha256": "9feb2de90a48f2dc14d88cd12eefa03ef036829ab895941fedd9685f0ba5a2c8"
+    },
+    {
+      "path": "DRMD-6DOF/art/elites/citadel-enforcer.blend",
+      "size": 7053810,
+      "sha256": "1662bb2dea07d2194dce9dce1f33de1c10379a9f05ebbd064b922ab71bc106af"
+    },
+    {
+      "path": "DRMD-6DOF/art/elites/citadel-enforcer.glb",
+      "size": 8429492,
+      "sha256": "0ff669ba45c4c634a798578fd8a393f06738cda79eddf9f5f6323b2fdd307f77"
+    },
+    {
+      "path": "DRMD-6DOF/captures/01-enemies.png",
+      "size": 1019554,
+      "sha256": "ba8afa4119e3d3ba4e938c100472efa4df573cf3870c73b3e01cb3265b8852df"
+    },
+    {
+      "path": "DRMD-6DOF/captures/02-hud.png",
+      "size": 1371902,
+      "sha256": "2b751f73eb5102aeb17d8bebb892c06a73539e0840faa2c298ac732f8857847c"
+    },
+    {
+      "path": "DRMD-6DOF/captures/03-hangar.png",
+      "size": 282109,
+      "sha256": "406fe5c09d86db058b2f92dc5184100469b8a130efcba2a7ad085ae0e616b189"
+    },
+    {
+      "path": "DRMD-6DOF/captures/04-cloud-verification.png",
+      "size": 90437,
+      "sha256": "81a8416c2961cdc0f3b79735fc389df7cddd04da4cc9b02846dde901bc86261d"
+    },
+    {
+      "path": "DRMD-6DOF/captures/05-scanner.png",
+      "size": 1081303,
+      "sha256": "60fad0ace3e8aa17d7b4f0a569ffbb6e650ddd9ee4e43e09d055da48fd3578bc"
+    },
+    {
+      "path": "DRMD-6DOF/captures/06-resistance.png",
+      "size": 1306858,
+      "sha256": "77aca970b61a4c62c25679b3786eee7036f58bc76dbf9e4ba5af6fc95912e107"
+    },
+    {
+      "path": "DRMD-6DOF/captures/07-enforcer.png",
+      "size": 1673154,
+      "sha256": "e8fa908f16c5386948cc0865c2498c725375055c56d7d4235c7b6d4a73e89e04"
+    },
+    {
+      "path": "DRMD-6DOF/captures/08-hyperbeam.png",
+      "size": 995034,
+      "sha256": "5ca22db8151fd2e75f1430f3ef20eac43708e60978ad3b1d81f2a1438b8975dd"
+    },
+    {
+      "path": "DRMD-6DOF/captures/09-adhesion.png",
+      "size": 955726,
+      "sha256": "187340ed2a669baaca223253c4f8103fd378ca61eb31bb0a50ff0001623f5a81"
+    },
+    {
+      "path": "DRMD-6DOF/captures/10-weapons.png",
+      "size": 987127,
+      "sha256": "3fb9bdda64a005ee1f3dfc23088757b6cc26a1f23be75831bbe0525e8ad89ab8"
+    },
+    {
+      "path": "DRMD-6DOF/captures/11-swarm.png",
+      "size": 1121251,
+      "sha256": "56ffe9a8b45a8f840759832a056e6a699ebb3eeb117b21b10a351385899ca67b"
+    },
+    {
+      "path": "DRMD-6DOF/captures/12-ordnance.png",
+      "size": 1118101,
+      "sha256": "f0a6abc5cac52174384b5a17a8f01169dacb7a59c6be95f26ccc5ee46232ca14"
+    },
+    {
+      "path": "DRMD-6DOF/captures/13-city17.png",
+      "size": 1144392,
+      "sha256": "b304d8adac797ed637158a2f9e49c3f24134d17d358f334b55f2751cf1efbbc3"
+    },
+    {
+      "path": "DRMD-6DOF/captures/14-reactor.png",
+      "size": 534566,
+      "sha256": "19a0ef0443c53b4ca1758be7145962261cccfc1b11f9446c6525ebc0463d8dde"
+    },
+    {
+      "path": "DRMD-6DOF/captures/15-arc-elite.png",
+      "size": 1672045,
+      "sha256": "cdb2f6a66fd7008b4c7bd796c4b53d78093c67730e6f4d76b741ac299ce32c8f"
+    },
+    {
+      "path": "DRMD-6DOF/captures/16-roguelike.png",
+      "size": 393982,
+      "sha256": "20d5ec65cc6934af2cfa1d2b38fdb4b172b5e1d2c02bde72254bc91d30063d92"
+    },
+    {
+      "path": "DRMD-6DOF/captures/17-escape-hud.png",
+      "size": 721221,
+      "sha256": "9b2c10a0a43ea5941584b0ae645a216b5f85c47881dd15d8444ef58aa937816d"
+    },
+    {
+      "path": "DRMD-6DOF/captures/18-enforcer-rear.png",
+      "size": 1643727,
+      "sha256": "3b98dc1dbb594c61f660a37f586879839f85de52defb283b3060734065c706b5"
+    },
+    {
+      "path": "DRMD-6DOF/captures/19-arc-rear.png",
+      "size": 1621794,
+      "sha256": "211a3cfd0ab89a6b09361579e915eb42cc4b19c3d27bc84aa1bfef80b77d42bd"
+    },
+    {
+      "path": "DRMD-6DOF/captures/20-relay-vault.png",
+      "size": 1177820,
+      "sha256": "ac4d6c5d277396d8e0b7e3f8da03fa60a58019a9c8726afbcb70a9c6e779ee16"
+    },
+    {
+      "path": "DRMD-6DOF/captures/21-boss-overheat.png",
+      "size": 724000,
+      "sha256": "1a1e5b1a45b79c01a08f09faf764b8a32507019f95270d573591ac8c2ce4d0ad"
+    },
+    {
+      "path": "DRMD-6DOF/captures/22-station-opening.png",
+      "size": 1442710,
+      "sha256": "9deace9b50882312a27bb8fa3f31a66720045687fadee7ab73343f1bd80f1ac2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/COMMANDS.txt",
+      "size": 9340,
+      "sha256": "12f2820d9afaad9154ea0a7bf5960f98377f971b4f9c65eae4a20a49be306598"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/addon.json",
+      "size": 281,
+      "sha256": "5f9f21ce838e911f99ada9460278c5be1a921f5f874cee3f8ceb730e0663eab8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/d6_entities.fgd",
+      "size": 6959,
+      "sha256": "94d8df221eb116c4fe49478ac01d99a8fabddb73f888c4e5a194f6959427c12b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_autoload.lua",
+      "size": 6294,
+      "sha256": "6fa5ff7356cc9319ffc4e78c934a582455a2d6ea8be5fb2ff5e84ff8605512c9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_gravgun_cfg.lua",
+      "size": 14550,
+      "sha256": "9b6479a986cb7d48bb3c1fb9e4452b6650dd20c742bc3a9875b1bdd476112ff9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_npc_list.lua",
+      "size": 11111,
+      "sha256": "4126326774f2b1f0666d734ee7aa08b54c96f38d2c3f2c574e1ea5e99c97e45a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_npc_workshop.lua",
+      "size": 27370,
+      "sha256": "d3b2dbaffbc5489e986b0d1d6137b5eebec16a41e9edd9c2b6894a0f464800f2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_npc_workshop_ui.lua",
+      "size": 23625,
+      "sha256": "2077ad357d66820e0855aa4de919f67336f1e27e5966271f37a7b3c6d7ba0128"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_qmenu.lua",
+      "size": 16244,
+      "sha256": "0388a701e1c4da35e7da3fb322cf1fce2a4d676b9ea843fc12a6a2b5a2ee2101"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_sck_bridge.lua",
+      "size": 19530,
+      "sha256": "32f35be60ee5f915f8e4cac13eac209b5a3a5bd02401a47875bd47e8f1fa4408"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_spawnmenu.lua",
+      "size": 10573,
+      "sha256": "34c58ff2f22cfb201ea8ada8654798ae28cded2c8330257381b4a229a09735b7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_weaponworkshop.lua",
+      "size": 29493,
+      "sha256": "9bbc65d07ade2269e7a4508f8510e9e4c189f1d6c9933cc9319f276a905bcf63"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_wep_cfg.lua",
+      "size": 1659,
+      "sha256": "ed1e1d13f440ad36b612015be2becc7aab67efb1cc879b7c2c92a266f5c3a066"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/autorun/d6_whiplash.lua",
+      "size": 8597,
+      "sha256": "7035331be720d19a24b55012d9119c15d60776c34c7bccda95c6e3be58e006ab"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_actors.lua",
+      "size": 3577,
+      "sha256": "d9d57a17f5fa2cf96b5129de8102481cc2241d00563d0a5103e2ca295886c95f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_ai.lua",
+      "size": 10407,
+      "sha256": "b6c474dd9b1e4495abeffcecb585fe1b084c0d44eedd0137f3a603621e208adc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_ai_roles.lua",
+      "size": 9470,
+      "sha256": "c86a61ab1539385e0d4a8ddde5597400518e8e2dcbfbb95b0a14900c42d0727e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_ang_patch.lua",
+      "size": 7905,
+      "sha256": "6b653e1305a24f8c4b8e2d659283f68047212964374ec381e004e3007f5a0ba1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_arsenal.lua",
+      "size": 19073,
+      "sha256": "058c9e82f03bcc7de2c85b762d61996bf9c2f224ccfd931e62f45128aea7a797"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_art_elites.lua",
+      "size": 16877,
+      "sha256": "b5f925569a460836d37954d926c4cf5f0f444c673ad76474fae052628a4526c3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_art_geometry.lua",
+      "size": 7540,
+      "sha256": "6e7bb02a6ce594e43ee10c349b551ef66ad63ad6f4e44e0362510f0df2411e99"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_art_models.lua",
+      "size": 28550,
+      "sha256": "fc2225f60c34ecb01d138c95384750b1334117cec6b437e25d15ab0602f374ab"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_art_ordnance.lua",
+      "size": 9665,
+      "sha256": "e38b4e7d6d1cb9178830f75b8e1dec92532249cfc90a402178a2d1ac96a953a8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_art_render.lua",
+      "size": 31810,
+      "sha256": "7e2ccdda4e22ea8c901195b9ad9429e3abeaa5666e6e3e961751d20eb31a3a34"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_aux_mines.lua",
+      "size": 3515,
+      "sha256": "f6a40df2ae1cbd599452fb94abdd9155f4c4a1182a2f40d6e3667f08bea63ccf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_bestiary.lua",
+      "size": 5224,
+      "sha256": "a7a0fff2f237509800eb0130e5b2587d7dbe8c3b8e4bdf3ec411e52439ea3000"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_campaign.lua",
+      "size": 4663,
+      "sha256": "3aaae7a46e9d6754e8cc50fd0073694ef3a69d28e00ab08728f462807070b70a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_client.lua",
+      "size": 10680,
+      "sha256": "9018309a1857c35016658ee7cfa460c7bb41e1d593466dba124767cb57ae3747"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_combat_balance.lua",
+      "size": 1703,
+      "sha256": "7d05ff3af2e473e0a2e4a4376ed2857910f6eeba1f3ba477834cfacab10b6f6d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_core.lua",
+      "size": 18209,
+      "sha256": "9fedf6dd62bfd95e7ec1ea28d1ddf333584568c4eb354621f41abd87fe66ae08"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_drone_catalog.lua",
+      "size": 7498,
+      "sha256": "17bdb890592ea068388cdd5dec3886935177b4a2d43b9aa1c346c959d7932867"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_encounter.lua",
+      "size": 3963,
+      "sha256": "d02e4b95dc85bb14762af9e89831088c6c05311d2d9b4ee8d0db5d3db015c424"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_energy.lua",
+      "size": 8831,
+      "sha256": "e24801b93263238f7223e926c4546ea062de8ac7a2abfb085117dd1bdb8b80b5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_frags.lua",
+      "size": 43471,
+      "sha256": "16fc9e98ecaacca605a057df94228a2bda7c285ec85f49891c17cf8930a71fe7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_frags2.lua",
+      "size": 32104,
+      "sha256": "1e58c67a02b49f9e8e0d1628caa91a3a869bac0e8acaebf192942504c9d3c8d7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_gates.lua",
+      "size": 6860,
+      "sha256": "504e38cf093e764d42bbe3cb9cc71cecca5977b82f118f191fa2ec91b9dcb2b8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_gravity.lua",
+      "size": 10973,
+      "sha256": "a609324d5c2f3dd569131afdb56c576f5058612d204f1f3f4793728b3ee63b4b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_hangar.lua",
+      "size": 9253,
+      "sha256": "80529e6e0febc5c9ccd50018e41dce6c749d50d53af9f428f1324e33772b77ff"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_interface.lua",
+      "size": 17528,
+      "sha256": "056946af96bb3eec40f7822dec94af67ba182fe88e2d10a19ad572fd1be019c0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_loadout.lua",
+      "size": 2072,
+      "sha256": "177834a016c40193d06d52b2ce3f348bebdf00239c9a6caeb5e69553051d796d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_menu.lua",
+      "size": 38443,
+      "sha256": "9030076633444569e398a0e443090f4e50ae21f8b1b3ff0d304a9c4dfa9c3ba9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_mission.lua",
+      "size": 9500,
+      "sha256": "1f0855401194b109afd0451c20784fd7ef4f1dd6ed479eddde36b9b1f683f801"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_modules.lua",
+      "size": 45474,
+      "sha256": "8f5bd85e04702a056eafd625071ef3dfd8e4a1b881523e6d95544d81e1e9f564"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_nav.lua",
+      "size": 10277,
+      "sha256": "88babd48b4d6376d52511ab10dbfe03511baee2fa01f05b2c4eee7f662d33a2c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_patterns.lua",
+      "size": 15478,
+      "sha256": "e2e34ef71a92bb010d6d00457813f6d99ba061851510dc2bcedcdc4defde8440"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_reactor_boss.lua",
+      "size": 8619,
+      "sha256": "a05e3257ed06168cdbc6db420ca8827e46a4b5e691ac9b6d2f7dacf6e664de10"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_rearview.lua",
+      "size": 9009,
+      "sha256": "5a45c693edb8c2bbfd54b51f9831ac8270e065501deb6f2c38d84faf9a106ef1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_rogue.lua",
+      "size": 11623,
+      "sha256": "7d9e310b49acda041a9bbef1670a467ce238f2b2e8741ea572c7506f924f6de1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_session.lua",
+      "size": 2304,
+      "sha256": "8138b116928e1b59ed2fa782d7f084985970d7292de16f94b659d5e109b45465"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_shield.lua",
+      "size": 8304,
+      "sha256": "251e57d9055f7c2e6a8519d6fa62321b9abe540395f0bb57555fe4070509122e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_spawnmenu_icons.lua",
+      "size": 4970,
+      "sha256": "bacf3d9f11fddf57c15b79ea87502f7a172d0297673e90d1eae38e0cd6a3c09d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_supplies.lua",
+      "size": 2794,
+      "sha256": "b3c690bad4aca38aa7eacfc221a7e37cd4bcdf068903d60c5bb78f6a785acc99"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_support_art.lua",
+      "size": 8744,
+      "sha256": "8d1cf49d75d7a2a22d80e4b090edc1856a69e4e752598f87173deeb8ca8e512a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_supports.lua",
+      "size": 29706,
+      "sha256": "458b701c750eb4c30c3a357ddef7732bd39dcf7596a7b5ca430a69f8428d6c81"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_supports_client.lua",
+      "size": 10731,
+      "sha256": "99459ab83b815fe6e1f8a72ea0590ac52fa404d4dc178f8d64103629ce41a46a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_swarm.lua",
+      "size": 9447,
+      "sha256": "fa39d7a428cb7aa43a48217492a40dbb87c8c8d9cc70e5b448bc990905ef1f10"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_trial.lua",
+      "size": 4581,
+      "sha256": "73833fbe4ff8287405b9b04aad3f956d811efe45582bb0e91a50a2f69c4786ee"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_view_mounts.lua",
+      "size": 2013,
+      "sha256": "4363bfb914e86b37f7a9f3411659831ce33e8f7ff373e64588a1b959205c7ddd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_weapon_core.lua",
+      "size": 33423,
+      "sha256": "cd26c9de12c225d9efcdbe4d9b61549c70fa654b56f4a83bc74b226693c24794"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_weapon_feed.lua",
+      "size": 5868,
+      "sha256": "c87af61efbb82ac6fe69e75561c8137a432cdafabeda438722818f4210fa073c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_weapon_registry.lua",
+      "size": 4677,
+      "sha256": "d0c45b94c10bcf0b903c698855822df93db4c1256702636a3294f25cc6fa1f06"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/d6_wepview.lua",
+      "size": 8553,
+      "sha256": "f6fc920cba234dd582c95b2e461f50e07fe19f751b675611ca5bbc1350a94b11"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_checkpoint/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_checkpoint/init.lua",
+      "size": 1386,
+      "sha256": "b47ed2696c049b666aa6c8a36f2b12313c81ec66d8da236cd5e1384ad289860b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_checkpoint/shared.lua",
+      "size": 193,
+      "sha256": "54df1a89ddbadf51ee56cd043e230d9fb4ddb8d8095a06c7624e70f5bb34d1b8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_drone/cl_init.lua",
+      "size": 216,
+      "sha256": "25dcde90b8c43a700bdffe6cbb4a785bdb88715b7013e96852e16471af9d1ad4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_drone/init.lua",
+      "size": 1292,
+      "sha256": "aeeb9f361eb6c484a842121d51cfcd3dfbe97109d42d3ff6ebb0606ea87d77b3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_drone/shared.lua",
+      "size": 189,
+      "sha256": "247e98c3fbc71a96dccacb73eeb3abe0eb7cf410107334eb7e2146a070578abf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_zone/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_zone/init.lua",
+      "size": 767,
+      "sha256": "b6ac070e35337b4287c8657226fc9d991d51f7ee73c1aa31060b124429e37966"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_combat_zone/shared.lua",
+      "size": 197,
+      "sha256": "3780e6941563c3b4f31d7481241738a28b1ce71f56de40fb8ffacab23562d113"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_dock/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_dock/init.lua",
+      "size": 1858,
+      "sha256": "975f6a45e91f0ca910f4f4c3dfbd3b2616edd50c8a6df7a8af3d83d65491906d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_dock/shared.lua",
+      "size": 194,
+      "sha256": "06af59bb07e44058729fcd530b3bce96df6f0d560a13c5007aeb723388ee6cba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_encounter_controller/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_encounter_controller/init.lua",
+      "size": 4029,
+      "sha256": "e9758e7712a3f81c74d2ef1159847a37608a5968f15f2e8ec59f5045fb63ec9e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_encounter_controller/shared.lua",
+      "size": 203,
+      "sha256": "ccdce0fe97b55f5e5ae7681cc2be4daf8862ede1c66aa890d4e025664f565130"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_energy_cloud/cl_init.lua",
+      "size": 884,
+      "sha256": "2204f5973fa32f9dd4108c6916d350900f553d5392478042da8f2cc35cf5f540"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_energy_cloud/init.lua",
+      "size": 1589,
+      "sha256": "0795d4a003d11a76d354c756536c21ee850422dde3b42d1b3d8b824e2f9c7b7c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_energy_cloud/shared.lua",
+      "size": 136,
+      "sha256": "5c5fca52c0b43d381fe276852cb7edf746efd01edd35822ba5dfe39568cc2efc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_exhibit/cl_init.lua",
+      "size": 526,
+      "sha256": "a89e7553faabbf0aae46586348627c54aec8177df0c4da1cf2f32f87c83d86a6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_exhibit/init.lua",
+      "size": 248,
+      "sha256": "e0f703b2f0e278898b7dd54371590baa266ca6ef9bea96b16ea5b0ced4b77b93"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_exhibit/shared.lua",
+      "size": 165,
+      "sha256": "9be3f6cbeea25bffdf6097b7b9af045556e1bdff64e7f23cfc119c03c853e76f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_nav_node/cl_init.lua",
+      "size": 102,
+      "sha256": "f70d3988da1315e861396d1fb609fcbd0e91ec32c8b158efb276b767cb7c72ec"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_nav_node/init.lua",
+      "size": 467,
+      "sha256": "2f3cdeccaec6c9ade6099637f6344490b462c3d392984c18fda1f8cfba1cd7bb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_nav_node/shared.lua",
+      "size": 192,
+      "sha256": "66014d644207e94cbdcbce51b3405e57c2c720582566f361d92c5ccb1531ebcc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_npc_spawner/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_npc_spawner/init.lua",
+      "size": 2565,
+      "sha256": "7c0ae7ed381140be4d7797c7cb2f26d4bfbe72eb45c0465a0c9002cd8d13eb8f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_npc_spawner/shared.lua",
+      "size": 194,
+      "sha256": "1d9a3b1993125e82b6ff040bef19bae90bc3e9ae39dfb5abd8fe9159cd7a3baf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_objective/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_objective/init.lua",
+      "size": 1771,
+      "sha256": "499c1d069fad1bec883ee3bf257627f8d6b43b3435fd0c83b8319fa99cfbb135"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_objective/shared.lua",
+      "size": 192,
+      "sha256": "0c718c446e9737b6bee07ba1b0e608a7396d55bfe9aaba2923d5fb1f082e8dbf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_ordnance/cl_init.lua",
+      "size": 204,
+      "sha256": "6455211b73f376885ff0877fa8c48cb325bec0d90d91cda40758d3a6b5d66b36"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_ordnance/init.lua",
+      "size": 635,
+      "sha256": "be7103d5168866a826bbb1acd2f0c13e441ee06ffcd00a76904f03e2dfe2d888"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_ordnance/shared.lua",
+      "size": 169,
+      "sha256": "1f457cceccaec930bf90c96493e2184d5838e387b9a2ad5089c54066c4fdbf03"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_phase_gate/cl_init.lua",
+      "size": 1731,
+      "sha256": "5fb881cc8142ac00460f4e43a1847f0d55b3a30b6a78c16ab1a1d313a9e43e05"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_phase_gate/init.lua",
+      "size": 431,
+      "sha256": "c4286c04b1b6f134b337f754cbc1e1f8dcb7c1f22ec26bd2450811fc19c978ce"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_phase_gate/shared.lua",
+      "size": 309,
+      "sha256": "470d5adc0b9b1a776ba586b2d5ac0d00145745bc0db8dd34c6fafcfc3a17526c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_projectile/cl_init.lua",
+      "size": 236,
+      "sha256": "02dbc248ef8693f9e8c655c0f4475ee6da8e973342301b202aa135cce1350987"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_projectile/init.lua",
+      "size": 793,
+      "sha256": "dc6b21ade88c28ca68bd3a1a55392fd46dd77c825cb13edf0b8742892d6884ad"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_projectile/shared.lua",
+      "size": 142,
+      "sha256": "7add7dba60185d7b75d86f2e0d59d2c6317ae7a6bd0b1a4e18faf67921b6fb3a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_supply/cl_init.lua",
+      "size": 535,
+      "sha256": "962b9dd63f3ea6df628d7439e9d0c8fcadd8eb438a9c961fca11949f9a155741"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_supply/init.lua",
+      "size": 1140,
+      "sha256": "f2bf403e1e9524485f89658b52c906beedb505532a6ffd8653bd882757872370"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_supply/shared.lua",
+      "size": 134,
+      "sha256": "4dfe2e944aeee93c67306e02c75b58a62a0422fdc5de61b81e4eb2ff6449bdad"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_support/cl_init.lua",
+      "size": 445,
+      "sha256": "644a2c9ac2e3ed1e310d0edb4f37fd5f342db54b62fad6ee4e932a44efb2e9d9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_support/init.lua",
+      "size": 404,
+      "sha256": "789845fd02d653a8a836b24391fcdf6d608401dc870dca0d0f04851e723e4672"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_support/shared.lua",
+      "size": 170,
+      "sha256": "55c9c96af645355f82ccfa1ac992643d6ca9691fbd68d98d5140ccc50221fd26"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_trigger_volume/cl_init.lua",
+      "size": 22,
+      "sha256": "3cccf48cc150a281c7510844c5c5cdeb1211e85bfb6e901c79fc25f8b285a4f9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_trigger_volume/init.lua",
+      "size": 824,
+      "sha256": "16a6ec882eec68c88b7604460ad65347955fa233d0d74c8123c2ee2d5314d300"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/entities/d6_trigger_volume/shared.lua",
+      "size": 200,
+      "sha256": "572dd13642ae917f4d20a5681e6a90ea0024211338437090a537a4019c11ae30"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/gmod_tool/stools/drmd_npc_workshop.lua",
+      "size": 4840,
+      "sha256": "ce7ec0ba247b6a90cf4d4f92092aecf00dab368e1dca13a2cb8dcce71698edc0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_combine_mech_drone.lua",
+      "size": 18941,
+      "sha256": "738ef57ff24b1aa6b587fb68ffbf04cecdb9f24b04c8c0b0ddd12e552747572d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_bfg.lua",
+      "size": 7905,
+      "sha256": "cba1c25705b50ce203912766b491b43594ac7886184ac51f20346ca0e7e4dbbe"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_concussion.lua",
+      "size": 4771,
+      "sha256": "5ac07be68c61fd3a188c6fd131b22bea05c1c6e070a6965f3331dd4ee29b2576"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_darkfield.lua",
+      "size": 6503,
+      "sha256": "a196672a9a2f51fbf97f1a4dbc15e2a40e16590df64a830c8df7fc3873a6a544"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_darklance.lua",
+      "size": 8879,
+      "sha256": "a62c95ea5f5cdc2cf3753ac298c11ebdceb7aec95f02631bb4abf9ab052ed185"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_deployer.lua",
+      "size": 3150,
+      "sha256": "6ff796bcfe95e9c66b1da7fa7614f25d02a0a67a58dad41f9dafe4df90cfeb56"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_energytrap.lua",
+      "size": 6204,
+      "sha256": "929251b57762b424e367fe2eb517036fbaf38b63a42b9d9deac613ce9ecf3014"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_flak.lua",
+      "size": 5114,
+      "sha256": "d0539beaa8c33bb2ad60d3241073c0a12a8b0f29e17ebe977e315737deebe05a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_frag.lua",
+      "size": 6266,
+      "sha256": "a0ae34c8585dabd06bf1d338af37dbb457cc4cd05348f6219491e642e85be65b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_gravmine.lua",
+      "size": 7432,
+      "sha256": "df672dc32efd2b20a74287e64901b49e0092f44dd1e7334376f16f499f48ef57"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_gravy_railgun.lua",
+      "size": 70714,
+      "sha256": "7ccfc912b5bdd5e72dea3627874d35b829b768dd74dc0eda2bc7362300a98832"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_heavy.lua",
+      "size": 4540,
+      "sha256": "667a3de245f0d04e24476b0b2f5332c9cdccf2606be69815cda9d4fc2ec2595b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_homing.lua",
+      "size": 7829,
+      "sha256": "27fbc531d0d58f4288966774d215b4eaece5ee31624a9f48c48abd6f617b75f4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_hyperbeam.lua",
+      "size": 5377,
+      "sha256": "d898e71e348b7ecfdfd47719b65730916b5b27c05d77654ba811ca5ffe1d94d9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_laser.lua",
+      "size": 8011,
+      "sha256": "5cf11a27d1a19ecaeea895a9ae30c3b36c631609a18319b90d6955325a10daef"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_mega_missile.lua",
+      "size": 5241,
+      "sha256": "40aa59db3029e670b94998eb6388ae03bcb3f12b2b2661550b42204ede662438"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_mg.lua",
+      "size": 5558,
+      "sha256": "db5324f94afd9e0ccb06dbf9eb7fec9467b03ebce8db8b31c3e518b224936534"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_overdrive.lua",
+      "size": 7444,
+      "sha256": "49060f0a00585c32eda7041068b33f2ad4ff47976d7734d4d0d10b426a2be00a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_phasegate.lua",
+      "size": 1443,
+      "sha256": "eb90b59ad440a2a69d65f9e66ccf08dca6580d838c163914b1b8a96f0a575389"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_plasma.lua",
+      "size": 4994,
+      "sha256": "875fc906dc11327a38d5093d4190bb11a3bed36d588ff419837af648cff05690"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_plasmamine.lua",
+      "size": 6916,
+      "sha256": "f2bf241adac9efb5bc4187ab1bd7bced4a6fe499a9856d2aa86b201216eb2571"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_quad_laser.lua",
+      "size": 6506,
+      "sha256": "c671ec5c9606faf551b7b99b3623e7324b041cc565a129bbc4c34215cf4bb8bd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_railmk2.lua",
+      "size": 14835,
+      "sha256": "b93516721ea5bbe40eef66bcb0bfad6dcffa445bfcb3076e6c1365bd24d650ba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_reactor.lua",
+      "size": 5293,
+      "sha256": "b881fcaabc977dda23e387fc3759149f3917e3778cc441573511a4ccbdc77680"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_rockets.lua",
+      "size": 6861,
+      "sha256": "ddf48fa39b197ab425ffe9c197efb6fb7d6b6e901a6b6757b4c36758ecddd5e7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_shockwave.lua",
+      "size": 5280,
+      "sha256": "9aeadc3a8010f7c94bc8fec325411e22679df6fb00e98d5b404c434fc58ec2ba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_smart_missile.lua",
+      "size": 8237,
+      "sha256": "fc9a6cb51f5648b776874ed6811d1a9a65116e0f3f451d50ccb3d992ebe84476"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_ammo.lua",
+      "size": 4039,
+      "sha256": "45591355a01a0669a3e08597b81c9896336d38940af4f13612c4c6f6c0a44092"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_grav.lua",
+      "size": 4029,
+      "sha256": "d9f0bb404edfde5e42f82bb18b32ef40626a0a80cb37a868284a2a07248b9f4a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_heavy.lua",
+      "size": 4022,
+      "sha256": "b412e74250b413102525b586267b362870352987c64492497c52fd81c24628b1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_laser.lua",
+      "size": 4042,
+      "sha256": "df97b72a685953b4df5744ea11bd06bf8feb68ca7c4e1f23bd49ca06c130eafb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_manhack.lua",
+      "size": 4055,
+      "sha256": "2205b115215184451a2d71f44b1b7c12b772a53b20c3a639d3fee544543df537"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_mg.lua",
+      "size": 4035,
+      "sha256": "b9eec757abf68346e4ac6ffbd663a6492bb158611e329f8975aa7c27278483c5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_mine.lua",
+      "size": 4307,
+      "sha256": "8508b8df7f81c53edf395b5e28a228396de06625fd2a0fe7a36eeac9b9852426"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_rpg.lua",
+      "size": 4000,
+      "sha256": "31d9b4a02b7eb9bbc288e09a24545a7eb588043cbdff406fe439a9693a7dfe8c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_seeker.lua",
+      "size": 4075,
+      "sha256": "2f950d1a323de1df41ff6e22e0474bd036d0b0ee7b61bbe2517927ebf3e8fbd3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_squad.lua",
+      "size": 4411,
+      "sha256": "e355efddec661a253ed497f1e66cb47f20d0071f572f9c177623f16fc29e1e77"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_spawn_worm.lua",
+      "size": 4008,
+      "sha256": "2dbd5e67ab625cfde509bf23100f77a1976e5848ab59b603fa50cc9acf86652f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_telefrag.lua",
+      "size": 5243,
+      "sha256": "173b874de87f96662662b32d98d0e818abac57c46051f02e9d48f171f1052b3a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_vulcan.lua",
+      "size": 6434,
+      "sha256": "ac474d684e5e91afff47c6db24c4f9dfe02c91e938d17bfbd2f4f67c8accb96d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_warp.lua",
+      "size": 5057,
+      "sha256": "ae64ac7fadbed4c3bb11ba78f7bf5421cca6e25924be6e9d362e43ea336374e0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/lua/weapons/weapon_d6_whiplash.lua",
+      "size": 1179,
+      "sha256": "9a94849b0cc5a04a9ef30ebfbf70b50d76fd3e32b40a961723fb757447916079"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_city17_drain.bsp",
+      "size": 1315464,
+      "sha256": "eff9f208d228ccad8ab6d49cf9f4df44d404f259098a913c39f06573a0881421"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_city17_drain.vmf",
+      "size": 156723,
+      "sha256": "728ca5ecc4e7841c616fc01ff934f0b5d002118ba60bf9af652a2718014d0595"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_reactor_escape.bsp",
+      "size": 6215944,
+      "sha256": "c38a11c7c467f36176c0ca2e98c871b6c6b7c65bba05554428b1b849fc31bf53"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_reactor_escape.vmf",
+      "size": 158874,
+      "sha256": "b439c82bdfd8d248800bbe2a27391dd649bcab50eb7d72af6452ecc54a66806c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_relay_vault.bsp",
+      "size": 3666344,
+      "sha256": "c18db791f4007e116fef42198124ed8f68d52c38ba51960507ab0151f0c06c4f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/maps/d6_relay_vault.vmf",
+      "size": 75154,
+      "sha256": "015aa24032e8f9f77b1fd93e9850ad766c4c16dfd3b674af5dfcfebb0eb00c54"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_alloy.vtf",
+      "size": 349604,
+      "sha256": "48d0cda1c3ea3c682671ea817aab2381c7a6818f2b0fcdd9ffa650aacac2d5d9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_arc_shell.vtf",
+      "size": 1398180,
+      "sha256": "b5aba7b51583e3dd56c3a7ff69c94e5fb19f3ffc07a39ba53f1e1d5137f91351"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_coating.vtf",
+      "size": 349604,
+      "sha256": "1c6ffe91dde51fbe01a69db065ac3ec6b177e1088cc5f5907214e9cb6c2fa51d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_glass.vtf",
+      "size": 349604,
+      "sha256": "66509ec6caaa8b8dec832141ec9a8103e68b7f4a127d969422f9a483a98c27e3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_polymer.vtf",
+      "size": 349604,
+      "sha256": "99612e68646a313e6e57b621f2726bb9e327099d368028e5b8d147fe2e36d77d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_salvage.vtf",
+      "size": 349604,
+      "sha256": "b2eeee659d4aa887fc2ad2130055fcc866e3d16fec23ae40e2b3a0eeff2063d8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_siege_plate.vtf",
+      "size": 1398180,
+      "sha256": "1c8b0d87d73d32799fd0a31837e71927a797bd7abde603395755f61ea4f5a5e9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/drmd/drmd_finish_turned_steel.vtf",
+      "size": 1398180,
+      "sha256": "db57adae4d07819bdd3e53a6f1598b3a404c1796cc3634231c24532c1e3c827e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/arc_plate.vmt",
+      "size": 101,
+      "sha256": "988854558340e9470d06683fb1764d49ba46839a6a219fc1335ac8915473e066"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/arc_shell.vmt",
+      "size": 101,
+      "sha256": "55c1f29dd0e808ba7e753e0f6262ad6baa4a8500fc7eb2ded627e3d58692e8b1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/arc_sink.vmt",
+      "size": 103,
+      "sha256": "a328d67acd4dbbcc19b3169276c5c28351e4f47227e0d2f8bdc2bb60c90b89a1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/armor.vmt",
+      "size": 99,
+      "sha256": "afc5ed9c5a31acaba430d3fccaff5865703d79bd9567bc41eb84d10de25a9ae2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/black_steel.vmt",
+      "size": 104,
+      "sha256": "977e32d3d6aadd2bdd4ea6cdb064b15fa819dad571f6d60c609a011cb0b50fbd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/bone.vmt",
+      "size": 99,
+      "sha256": "f340c5c6d5b37598c62a840b5ad818682092aa00738ba8fabac881157cd4a5f1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/canvas.vmt",
+      "size": 99,
+      "sha256": "84e692fa86b85751b0ee27311d8eb9e0b92d3cfbf5a42ed66a5900b74094c0a1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/ceramic.vmt",
+      "size": 99,
+      "sha256": "e9d0910c35d37886d4a1353fafd2840add63aad00b8787e7a29f9cecce40cb9a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/copper.vmt",
+      "size": 97,
+      "sha256": "291bf3f2e3b6eec521a9cd9a532b9cda6464bd479939b029a46e2a8fdccf4965"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/dark.vmt",
+      "size": 99,
+      "sha256": "dcc651d55cd95a9dac3cefffe4478e3fedce26e990f6d6f1295b5ffcd53cadb9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/edge.vmt",
+      "size": 97,
+      "sha256": "b361ae2736813196551f991245edd78f654b2e6f99cce54cf8a5c14a57f5f079"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/emit.vmt",
+      "size": 81,
+      "sha256": "24dd5439ea8e3a8c26622a16c0c9e8eaa048a64ce3ab5d2c0fc34edb4a5152b0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/frame.vmt",
+      "size": 97,
+      "sha256": "575318998c6b5a53c6a0be857817e86a0da6e4ce78678dffb8e3a18c4fdb364d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/glass.vmt",
+      "size": 97,
+      "sha256": "f80c68d0018aba105c1f90ad31976897faef9b5e17290a2b81f37987bfe57cae"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/hazard.vmt",
+      "size": 99,
+      "sha256": "b68ea2ce66ea072a81ced0a314bbbf28b199d06eb2f5002193bec9fffea44431"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/hot.vmt",
+      "size": 81,
+      "sha256": "1c869e66cb32e6080ed5da0a87f1e968f29cd234f36302ec29d628ed02a15b99"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/lamp.vmt",
+      "size": 81,
+      "sha256": "7019a8cbccd7e7eedb0dad0d132697aab199b76939f0f94650e652db8b3e43e4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/oxide.vmt",
+      "size": 99,
+      "sha256": "6572ac563aa4e3716611af42b518233474114446de2621a187c72a8384f4c517"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/primer.vmt",
+      "size": 99,
+      "sha256": "e0ce07a411364071cf5d9a55fbf3bd6383fa10a66876be2b0bffbcbfd2d63194"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/rubber.vmt",
+      "size": 99,
+      "sha256": "49c2ab10cf387e6e3fa6c25bad9cb6da12bf66e547864ca9a8e44db9ea51aaa3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/rust.vmt",
+      "size": 99,
+      "sha256": "8cbab86b9feb7e064897a2c9113f2276d33d560716da49eeeec9410b7d77b57b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/scrap.vmt",
+      "size": 99,
+      "sha256": "c868efffce5c7ebbd5949da445e17577bde649f577d69076f40bce4ba7004cc8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/siege_cast.vmt",
+      "size": 103,
+      "sha256": "6998c0d7afa4ceaf247086ea07957a932d76b4e7d8a9b6f19d1cc537b2584abc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/siege_eye.vmt",
+      "size": 81,
+      "sha256": "b3e117552d1325d5fa200e373e07710f3f10f3fe307b886b95146b8613c6bb37"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/siege_oxide.vmt",
+      "size": 103,
+      "sha256": "572353b29352c188a8287f90e2fa35cdcedc066bc292b7c771f7a85d3760045b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/siege_plate.vmt",
+      "size": 103,
+      "sha256": "a2cec5222a379fd88d2f2a40165df3d2b87b2ce8cba77911e2335358d15e4516"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/steel.vmt",
+      "size": 97,
+      "sha256": "dba2224176111ef3baa041fded38c7a3b1ac9124727f69a24b6f9d3d913d2b6e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/stencil.vmt",
+      "size": 101,
+      "sha256": "17b61a1336f007d4fc4a18b1b08a67cf3b157ecb9792064f5e5c55ea8cb74412"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/stripe.vmt",
+      "size": 99,
+      "sha256": "c8e7e5e338cb158e2e4daf23159405170ed78bc34b9dc461a780a6707d940feb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/tarp.vmt",
+      "size": 99,
+      "sha256": "88da1ece1c1e0f857a37afa9b2713c550a5160dcdbc038cf95e26a3700066785"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/materials/models/drmd/turned_steel.vmt",
+      "size": 104,
+      "sha256": "dfa7bd26bfbd7d85e749473ef22f37cbe966f5daf653a3cde028319e37e174f8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/artillery.dx80.vtx",
+      "size": 142125,
+      "sha256": "16806249c4524efe0c106ddb3ae1e4dd96fdd5a0fd8b1f5659b90208d1a599ca"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/artillery.dx90.vtx",
+      "size": 142125,
+      "sha256": "16806249c4524efe0c106ddb3ae1e4dd96fdd5a0fd8b1f5659b90208d1a599ca"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/artillery.mdl",
+      "size": 4012,
+      "sha256": "9a05e359d5f6003742266a8b2e772d906f335758c937685e20b6c70a677e646c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/artillery.vvd",
+      "size": 719168,
+      "sha256": "2d7f7e5a0dd7d8dcf496a89821cbaad985d9fef83ead263ab992753449f38834"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/assault.dx80.vtx",
+      "size": 146412,
+      "sha256": "9b8d04f921e4fc7ada11b9f8c7899a882013be3480abf193a34703a5f6751ee9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/assault.dx90.vtx",
+      "size": 146412,
+      "sha256": "9b8d04f921e4fc7ada11b9f8c7899a882013be3480abf193a34703a5f6751ee9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/assault.mdl",
+      "size": 3816,
+      "sha256": "bf427dc8da8a1fc0b541e42f925d2e3e4cfcb66b3fffb95c1f43f6dc0ee67162"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/assault.vvd",
+      "size": 747584,
+      "sha256": "f70df0fe383d6c547b86301293fbcd2b80ec2571c2278a366a0802255dd3aad2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_arc_elite.dx80.vtx",
+      "size": 583212,
+      "sha256": "ddc8c70508e1ed4e81d3a0fa0801ef0abb67ec4eb062119cd50193573fed7db8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_arc_elite.dx90.vtx",
+      "size": 583212,
+      "sha256": "ddc8c70508e1ed4e81d3a0fa0801ef0abb67ec4eb062119cd50193573fed7db8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_arc_elite.mdl",
+      "size": 3824,
+      "sha256": "83338c0d366eb0c12c215a0b599aad450cbc49444fe8555afc9cc86f617e004f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_arc_elite.vvd",
+      "size": 3001152,
+      "sha256": "f2f875128b1e3bab76d963bb89d5b559823a839ae93d746ec8f2e311c452d6b8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_elite.dx80.vtx",
+      "size": 686001,
+      "sha256": "e1493f77fece384cdd3bd2e8c1ab2316aee661e38be60219a8b3ba0ba5cfb1fd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_elite.dx90.vtx",
+      "size": 686001,
+      "sha256": "e1493f77fece384cdd3bd2e8c1ab2316aee661e38be60219a8b3ba0ba5cfb1fd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_elite.mdl",
+      "size": 4208,
+      "sha256": "dca980048bb5378364ab181d892470f7f8624bc996ae761448f13bc5aa56d18d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_elite.vvd",
+      "size": 3527808,
+      "sha256": "20d12e676049c2816c94cd93a4a69e6b030e0bcbe3058ec3d9603b72b1570a87"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunner.dx80.vtx",
+      "size": 147024,
+      "sha256": "4da51ab3fbb67e10d8e75e4d57dcb5529013b8dd3601567fd0b59cc87a523a2e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunner.dx90.vtx",
+      "size": 147024,
+      "sha256": "4da51ab3fbb67e10d8e75e4d57dcb5529013b8dd3601567fd0b59cc87a523a2e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunner.mdl",
+      "size": 3824,
+      "sha256": "6050c6a105897bfcf02c59c77fdd9086a5648c6d740a0e620a411c15e6426776"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunner.vvd",
+      "size": 751936,
+      "sha256": "5f9e8bb1bad02f6fa9b7e4bc4f2defd200a438f20f1a718249a09dad2de2116a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunship.dx80.vtx",
+      "size": 34836,
+      "sha256": "96189f24e7aeda69cf5de7e9d07d85c84412886e7ea6e23da7806b72d5a417f8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunship.dx90.vtx",
+      "size": 34836,
+      "sha256": "1ed27688c81d96c78bbfc54b7f7f8ebc3fc949bdc14039e3e08f16972d62fde1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunship.mdl",
+      "size": 3048,
+      "sha256": "b129205e53a8c14a4e25662e39a37ea2d889613ea2e3a0bf112fea501fc63966"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_gunship.vvd",
+      "size": 172352,
+      "sha256": "2cb9ca599a8f25503e3d8432ed2c92f3f3ff7090d1fa617ae98648afca341e48"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_laser.dx80.vtx",
+      "size": 95031,
+      "sha256": "c54c62ec8d6adc4c7730c58eac2e2c1de9adeb881a72916ce31e8bd8801e0397"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_laser.dx90.vtx",
+      "size": 95031,
+      "sha256": "c54c62ec8d6adc4c7730c58eac2e2c1de9adeb881a72916ce31e8bd8801e0397"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_laser.mdl",
+      "size": 3632,
+      "sha256": "48d7ea142b79443300fe10a04003d1c379aa98cebff5be6841d28dc36d090eeb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_laser.vvd",
+      "size": 488512,
+      "sha256": "563da1f2e957d3bb23d3db3181ea886495dbe84d52deaf2036b69e9442f8ed45"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_rocketeer.dx80.vtx",
+      "size": 140760,
+      "sha256": "05293ba2610959165278d19a0724e9cb3c5b26097a3dc32b63f6443fd1165748"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_rocketeer.dx90.vtx",
+      "size": 140760,
+      "sha256": "05293ba2610959165278d19a0724e9cb3c5b26097a3dc32b63f6443fd1165748"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_rocketeer.mdl",
+      "size": 3824,
+      "sha256": "bd9ff9d46631268812377040154a77088e4d7a27e4137ae0ad421c83736e60dc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_rocketeer.vvd",
+      "size": 712512,
+      "sha256": "8951a57b9fd72800dbc82f8e5fae376ca7004c06cb35d182e040d236bd15db8f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_seeker.dx80.vtx",
+      "size": 140544,
+      "sha256": "c2bfc534386892256842dc7e51d78d922762ba6cdcd432b9d5081ab7194c558b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_seeker.dx90.vtx",
+      "size": 140544,
+      "sha256": "c2bfc534386892256842dc7e51d78d922762ba6cdcd432b9d5081ab7194c558b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_seeker.mdl",
+      "size": 3820,
+      "sha256": "7d4d93af8b0e66e2d9a354f99c68d3bf058ec4c53cc6aec40415611d6d657545"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/combine_seeker.vvd",
+      "size": 710976,
+      "sha256": "2c96d1a76979b1a62baa766eba1c5e3b69ef54964596dbef9d57498f6bf627c3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter.dx80.vtx",
+      "size": 13695,
+      "sha256": "cce9e33edfc90451443a4db1709cdfcf1efe66483932a01b9fad59440a0314e3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter.dx90.vtx",
+      "size": 13695,
+      "sha256": "11b6582b71f8977c618ac5122dd4d8fb6f2582a18a7b656cf920f7042f71622a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter.mdl",
+      "size": 2852,
+      "sha256": "b7bfb70c953c66d6cfbb1532891f66f341acecc06054126a62d9d257a69e1ab2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter.vvd",
+      "size": 67392,
+      "sha256": "d226637bfa15f316c3fb5cd8e438c523bbd7149b44d26398e5f661c5640e9367"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter_rotor.dx80.vtx",
+      "size": 5769,
+      "sha256": "8ee35a332d228446d7daa98125ca3f5f8981a8d69237bd5192219960f06111d1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter_rotor.dx90.vtx",
+      "size": 5769,
+      "sha256": "808936e8e43756a44fae350d2f5e1eb03bb3e230dce0b395b2cf035b60feb4e6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter_rotor.mdl",
+      "size": 2108,
+      "sha256": "798e9c7e841a24d1c879f0ac3acf60f87daacf4c2354913fa5db048b6964865b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutter_rotor.vvd",
+      "size": 28864,
+      "sha256": "72f50e1c250de80b35a6e58b7b866285e555b6eec8e233f175ca0b4dcc031b89"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutting_probe.dx80.vtx",
+      "size": 20967,
+      "sha256": "d25a3e0d6e4751e5c94528fe796edfdbbb7bc502d6fea984f151a0b67631267b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutting_probe.dx90.vtx",
+      "size": 20967,
+      "sha256": "026a0bca97e4ca8595a74844200308f916cef7d73255ffe66a1b350112b14add"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutting_probe.mdl",
+      "size": 2860,
+      "sha256": "7e4bb7f428be48ff5f7041149f5b95a3c82588f2349186437526f2562eae3fd3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/cutting_probe.vvd",
+      "size": 104768,
+      "sha256": "9d2618b9e87155af25ab9c326aaf17155edec03adde0bfdedd7087c9737bb22a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_aa.dx80.vtx",
+      "size": 52800,
+      "sha256": "53da3c46b757da77506bef751c615a416d72d9649e14ac1c5ba69a48f383f1b3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_aa.dx90.vtx",
+      "size": 52800,
+      "sha256": "41738bc136bac20d46107d37d0386cc311c0a20092782e604baae6e4d7dac942"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_aa.mdl",
+      "size": 3044,
+      "sha256": "e9ec1526aeab93d00584472c01a2eb3456419fa114c59302b2ce8fe617c259fd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_aa.vvd",
+      "size": 262208,
+      "sha256": "fd571575432a13879452c43c0f7885c71af82419d317dacf1098c97a16885404"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_homing.dx80.vtx",
+      "size": 154506,
+      "sha256": "2c709494df96f86d85e814ecb8d378043052710df9a1e71fa96ab7710eed03eb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_homing.dx90.vtx",
+      "size": 154506,
+      "sha256": "2c709494df96f86d85e814ecb8d378043052710df9a1e71fa96ab7710eed03eb"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_homing.mdl",
+      "size": 4200,
+      "sha256": "4cd60e6abde0a81a220f3dc91ad0ce3ad21a947bc41f9d8c19b3c54264080eb5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/elite_homing.vvd",
+      "size": 780096,
+      "sha256": "cb5f8109b1bf7cd95461b634d44f52db2374e0faffb1548df6cf37382cef84b0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav.dx80.vtx",
+      "size": 97845,
+      "sha256": "efc95bbb503a8cb30e75c9c67b0400631b4b23d799e7e82a8eb3f9638fed900a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav.dx90.vtx",
+      "size": 97845,
+      "sha256": "e1b3acb748df97526aa6f1c30503d1876eee52c83bc0fd336801ca52c130c416"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav.mdl",
+      "size": 3228,
+      "sha256": "0da9569f921f4fca41b1c9c9ff9274d661b663af3cfed3b8ef31b2c71e329099"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav.vvd",
+      "size": 500800,
+      "sha256": "bc29e82dfcfa27428a58a67fb6d36987c303066eb57a1b905cb8065f2a28f363"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav_gimbal.dx80.vtx",
+      "size": 39996,
+      "sha256": "fabfc6bbee944fce732fc6f37de2e7d8f4a461a129d3af3707f9ecf91b350ee6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav_gimbal.dx90.vtx",
+      "size": 39996,
+      "sha256": "152cd43870a783db9f481128c27e260c2b7d5a981b79ef5e00642b19a67e3de1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav_gimbal.mdl",
+      "size": 2296,
+      "sha256": "d153413e8fd063caa412c9df3e20cadad00dd131589acfb3256239778feb5fe8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/grav_gimbal.vvd",
+      "size": 202816,
+      "sha256": "93464ecceabf8482d3a869b0381616f8a38c72b176cd10fce778272968e2fcc7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_bfg.dx80.vtx",
+      "size": 68901,
+      "sha256": "f4e41cb48e9dc2fa80e2d21a8f77b5f6975d3d071a7d44e92d85954968153347"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_bfg.dx90.vtx",
+      "size": 68901,
+      "sha256": "01f2ab7e757713c2ab88f4610eb17f0d44978674a7dd93cb11dd919d87c03be5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_bfg.mdl",
+      "size": 3232,
+      "sha256": "aab68d7fde1b8b370f11b97915ca7723c45d9f15c1fe012aad39c88bafe521f1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_bfg.vvd",
+      "size": 354880,
+      "sha256": "8e7f08b366ed09aa112505bb6ce418da2d912db04aebf1ae990f51cf2e01290d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_concussion.dx80.vtx",
+      "size": 75732,
+      "sha256": "f4461261c3c8bbeafeb1ae5c7480072eaadf308346372cf515ea7229a4082b80"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_concussion.dx90.vtx",
+      "size": 75732,
+      "sha256": "ee3b9610f906eb2c029ff5e5ee4d6faf7e3983d5ff1d3bf2a10d75b72fadb5f2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_concussion.mdl",
+      "size": 3048,
+      "sha256": "621492c29032cc9acf33127d2724625651aed58f5632d0381bd53d9160f670e8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_concussion.vvd",
+      "size": 388928,
+      "sha256": "87bcbce3526ab13b0ad35a11fc0ae7f449d5a5e600959ffedd290efef3f9f2d8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darkfield.dx80.vtx",
+      "size": 69363,
+      "sha256": "40985cbe28c7362f294c0e127e8a751cb571b9707ec58a60d84818984aacec4c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darkfield.dx90.vtx",
+      "size": 69363,
+      "sha256": "d8276b629862c1be81616e92153dcae1ad2a8eb3da6e9afb0fb94f63c83517a8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darkfield.mdl",
+      "size": 2860,
+      "sha256": "7a49de4fa541f843f10b9f0c6a4a3c4f37b4a8e6cfa6a050b4c84aaad9c6589a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darkfield.vvd",
+      "size": 357440,
+      "sha256": "090b26c790d5d4cb80ba884a1fa283b4590ee6beeec173b8eebf61306d0e0747"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darklance.dx80.vtx",
+      "size": 63072,
+      "sha256": "d351398454057cf5e5312f46ea3ed312c10abe09d7db74d84d64efa92cd41222"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darklance.dx90.vtx",
+      "size": 63072,
+      "sha256": "8f9ad53fcff30edffa66c71e4065a4aa43fe4d99258acfd039d947564001ce05"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darklance.mdl",
+      "size": 3048,
+      "sha256": "e17759ceb253eaf637e2d3a63657fe524e30b80e328b057cbfc4334032beb2f7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_darklance.vvd",
+      "size": 324160,
+      "sha256": "7c0aab0cf9017660c43ff3ff3e840e2bf4802794ffc48588de62372fbffbfe78"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_energytrap.dx80.vtx",
+      "size": 61620,
+      "sha256": "d0b826f15afbc8578cb0cbd5ea7272847f1a94ee06e63dba6ef6cafee41817ae"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_energytrap.dx90.vtx",
+      "size": 61620,
+      "sha256": "7ab64a3345730075b3a48f18ad41596a6ba47ac016cbbc2f47f4483509b29f38"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_energytrap.mdl",
+      "size": 3048,
+      "sha256": "3b13957860d09eeec72feed46ad07724f46b272bfe6c09241303fec37401abfc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_energytrap.vvd",
+      "size": 317760,
+      "sha256": "5271ec35e02978c7026756b59c097cec48db1260ab0b8205dab4d00d999795cf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_flak.dx80.vtx",
+      "size": 66123,
+      "sha256": "ae31ffdcfc6ed4aa8b5d52bdd4fe2315e27aa887e3ec131bcf9e5eafbe234a33"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_flak.dx90.vtx",
+      "size": 66123,
+      "sha256": "5a95a6c763c1dda94e55d3a5cecdac4889c15a942e464d10f4ddb586335d75f2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_flak.mdl",
+      "size": 2856,
+      "sha256": "ca3cab8dd444f6f62160ccb1f779330beb1621bb530ba7a555b3fe14acadae5f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_flak.vvd",
+      "size": 339008,
+      "sha256": "7e3e50fff894e09ba5a4bf479c76dd817940d8951b26c4ace54fbd9220258ab8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_frag.dx80.vtx",
+      "size": 69321,
+      "sha256": "76cd3bed8aa689e4ab6f09101d5af9f485883c7ea373cb6072942925d2a64e3b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_frag.dx90.vtx",
+      "size": 69321,
+      "sha256": "9b9985517cd659c6717271bbf154e6dff4dcc91f1a7361b976ca150c2ba42b9e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_frag.mdl",
+      "size": 3232,
+      "sha256": "cb4e9c6407838f6ae5f260dcc0e6e5686b0a2254183b239828f4fff693997963"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_frag.vvd",
+      "size": 356160,
+      "sha256": "73af68c779911ca9b738db225ad63caf0810e447f9d5b974d6fc9d2252bc3167"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_gravmine.dx80.vtx",
+      "size": 64320,
+      "sha256": "9c19f4a2e1c698c58f38c934dd3679dded3977ed1e46d744031d66af19e79bd4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_gravmine.dx90.vtx",
+      "size": 64320,
+      "sha256": "366d37a904947ec15a7843815f95dcf28ce280b7061639d5f6a512563be28ed7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_gravmine.mdl",
+      "size": 3048,
+      "sha256": "53bc207de1c447530cd2737ff4d0dc21ca42e687c0bca0ceb61d39864f3743aa"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_gravmine.vvd",
+      "size": 331840,
+      "sha256": "16db4fd250a999901bbc1e45bf01433f2e1ccd271639dc77de1a2a5459a74765"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_heavy.dx80.vtx",
+      "size": 69903,
+      "sha256": "8b76721a9e50f7b79d5a1b010bc271859e8e0ecff473642bfccce7040364fe19"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_heavy.dx90.vtx",
+      "size": 69903,
+      "sha256": "c751f6087c16c12a791c1252fcce6eab60625fe40e2abce3a982f129dab18ae2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_heavy.mdl",
+      "size": 2856,
+      "sha256": "4da49b4d6d676e022cea6b292c3b06cc4b257d8e368550803ecb708465717c5e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_heavy.vvd",
+      "size": 358208,
+      "sha256": "30a508a3a77bb7999828f46386244ef72be92c14d0a42e9e714c8b3f56d609a5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_homing.dx80.vtx",
+      "size": 61044,
+      "sha256": "4fda5999278a449d1f2680e5511141bb2779172997d7710903b5e117af3f9c94"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_homing.dx90.vtx",
+      "size": 61044,
+      "sha256": "807144957a9f27be91238b281c649f87564f8a4aef693bd206c30ef78724fab4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_homing.mdl",
+      "size": 3044,
+      "sha256": "da84b199be6267c3249de521f2e3df16f8530b0df97bce1a914aad252e671d11"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_homing.vvd",
+      "size": 313152,
+      "sha256": "9d52f3186b5c8da2858015a8d34d45f853ce31a26e1e5c9b37193a84b2e68c8b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_laser.dx80.vtx",
+      "size": 51795,
+      "sha256": "be7a2f39fa87d4268b525bcc78c4838b1cdba87cdd21166d3537c8aa9789311b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_laser.dx90.vtx",
+      "size": 51795,
+      "sha256": "b675df2dd53b1f4784c3d773a0bbcd75e592aca45cb66f78f9c035e3bd4ee9a0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_laser.mdl",
+      "size": 2856,
+      "sha256": "6dc2d82b55cd0a3cba8c034591ee4b46a66fd3d4c5a63c3b359ebec78402c726"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_laser.vvd",
+      "size": 266304,
+      "sha256": "ee9a33e4ea2fd362d1b64587692a0e5ea0a7db4965b2d54a99c2f3e1f687c9d6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_mega_missile.dx80.vtx",
+      "size": 62091,
+      "sha256": "db58445b4ae8895987e88d2a06dedc09fc02650a0bbb0cd08d5fa602b0983a56"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_mega_missile.dx90.vtx",
+      "size": 62091,
+      "sha256": "c17a2274949a1ba73fd783dccf0fc31b9252c2b23b5667ef18f8ba93ad3d0194"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_mega_missile.mdl",
+      "size": 2864,
+      "sha256": "0f557d23fca6aba03bb8593e4352f6fec49e627a22919bdd74c2bfc1684c4720"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_mega_missile.vvd",
+      "size": 318528,
+      "sha256": "11a3baecc82354dccfcc4ce164197b7ba67ee70012c0d5ccc27614286a73d67f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_overdrive.dx80.vtx",
+      "size": 54744,
+      "sha256": "ccc19246d0e753b1341ff96a3752cc52f0a901e99ac07a07814ac93498cbf8d6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_overdrive.dx90.vtx",
+      "size": 54744,
+      "sha256": "fa67baa2cdc4514f2d7937016a0e35b5590c61415f865d71f217edf51bc2a93e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_overdrive.mdl",
+      "size": 3048,
+      "sha256": "7a2fbbcbdc7a4204cc314bc9bb11ff4c96f3c0a67b3db2a80f9b11c6c71803bd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_overdrive.vvd",
+      "size": 281664,
+      "sha256": "1ec42f5ab10b2824cd19f2dde318784110aa36a0cefdd86612e701975feeb155"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_phasegate.dx80.vtx",
+      "size": 60189,
+      "sha256": "ee2901fbd9620b2c0f34f9e95f73dcfeaf4f174c33f29013087b4915f2873636"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_phasegate.dx90.vtx",
+      "size": 60189,
+      "sha256": "f0eb895e7f13d6917c71e30d3ea2f0b8bbaa86f8df9089a295ca2cf3999865dd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_phasegate.mdl",
+      "size": 3236,
+      "sha256": "68e143b4af70d268ff05ffca3d6a9fde9a1bb9d34a367ded65e18d7d1d39ebba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_phasegate.vvd",
+      "size": 308288,
+      "sha256": "08ab9fedd6483682455b4b395d399a49698d467a7946374491ebaaece905ddf0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_quad_laser.dx80.vtx",
+      "size": 89376,
+      "sha256": "ea558ea6e7990a31999acb1f7ab2e77599c9c51e9aac157570d5a8984ab91593"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_quad_laser.dx90.vtx",
+      "size": 89376,
+      "sha256": "c1b4de8171ee2538095d4207c8108d4781522125020267dca7bf62e76534d338"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_quad_laser.mdl",
+      "size": 3048,
+      "sha256": "5d80583705f65a3ddc61e04cfd0cd40284e2909f59a20a54223ebcc4a8cb3b00"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_quad_laser.vvd",
+      "size": 455744,
+      "sha256": "75fff1465eced07a9f392a8c8402bb349a606096430ef3f3c2753ee86b07eb8a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_railmk2.dx80.vtx",
+      "size": 63141,
+      "sha256": "73d6c8c9f8035fc2b6410c50112885eccbb0e60dffd9545a8c23b548e3f45232"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_railmk2.dx90.vtx",
+      "size": 63141,
+      "sha256": "bbe779c42feb95030ad3903b1fe04c781e30bb1149e16a7cb5f62337099914f0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_railmk2.mdl",
+      "size": 3236,
+      "sha256": "d0909679a814058a4332c0960a384b210911b7d7c38c75ad85f602c72f02498f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_railmk2.vvd",
+      "size": 324160,
+      "sha256": "8aa57dfa874332a90e75a96448727618850f1c7e26ebcb032126f5ec268db9b6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_reactor.dx80.vtx",
+      "size": 71880,
+      "sha256": "bc65ba641a103ff9ba181b43a9858f99989c846ed6b77ae396fd955573b6a28a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_reactor.dx90.vtx",
+      "size": 71880,
+      "sha256": "a67c247c01249c0ce3330bd6b50de0c98121dfe06a590f044728e4d89de5cd17"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_reactor.mdl",
+      "size": 3044,
+      "sha256": "32eddc8fed7a82db5d694a9fa38b0fb77863f80bcf0f16bea4606a002d5adf64"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_reactor.vvd",
+      "size": 369728,
+      "sha256": "b6417cff1a90a82a0630a98ba10ca8aa6794cb0826305929a7de1cf9563394ba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_shockwave.dx80.vtx",
+      "size": 66408,
+      "sha256": "4d93d6b19acdef690902daa62d787466e99a7004d2ef23e8ec58a39993cde860"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_shockwave.dx90.vtx",
+      "size": 66408,
+      "sha256": "eaa1f0c62cc9c65b75b6739a0f37cd8202d906e63e518e65d3a02c525db4e53f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_shockwave.mdl",
+      "size": 3048,
+      "sha256": "20b0c6846a528433c82c2c9dbbdb3e8b8c86c80d2f45d55e4af1207942ab6220"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_shockwave.vvd",
+      "size": 341056,
+      "sha256": "3db07a6d8232508d384e5e0acb34a85a8f84ba7bab7e13b61698202b28a6d5e4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_smart_missile.dx80.vtx",
+      "size": 66516,
+      "sha256": "1f4bb5e22e05168e5f99ae5f84cad18a18f1c6400a69d5d0569d9e1836f936e9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_smart_missile.dx90.vtx",
+      "size": 66516,
+      "sha256": "5eac7de52a1648068ac65b7474a8320e9366ca14a3a68d08778652951afc4f98"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_smart_missile.mdl",
+      "size": 3052,
+      "sha256": "b5afe63dd3afab52dee28b2c786e44ed4e0fdfc351165eee808fca6aded3e4c9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_smart_missile.vvd",
+      "size": 341824,
+      "sha256": "8fdf4c06d6e2029db47b8ca02777c9ad3d51f420ff6fe9c7c7c029e4f833d4bc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_telefrag.dx80.vtx",
+      "size": 65808,
+      "sha256": "1c2e9432fb2b1ae463d6e786470da6c5aaa1d1217fabb0b39ada4d93c99cebbc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_telefrag.dx90.vtx",
+      "size": 65808,
+      "sha256": "90dc68c86484994faff9f381764fe428c9ed5ddd728b66d1c3793a1c2553e452"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_telefrag.mdl",
+      "size": 3048,
+      "sha256": "e505450882c868172ee6a7bbca391cb2940e2085a795dede86dc0eaa5a5a2a6c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_telefrag.vvd",
+      "size": 338496,
+      "sha256": "a5004a9f5e9b5207d1e6f21208e52bfb906c4ac0110f6b0a168f5cae79c76b8d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_vulcan.dx80.vtx",
+      "size": 89706,
+      "sha256": "9dc8300809c329292250a45263ab2eaba3baa8366f2908a6bc657173a5f81406"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_vulcan.dx90.vtx",
+      "size": 89706,
+      "sha256": "a57f3c570f033f7afb20abb3c8b126b75e39c445d4096fcaf23e956327531aee"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_vulcan.mdl",
+      "size": 2668,
+      "sha256": "29e4e685ad484ec8ad1675e07cf7f83f44cb7e4a1d30b7ad2a6c37951f07bc3f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_vulcan.vvd",
+      "size": 463680,
+      "sha256": "09db2cead93b1103389ea78b9754b4b24b65abe07872b5517ce29ca66d5b6d75"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_warp.dx80.vtx",
+      "size": 63648,
+      "sha256": "a16e5e861f3cbee81a80dd3de2828e29c448670f0f93bbb41a3373717106e22e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_warp.dx90.vtx",
+      "size": 63648,
+      "sha256": "7fe0f2c14d281529b2d274eaf00335204bc4b01db92cfe3861a424ef4f756010"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_warp.mdl",
+      "size": 3044,
+      "sha256": "afead9f5b76d9e7f1c99b73084cb8ed9a5600452d287a09e0073db8ce52f1bc4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_warp.vvd",
+      "size": 328256,
+      "sha256": "457ce0232905c4073d3358031a4a5d33c43a2ead5406563ffc0c88b463324afd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_whiplash.dx80.vtx",
+      "size": 66309,
+      "sha256": "3fe0bb4e9dc193fb3f62bb8f79bb0bda4157dfab646e6ec20c0a9f9c6cfd8555"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_whiplash.dx90.vtx",
+      "size": 66309,
+      "sha256": "8e9b36b731eba418006b68c40627d271aff7ecb9e2453e3038ce30d92384de86"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_whiplash.mdl",
+      "size": 3236,
+      "sha256": "eae208e3f9561bc612edb8516a836bae804533799480eff65c896a1660f39e0e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/gun_whiplash.vvd",
+      "size": 341568,
+      "sha256": "46680ad79d6438b36a792811f214fa559d6489ca115bc48076af14e405790f85"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/heavy.dx80.vtx",
+      "size": 105165,
+      "sha256": "c3efc661be9628ee1a8425093b0a23e4be05befcb458acffbee203500e854bd8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/heavy.dx90.vtx",
+      "size": 105165,
+      "sha256": "c1eeb91512649ceb95dbe1354fd0c2359370e9a236fdc71016c84bb4a47ba888"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/heavy.mdl",
+      "size": 3604,
+      "sha256": "09bd482bcc62d6746756ed54ab288815e4b502aa4ad9adad53f2a31889a90a19"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/heavy.vvd",
+      "size": 536512,
+      "sha256": "3715695a42cdf84d9393f85a2575a512c39bd3c19d4266f6d80d23b57f516480"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/interceptor.dx80.vtx",
+      "size": 158208,
+      "sha256": "93700d4030674c5d6074d96f2ff882bd7f53d85fad0d5f7a485a89b52fd5bf8c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/interceptor.dx90.vtx",
+      "size": 158208,
+      "sha256": "93700d4030674c5d6074d96f2ff882bd7f53d85fad0d5f7a485a89b52fd5bf8c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/interceptor.mdl",
+      "size": 3820,
+      "sha256": "37054b920e49f9cc6644f67f4eb50764745f890cbce1ef88039f91d04a1cd00e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/interceptor.vvd",
+      "size": 810304,
+      "sha256": "353bc8628636109d36b8bf103cf8e96067b74a60c926f9dc86290ebdeecaf320"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mech_receiver.dx80.vtx",
+      "size": 89634,
+      "sha256": "9834ace92bace7d8748edcb74024b6d97bb4f6dda5587a06326c6e5cabee05ea"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mech_receiver.dx90.vtx",
+      "size": 89634,
+      "sha256": "2ddfc0482452ecc948cbbe8af8d9823070d746e8b97a4c0b3563bb6da20b7b70"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mech_receiver.mdl",
+      "size": 2672,
+      "sha256": "211b957d42f9c22c589de792d6f074f6e7a70967024d2e21a3fcba127ffaed57"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mech_receiver.vvd",
+      "size": 463168,
+      "sha256": "519086b31739913235fa3a88b6c30d5e2b437ee6ec8cfbc94e506ecf9f69a66c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine.dx80.vtx",
+      "size": 22812,
+      "sha256": "83bdb99a4af5debd434e4d95db5b0b40ffaedb3a946f187484b817a8b30f6ae7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine.dx90.vtx",
+      "size": 22812,
+      "sha256": "b1d774f45f82d50d6d1f6f19cce8e10e1a7973988bfd97afe709167b3215a63b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine.mdl",
+      "size": 2288,
+      "sha256": "76c331711260e0b78bdef44c8ec8283a5e33c168075b89c3a6ba137b00cc182b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine.vvd",
+      "size": 117312,
+      "sha256": "be0a2d348c1931b4fcd6b52665e75df8fdfdebb376af27ebf1f63b99c4eae621"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_air.dx80.vtx",
+      "size": 43716,
+      "sha256": "8291efdc74f33a4ac7c4b920db861e0ec5976dd73a63dd3ac3df2cfc0f9bc050"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_air.dx90.vtx",
+      "size": 43716,
+      "sha256": "a538f5a5a21c7079e42817e6b47f8887f0270dc9fad6597db65eb14b55ee4767"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_air.mdl",
+      "size": 3044,
+      "sha256": "4d87fe7d04affa0e1c4da9af2d5a7091d25254c0a82ae18e324632c34fa212bf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_air.vvd",
+      "size": 225088,
+      "sha256": "2ec29563d11afb518bf2f94b1d054da6032ac6524061b4de30e0eafc4aed05c0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_gravity.dx80.vtx",
+      "size": 46455,
+      "sha256": "5eef98e571849b9d959a1ff076fea98f4ab90c48d729d8196b7146ad8ef5fec2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_gravity.dx90.vtx",
+      "size": 46455,
+      "sha256": "6255f7d4841d906d0ae048e0c076b4b8618a8c4b1623a39911315a4525e9a9fc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_gravity.mdl",
+      "size": 2860,
+      "sha256": "d1cc3e81b9fdea66429f16f8fc951134f8ac1d3e8d2b1ddd39c494ec46db9539"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_gravity.vvd",
+      "size": 238912,
+      "sha256": "7d2e434aaa4965ef20983e01754de7c0ae47a335ff1947eea3371931c4ca1000"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_hatch.dx80.vtx",
+      "size": 2946,
+      "sha256": "7aec2ad7e087862f9ad020ab5bee1809bd2dc11ab1fb42f17ae377f850cce133"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_hatch.dx90.vtx",
+      "size": 2946,
+      "sha256": "d665c087357f084dd0cd9d85d64f6be954d08636f1544ccd6c65112d20272714"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_hatch.mdl",
+      "size": 1920,
+      "sha256": "5ffdf28aaaafd1fd5524126ba9c225e9cd1c29c47e65d7c11bae903e6d58f1d6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_hatch.vvd",
+      "size": 14400,
+      "sha256": "c3b89c72570b73f623c37aa8a5c25157368169beab14f4baaa3853b3f3752fbe"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_plasma.dx80.vtx",
+      "size": 49119,
+      "sha256": "85d0f07b152a4fa9b3919088d45d385fbabef5c3b0abeb536d4346070e13022a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_plasma.dx90.vtx",
+      "size": 49119,
+      "sha256": "8ea5849a52582f2d9a7eeaf85c41061e539a6a7631f620726a2e465bd4239963"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_plasma.mdl",
+      "size": 2856,
+      "sha256": "eb773d8b1fbc7d40e4412c9050ae3e1dbd83c9730aa22a58d4d8d8447ca141ea"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mine_plasma.vvd",
+      "size": 253760,
+      "sha256": "30f39a4bf34425a214a870dec054e44830048e092bee9d312bf517576effb2dc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_arc.dx80.vtx",
+      "size": 37605,
+      "sha256": "589608f83ab9dd31a62b2b26a4fbb2431096d949b4ea4d6539fa9b2011cbd240"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_arc.dx90.vtx",
+      "size": 37605,
+      "sha256": "21e9aaa49f9f6b430c51f463fc0626daf72dea0dabe0abb39e47fc837f3af02a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_arc.mdl",
+      "size": 3232,
+      "sha256": "536215da20c48e712d37139e37d223ecf0c8a6643c7212145c3930d271fac4f8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_arc.vvd",
+      "size": 193088,
+      "sha256": "1e1f67c697fd4c06b0af26914bf485998583514c3c2b86e5b2d6e1a385defcb6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_field.dx80.vtx",
+      "size": 23136,
+      "sha256": "fb066be4709181b4ca43442e8316965f8a6d99bea603369a2f8071aaefea0618"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_field.dx90.vtx",
+      "size": 23136,
+      "sha256": "7b36c5f5e13f19b3997efe572abf11ca7a8f9e183298439cf8865e3002059d43"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_field.mdl",
+      "size": 3044,
+      "sha256": "27a592c198c4525520f4c225874216d91b398da2f9ba2c8e4ae3fc6b726b429c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_field.vvd",
+      "size": 116800,
+      "sha256": "9f2a4b8b07b1a7b175a3c64c2e94effef9941e030287ea4cbf9374e48a307f5b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_joint.dx80.vtx",
+      "size": 4383,
+      "sha256": "f623a7e2e076b2b2cd4f6049e5e6c4201999d8d37ab1b7a49acd8e23696ddbd9"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_joint.dx90.vtx",
+      "size": 4383,
+      "sha256": "4fa1ad013d8c04aceceae1a4b79996eedbb8cef8c925bef8b0d5cad8bc9bc83b"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_joint.mdl",
+      "size": 2108,
+      "sha256": "73f27cdf35297282edbdd37ff5134ba8642d0fff15c39dd574445b668ec410dc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_joint.vvd",
+      "size": 21568,
+      "sha256": "d89ec0e983a5c17a322d977663293ddd0208486817f10aa98ee4ac4f49534d56"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_mine.dx80.vtx",
+      "size": 26589,
+      "sha256": "7ec2a9135c5bbe3afcf6cf1df3a3997ec4ba06a62410eca40d33b8f0f1b7a0dc"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_mine.dx90.vtx",
+      "size": 26589,
+      "sha256": "7b8023658448ea399290c435f7ea5a77b0da57a47a13378bfd5c09a4febe4888"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_mine.mdl",
+      "size": 3232,
+      "sha256": "4cca11c3ed4356ee71cbf60efc501305527a4cda2bd542b2d363a0e21f5c2421"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_mine.vvd",
+      "size": 134720,
+      "sha256": "24be1dda14971b0aa119e8b4c2afa9abfaa897b2c86b5623668e8f6e3eff2126"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_optic.dx80.vtx",
+      "size": 28014,
+      "sha256": "401b9e07f1e8a1c10df12ad17c3130408aeb1a649aa5c17798fc6c3a2f80c7c5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_optic.dx90.vtx",
+      "size": 28014,
+      "sha256": "2facb0994ac8e34871746b8e93acb567038e25fe5deb313a0ee97cd981b3f679"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_optic.mdl",
+      "size": 2668,
+      "sha256": "cc4c3be5587991a16615cb07ad63954380489556107f1afd1d81a59690568010"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_optic.vvd",
+      "size": 144448,
+      "sha256": "5e567284fa6382465850d38f592299fd61a89c84fd589d94178500efb1df0619"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_pulse.dx80.vtx",
+      "size": 62808,
+      "sha256": "e3197808ef7f2c9c464eb4a0da123c047b46175505e26480ec1e1fe0c8391272"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_pulse.dx90.vtx",
+      "size": 62808,
+      "sha256": "81715a0598d20c03869768bf67dc53e4fef2e8e04edb68b6f3114ac94e901dae"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_pulse.mdl",
+      "size": 3044,
+      "sha256": "022f5fd7c0b7fa3785c3e630b27c03f733b376a0249ec5cb6cd41f34d8c8c48d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_pulse.vvd",
+      "size": 322624,
+      "sha256": "eab52671b59a9a58d62accdac76976fe6df1becef478056e09de109879d8d253"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rack.dx80.vtx",
+      "size": 41352,
+      "sha256": "1eec9c48031c31c12d115d63e0b162b92ab990c77ae6d0fcb3636f612ff8e01e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rack.dx90.vtx",
+      "size": 41352,
+      "sha256": "6f0a3fe8b06393b4409f0900d626252c4da7f20823907d9dd2b0829df31cd3f3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rack.mdl",
+      "size": 3044,
+      "sha256": "9698dd6642b9801a97413fc68f5315453573cca77c956a0c3b153b33fcc3770f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rack.vvd",
+      "size": 207936,
+      "sha256": "d8bdfe853f1bcdd8e0bf59c985fd984ec9a34a622f1ee2f7f5b37723f8ba4234"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rail.dx80.vtx",
+      "size": 43203,
+      "sha256": "5fbe7e2e0f8b14153b5d375ac9c87972aae4fc8fdb40b5529e6f52ca5bfff110"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rail.dx90.vtx",
+      "size": 43203,
+      "sha256": "dc4df32693e4af93e545d89273905649cf7a71a3e19810fed5734379e57a8b86"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rail.mdl",
+      "size": 2860,
+      "sha256": "9ac5582d6465f8b101d0175429456666863bb014e8c0343d948aaaf04974ca88"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/mount_rail.vvd",
+      "size": 224832,
+      "sha256": "8a4f3456c15917a1dd91521c1be664939c75d92d85093e4ad22b2aa07892db17"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_dark.dx80.vtx",
+      "size": 53364,
+      "sha256": "6c6074be6c07f6bbbe5c071c31928858820ab37438a4b998ca01cdf31f8e27e4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_dark.dx90.vtx",
+      "size": 53364,
+      "sha256": "e375c58d0c19cf9f4b4087cb78ab9bda5f9af0fe0ec64572a14d7729832add05"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_dark.mdl",
+      "size": 3044,
+      "sha256": "c119069bb4f119211f2202d120dc943f668866844e4ccdc4669ec98d34399ba1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_dark.vvd",
+      "size": 274752,
+      "sha256": "5e3215b91e3e1aae1944224def6dab1290825d0c0364240ddad9f7bc84d2a658"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_snare.dx80.vtx",
+      "size": 36231,
+      "sha256": "2a1d5aad328e8f42fc4364ce7bb2eb06237ae250e09ded1f0160f5311940bd5a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_snare.dx90.vtx",
+      "size": 36231,
+      "sha256": "791635e4dc2e9f4cef4f796de00e7402fb2b3f130a129c6d5a1c4c54c4bd9e64"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_snare.mdl",
+      "size": 2856,
+      "sha256": "035223d9dc53fcf814105128efe328f7630e888f8053220b71bc09101a5fb35a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/node_snare.vvd",
+      "size": 185152,
+      "sha256": "f9fc9fb446bb2550aad68e3a752861831e82aa12421162a6be5c740b15ace137"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/plasma_strider.dx80.vtx",
+      "size": 129294,
+      "sha256": "b8b3cee12cd5ee0549e14c4b55e1c04984a426b1c6b7bd4a1b6baac319bebe3a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/plasma_strider.dx90.vtx",
+      "size": 129294,
+      "sha256": "7043addc0c76cd5fee06f7d5f2e8d1e2fb94d7d85491a10cdc0c4c74d5d80110"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/plasma_strider.mdl",
+      "size": 3804,
+      "sha256": "1c68367584cec557d1b9dd93ddc9c12c9c6f2b98f595bf0cf3b661a069c81b1e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/plasma_strider.vvd",
+      "size": 660672,
+      "sha256": "f3169ab436fa90d8e8574952ff952eb7e4f0725a94253a3c64cb52650d7dd6da"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_hauler.dx80.vtx",
+      "size": 72120,
+      "sha256": "8405ae469bf9ab599f9873654579a76ab3878b89ef1a0bbf769dd94a5deddb8c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_hauler.dx90.vtx",
+      "size": 72120,
+      "sha256": "5e29bf87be85c3f611cdff2f76abf7b11c43afceef77f7216949668b9d0e7464"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_hauler.mdl",
+      "size": 3804,
+      "sha256": "74743cb354426aee9de3116362b0825bf8e335b743237bbcecb7cb3516d614c1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_hauler.vvd",
+      "size": 364352,
+      "sha256": "38b33e40bd4072935426aaf40567bfc202776acf96a30e82596ec656ad24dd16"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_raider.dx80.vtx",
+      "size": 74793,
+      "sha256": "d9476725c7b2e98d432a781e545d7f17fa41bc40daf1b1d2219acbbf5a914a32"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_raider.dx90.vtx",
+      "size": 74793,
+      "sha256": "a43548d5449feb3f0c97ba5c36186430dab981bcbb182771d51dbfb734991504"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_raider.mdl",
+      "size": 3992,
+      "sha256": "9af068a11bcb6c01227d692c7de8b6c7287e675a669b9d0543f2ffa008ae2e99"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_raider.vvd",
+      "size": 374848,
+      "sha256": "85cdfe3ec177a240226e94ff5107cb6c7cde47e6391d8bbd53d1b51bfc7c1c0c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_scout.dx80.vtx",
+      "size": 95718,
+      "sha256": "0999bffe1afae1f16ec17cb3bbfc77607f7e075a8a2f900ed743c6bf92bd49f3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_scout.dx90.vtx",
+      "size": 95718,
+      "sha256": "beb2db6373ec36eff8c1fadb13693d02fafd0ca3db8e7ed70b7c789f892e3e59"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_scout.mdl",
+      "size": 4180,
+      "sha256": "9e5356fc1232158026f0c842307ad8209f9a655ecd15820e29293b43c1eef452"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/resistance_scout.vvd",
+      "size": 488512,
+      "sha256": "4d1732e2f149cc0c62efd0679d301c8364025fb3f6686f009c5901df302f45c6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/rocket_strider.dx80.vtx",
+      "size": 210135,
+      "sha256": "4fb8bf64a6545174ff25c5450d7d0c4e796e425809f3a96298249c35e26c8eb4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/rocket_strider.dx90.vtx",
+      "size": 210135,
+      "sha256": "19b257d8d0029f82723ae59af50b2ba2b41a97a94dc525baf7dfd2f2bdb13f27"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/rocket_strider.mdl",
+      "size": 3992,
+      "sha256": "37687ac06c5eede6a73cb51f90800ac6c78ef18d3ca4e1d1a4dfbba5e54222d7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/rocket_strider.vvd",
+      "size": 1075136,
+      "sha256": "4a2ce2ea30ac52550135e1be14a00a40cb865c09401491febfcce4a8bbbd7924"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/salvage_ballast.dx80.vtx",
+      "size": 11748,
+      "sha256": "f4ca123c278356c7fb9d6eff9d51ba9f4f4f40b2fa83c9cc51b2c66f01015d2c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/salvage_ballast.dx90.vtx",
+      "size": 11748,
+      "sha256": "405827fa9610d450438416ae7d964a81a9df2cb0d12996828fa3a9dbbdb8e678"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/salvage_ballast.mdl",
+      "size": 2300,
+      "sha256": "a52fc6e365ab2d7a0d7f97d08576a26d772ac0b9e594e91c7c731540cc7e4076"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/salvage_ballast.vvd",
+      "size": 57408,
+      "sha256": "36e52af7afc7f5a028c853edc4c8f22cfdcfaac57dfb113462a279169f653fbf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/scanner_player.dx80.vtx",
+      "size": 171915,
+      "sha256": "42f6e9130f47fd785381ce40a081f4b06ee22385a6f0e4dcd9209b17e7e94fef"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/scanner_player.dx90.vtx",
+      "size": 171915,
+      "sha256": "176367f43d287e5e8222abc687b89751a685308a99a10eee9bffd9a885ec93bf"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/scanner_player.mdl",
+      "size": 3240,
+      "sha256": "2496856691d0a39243900efd15f14c3079b43364e3f475867c8be60e2ffc01b3"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/scanner_player.vvd",
+      "size": 882624,
+      "sha256": "863acc3e52be729bbfe2ba407581e45efc3d4da48b4a69ed159b020a3eedbc39"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.dx80.vtx",
+      "size": 15336,
+      "sha256": "da75e6b076a6da34b0c5e840f637e7f3577b22f63813682ffba887502ff67b08"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.dx90.vtx",
+      "size": 15336,
+      "sha256": "d51f93cd994f24ac103cf8f3743bfbb508054f0a015ee2b57e112d8b11e11dc2"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.mdl",
+      "size": 2292,
+      "sha256": "91c2ef3baea17a153bcfb656f3bab69b79c44da7cdec23030b8dca3e70f1816c"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.vvd",
+      "size": 77632,
+      "sha256": "3422166ed00ac55f3aa9e79bbc4f944757ed1a726ed401af4fc7f6321aeafe25"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_cluster.dx80.vtx",
+      "size": 30027,
+      "sha256": "e7cd3977be7069ed0effbb2420ee1d6b933a8caf646d01f27ccc46bf9964e834"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_cluster.dx90.vtx",
+      "size": 30027,
+      "sha256": "b49e8ca934065f9c77a5a323b92902a2bf3474f78163f7227cfc55cbb5f9f65e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_cluster.mdl",
+      "size": 2860,
+      "sha256": "71114d18c8c11de49f4835f575b118c7c10aa9cfa5b426cc06b6852a5bf14fcd"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_cluster.vvd",
+      "size": 151104,
+      "sha256": "d42a2c3d1fda85627e288f165ccd8d80631fa00260c8f5367f1c8f76f3823405"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_energy.dx80.vtx",
+      "size": 7398,
+      "sha256": "a7708e96a73bd1ad955eb779d67179bc94f1b1d83a7bfa755fbd6d7bf3a7e9c7"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_energy.dx90.vtx",
+      "size": 7398,
+      "sha256": "584b3a7a1df7dc22285f896a8b844c71bd62bc14be39dae24022102696258b41"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_energy.mdl",
+      "size": 1916,
+      "sha256": "bee9d31d656b9c64135c65b69fd3c2c3d4a820a65739116e66bcaa29717957ff"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_energy.vvd",
+      "size": 37696,
+      "sha256": "8c724f3e32fb322d96d313e51d8b14827e04ddffe4a78a021f0956e8fc860e8d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_exotic.dx80.vtx",
+      "size": 5118,
+      "sha256": "c22e0e5b9ad32aacb729c4e984ceeb83768288474010eccadbcc731949e3989f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_exotic.dx90.vtx",
+      "size": 5118,
+      "sha256": "0454ac9180a4447da4d8b0ef0d58f306261906cf7ed3f0a32311735221a76429"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_exotic.mdl",
+      "size": 1916,
+      "sha256": "2a2a8277b6eecb171751d7c5a4842d66fc8f21add3103ac6e52253393f55e1b5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_exotic.vvd",
+      "size": 25408,
+      "sha256": "64ea25465cc94039a5958e48d8f28fcf705d3483e1f7ddb736058ae0c5e7466f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_homing.dx80.vtx",
+      "size": 28635,
+      "sha256": "8c708ac8211a56a955152869d3ab7c83269094d5b36938d6ea11e2f5f38c3b86"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_homing.dx90.vtx",
+      "size": 28635,
+      "sha256": "c74e6eb0ac171d26f433fc5008153b244e809ada6c3a6ccc28d34fcf5b7d5ff0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_homing.mdl",
+      "size": 2856,
+      "sha256": "e7736e67e973de23b05d84838622b803fba4357a3833009b26f1feb46571bb96"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_homing.vvd",
+      "size": 143936,
+      "sha256": "5f9fa6891ec0e5a1911611f896b62e569a0680d778afdbd1d56bf10271096428"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_ion.dx80.vtx",
+      "size": 32145,
+      "sha256": "a32a969842661c5d39b8d46cc9da610826cea15d1c076a6779fd86147641849d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_ion.dx90.vtx",
+      "size": 32145,
+      "sha256": "7edd6e8f21e4e0df12b7c58d2e5e957cb345dd679f591509fc3c12c73591ec01"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_ion.mdl",
+      "size": 2476,
+      "sha256": "f2c3365f93b2b6c1f23ae90ca57fd0452e98385cc1e6a661f8c565c172c715ba"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_ion.vvd",
+      "size": 163904,
+      "sha256": "708b76a81a797b8ea2c4e6898ad694761dd31c7d4cfc3a6c150fca93313dbe5e"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.dx80.vtx",
+      "size": 2802,
+      "sha256": "3fecce03ef95c1d6ef1aea626a1750f05cdaf26fa8f102b82b95a84a621bebf5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.dx90.vtx",
+      "size": 2802,
+      "sha256": "a6744320fe5402668e9e39d38cf2cbf646b5cf01b99131a12788f3574aebefe4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.mdl",
+      "size": 1920,
+      "sha256": "07a6588ca514e36c9f8fcbf5c0c5605d9e6415e28489e20d0079608742cf6190"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.vvd",
+      "size": 13376,
+      "sha256": "20d0a6201698bbaaa9166631551c1b484619acb13833047061e2f2a846edd557"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_mega.dx80.vtx",
+      "size": 28635,
+      "sha256": "ef0e7854e8d7abc2b473d11c0a3ac83f49adad966f84e9818578dfba54b26960"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_mega.dx90.vtx",
+      "size": 28635,
+      "sha256": "b348040a09b38a37465bc965a35bc3a2e1a075aa597bcd0fb12a9706c6849b41"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_mega.mdl",
+      "size": 2856,
+      "sha256": "880f507e56bebea34368b9bc4c0122fbed7bcf3b137cc3869702d100f25a4b20"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_mega.vvd",
+      "size": 143936,
+      "sha256": "f71fa4b94e34a90e73cfbedde39152e10d2637c95bc5ddc90fbdebfa9df2ab14"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_rocket.dx80.vtx",
+      "size": 11511,
+      "sha256": "d9bcfa4503270bba6b6a9dc250a88160875e2a6027536c2da90bccedf322a7fe"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_rocket.dx90.vtx",
+      "size": 11511,
+      "sha256": "9f1fab5da520e06939b892f23c3f68c2866028d76d129cd34fd1c840f8ebe17f"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_rocket.mdl",
+      "size": 2856,
+      "sha256": "217cfd9841a49ff39100fb0eb2106dbebe2b5726b7e61ddfd89b6297d8a91ac6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_rocket.vvd",
+      "size": 55872,
+      "sha256": "531de18f0f4746d0ed623dabdac1223432a86a58a0ed0f1dba0de61116324021"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shard.dx80.vtx",
+      "size": 23739,
+      "sha256": "39ce841b3befb0de22ad88603ad8e9d558b662a367521a45e9bc7f992d8b30c4"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shard.dx90.vtx",
+      "size": 23739,
+      "sha256": "905c7ecbd386c92e70b449258d50ffe577c1c3c9dbe244a9222bc3802cc0d057"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shard.mdl",
+      "size": 2856,
+      "sha256": "e4ebad541fb946c66b75631fb010fc5ec6bf723b06317f566ce2d82a0771561d"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shard.vvd",
+      "size": 119360,
+      "sha256": "4592a3528a2a3708811e5f82c2849f6c6f23e91d11d05ec9a605f6b3da849831"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shell.dx80.vtx",
+      "size": 23232,
+      "sha256": "e305fb7d81214bfe7ca7dc24a4067c7c5481e0cf5c6898dfeeb7193dcd53bdf0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shell.dx90.vtx",
+      "size": 23232,
+      "sha256": "f645f4db9b1039dd007f2a0adba821d9414bf685fa71bfb13f69b05c15e63b2a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shell.mdl",
+      "size": 3044,
+      "sha256": "8eb29ca150b4042990d99ea79e267ffc61dc1c3f4ae95f3319c484c0bb1f6aab"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/shot_shell.vvd",
+      "size": 115264,
+      "sha256": "e92c792c70d8cb13ffaf1f6bfade60a207167f20fd17b6a9528de6272fd76e97"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/supply.dx80.vtx",
+      "size": 12798,
+      "sha256": "982dc187248a72eab9ac14ce3f88c8d5662ced64c6c1d6d0d6e5e609fabb4ee0"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/supply.dx90.vtx",
+      "size": 12798,
+      "sha256": "49b5b9da837aaf935e15e12f04b608d4d9a6cdd23e42845851fb6881a5b6bef8"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/supply.mdl",
+      "size": 2668,
+      "sha256": "941d03579a99bc10047c7a1bcce1ad4ecadc291347c2c977af02f3eafe4ab6fe"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/supply.vvd",
+      "size": 64576,
+      "sha256": "f4e0f826a6aec6274cbc1bb8bdbe8ceed8e61f28dc277468dcfeb3c7acbf78d1"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/support.dx80.vtx",
+      "size": 158313,
+      "sha256": "5fdda7317b8707d667c9401e9632184da0c49bebd650c2232aba454be5bca217"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/support.dx90.vtx",
+      "size": 158313,
+      "sha256": "5fdda7317b8707d667c9401e9632184da0c49bebd650c2232aba454be5bca217"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/support.mdl",
+      "size": 4008,
+      "sha256": "4ec0d33fda85b587f0b67375039899d5c6cd8abe67f957c58a6c505fa600b532"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/support.vvd",
+      "size": 809024,
+      "sha256": "bfe3a2723bb45906a6f1daf8e781e7f843353c7936424541a0dd1fea17be1887"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/tool_deployer.dx80.vtx",
+      "size": 24156,
+      "sha256": "cf5d8dd77f33fec4125da822a55c28ba2125a476ff10a56e8cd88daeb8d498c5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/tool_deployer.dx90.vtx",
+      "size": 24156,
+      "sha256": "00edfa66f815c69ce207be84990f4953a07e7ee58470f7f5bb8db4896d48eaa5"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/tool_deployer.mdl",
+      "size": 3048,
+      "sha256": "9ee52808d8d5d811e8a865118a21e69d6f410631e03ed896d6ddcf6cb0dfb44a"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/tool_deployer.vvd",
+      "size": 122176,
+      "sha256": "abbb68c72fd85ef549e4af6648fe98c9d33b8c638b0c42018bcf604b86f4cd84"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/worm.dx80.vtx",
+      "size": 58437,
+      "sha256": "23a6f9cd4c234752d5157000e0db15a8201668a50bb20e3dc49b66bde0377cf6"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/worm.dx90.vtx",
+      "size": 58437,
+      "sha256": "8584a1934b2aa6d156a164eea3dcafbc7a8a475a9ee8a33e3cec1729c8455106"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/worm.mdl",
+      "size": 2848,
+      "sha256": "bf5b243ad3d3bac912a2480dfe6d9f65fe948b5a68336c253ea1cae87ef49641"
+    },
+    {
+      "path": "DRMD-6DOF/descent_scanner/models/drmd/worm.vvd",
+      "size": 301248,
+      "sha256": "e675329bec96f2a3108d88c6aaf76212c3740c314f49f4cf95aef963580a7a6d"
+    },
+    {
+      "path": "DRMD-6DOF/launcher/README_RU.md",
+      "size": 9455,
+      "sha256": "32e14da565e0b965fce63a314e2a1710b87cfaf4c8d30bf68137595687af7842"
+    },
+    {
+      "path": "DRMD-6DOF/launcher/core.go",
+      "size": 28839,
+      "sha256": "705a2c2822a8fe2c94279aa1c3c5f5f600690dcadca9364e8d0d88e92ce4b915"
+    },
+    {
+      "path": "DRMD-6DOF/launcher/core_test.go",
+      "size": 17176,
+      "sha256": "6dd4d7f90a0426963db78e43f8ef56c539ed2d086478abe948b5d48d46df278e"
+    },
+    {
+      "path": "DRMD-6DOF/launcher/go.mod",
+      "size": 33,
+      "sha256": "56ef1d6099ffd86ce554624e8d55d83c2ab5f0269a045c39dfef679d5ba669a4"
+    },
+    {
+      "path": "DRMD-6DOF/launcher/main_windows.go",
+      "size": 23784,
+      "sha256": "9f71a849caac1ca3e2ce74187f0227699a293e4accd8bf80443a657966bc55ee"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/README.md",
+      "size": 2109,
+      "sha256": "092cc1fa459774b5041073c4ae3695d648f0b9cedce39d9bf6bda6a25fa511d4"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/motion-1.png",
+      "size": 54081,
+      "sha256": "38f34385f2434529017b5505c02ead1876a5ed34eb6f1c4b90a0cf58e4d0fe44"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/observations.json",
+      "size": 4343,
+      "sha256": "d8a9fe6b0773e418cbdf8b1a3af6ed1fd48a7f4771a5004310e34da6903b5f25"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/rom-001869-hold-2.png",
+      "size": 8377,
+      "sha256": "eaa534a47fe201605f7887715627d3afd8a40b4d807bdea48ad426b727b34b8d"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/rom-002169-north-east.png",
+      "size": 11445,
+      "sha256": "810bba129f76b8cfbed53145eb0e397e464713b63de2a8db5e23c015999538fd"
+    },
+    {
+      "path": "DRMD-6DOF/research/granada_stage1/rom-002312-observe-result.png",
+      "size": 11291,
+      "sha256": "da17fb3a56997f171baceb43387d544bbe21dccd55c295aeea06f0c949aec99e"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/addon.txt",
+      "size": 330,
+      "sha256": "92acebed41fc6108bfe3e2e75546440c2fa0aaab3ec10a0c21e1540eaad9afe8"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/animator.lua",
+      "size": 5330,
+      "sha256": "cbb8a3cf29188c5a33b6e38f5d7b85865425768915a61fb4a8182ef6f9f9a4d6"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/base_code.lua",
+      "size": 11840,
+      "sha256": "bdab911fe80556809a81da813f3b12fb70d0c115587239e2a4db42f296ff300c"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/client.lua",
+      "size": 41803,
+      "sha256": "b0cc192ae2599a24ea24dbfa795352d7f58e76478615ca8bb64dc720c9bae35c"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/clusters.lua",
+      "size": 12886,
+      "sha256": "18d1e6d12459b4a5399fa404841f04d55770f396a887da44c7a24d212f04f870"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/config.lua",
+      "size": 5156,
+      "sha256": "33310831d2d79ad33f5bf2957ceb5b8fca96e248000ac02941c21cf4593bbd70"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/generator.lua",
+      "size": 10174,
+      "sha256": "11886929b5f0eb327ae39e03944414daa54c32460087d8519688481ae135b75f"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/glon.lua",
+      "size": 9954,
+      "sha256": "9061139794832d2a5a8e89e9deed5c98cc23bedcea0447dab603ab638308aefe"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/clusters.lua",
+      "size": 20112,
+      "sha256": "0570319c9ba0cd1a01bb54e738eb6cee631af08e8c1862e42486d710dbb6d5e5"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/flak.lua",
+      "size": 493,
+      "sha256": "d034b6911bac79a932584ad414cf645ebcc30ebacc6c8eb5ce48085a1f8b1f4f"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/guidance.lua",
+      "size": 510,
+      "sha256": "fd996b4ae9a744ee1dc9e1b7109c636b37736423c5e6d2cfd805aa5e853c47fe"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/ironsights.lua",
+      "size": 4945,
+      "sha256": "e19104edf4a61ce144ddbc07ef3f98115d657e381f4a65b64314d7aec09c8f29"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/models.lua",
+      "size": 47055,
+      "sha256": "fa3cb9b5ca341af6bab45ed1351da299286171eca142101caff6d9f8c25cffbc"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/projectile.lua",
+      "size": 516,
+      "sha256": "a275a505f5d68f231d9e2c1c59cb80d657d7e6865ce44316b97bef66d2f8b215"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/tool.lua",
+      "size": 6166,
+      "sha256": "40260a6cbd3c81295eebab4d89c41a029fc0c47e0b8fbb4986694d61ccf41eee"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/weapon.lua",
+      "size": 17015,
+      "sha256": "081f522187448fd70a4a31cb8d7ab6954ab9e539478e8484a4a86d98c9888697"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/weaponparams.lua",
+      "size": 6294,
+      "sha256": "4eb4b8c67d4bae47a6f0d24e43b11bd7682dc3800eaa7f686bf6a6a7ed903632"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/menu/workshop.lua",
+      "size": 15903,
+      "sha256": "49836eef0f138653fd9d37648a0fe5d15ab6171ab9e084be3bdf3a6d422842c5"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/schema.lua",
+      "size": 9636,
+      "sha256": "69ea43099d9ca272f84ec3c41efc9dac68a5b937ea6cb7f9910333451f0f06f8"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/server.lua",
+      "size": 3593,
+      "sha256": "5dd62260d31aabf8c1f194f53310ebf90797d1ec2169a63baa9bd26a42a2881d"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/shared.lua",
+      "size": 6170,
+      "sha256": "ca58d61f4f1068aa75537d2a9f8ef9fd7f83192e28ad450430e53601ad368cdf"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/ui_schema.lua",
+      "size": 5162,
+      "sha256": "a74e9e77638c378028fa221f47c06f08845d4bf8dda5b545d6f5e57e24b47a85"
+    },
+    {
+      "path": "DRMD-6DOF/swep_construction_kit/materials/vgui/entities/swep_construction_kit.vmt",
+      "size": 136,
+      "sha256": "15d83477268011d0278b0e556160c309ea1485c6f3a6761324f4982483f4a37c"
+    },
+    {
+      "path": "DRMD-6DOF/tests/RESULTS.txt",
+      "size": 10238,
+      "sha256": "4af65772c1739ed0fd57e8095edf64a495ab8404f84f638fd0f2d471b101f63f"
+    },
+    {
+      "path": "DRMD-6DOF/tests/actors_unit.lua",
+      "size": 7092,
+      "sha256": "f71e178b5ee20c53773fd58d72826a40ecdfc6568857f537d02ced1ff45dee96"
+    },
+    {
+      "path": "DRMD-6DOF/tests/arsenal_progression_unit.lua",
+      "size": 5929,
+      "sha256": "99e707984fce0ab50ac7cba9caf8310b3c7219d1a75796f4d3074c59ecb58518"
+    },
+    {
+      "path": "DRMD-6DOF/tests/drmd_actor_verify.lua",
+      "size": 5468,
+      "sha256": "45ae4731bcaeeed5e81e7ebe3bc5bb1cbe11b6efb723a59c3d36d124875c8094"
+    },
+    {
+      "path": "DRMD-6DOF/tests/drmd_cloud_verify.lua",
+      "size": 46501,
+      "sha256": "2b83ad4cd465395f6d70d558642f0aedb97b3145acef00642f880b034d710a0f"
+    },
+    {
+      "path": "DRMD-6DOF/tests/drmd_episode_verify.lua",
+      "size": 14797,
+      "sha256": "a16500a150fcd10df23e6705973da3ce253de5f4680c2c16206ad8c1934d6dc3"
+    },
+    {
+      "path": "DRMD-6DOF/tests/drmd_support_verify.lua",
+      "size": 8759,
+      "sha256": "58fcb8d050fc43c5a11ad1c30621f113b1cd55c8d31128ea5ce612fad28466c3"
+    },
+    {
+      "path": "DRMD-6DOF/tests/export_art.lua",
+      "size": 3319,
+      "sha256": "ad1690c78aac3767dbbfae4572a71e1145b563521b175558ababff3c0de1806f"
+    },
+    {
+      "path": "DRMD-6DOF/tests/replay_ui.lua",
+      "size": 18226,
+      "sha256": "02a03283bcd4fd7173b2c637280991405b64aedaeff6c371e1a889fd46ee2d7b"
+    },
+    {
+      "path": "DRMD-6DOF/tests/support_art_unit.lua",
+      "size": 7113,
+      "sha256": "a1eeea53fe6659120c6282db1e05f8e56c021dd1523e9822dabfbeeb9914bfca"
+    },
+    {
+      "path": "DRMD-6DOF/tests/support_projectiles_unit.lua",
+      "size": 14522,
+      "sha256": "59d654ff3e47e949715df0f6d769082e1abb1d9a4bdb91a137b3cc9505be27ab"
+    },
+    {
+      "path": "DRMD-6DOF/tests/supports_unit.lua",
+      "size": 19206,
+      "sha256": "a33fe9a6099e322608e7079bfd9dc2def90370ebe5708e484592660788af6ad8"
+    },
+    {
+      "path": "DRMD-6DOF/tests/verify_mines_and_view.lua",
+      "size": 11790,
+      "sha256": "a1409de17dc5b474e586ae719649f575c9d2e3387c72764fb5e93ebfd1c4d6c1"
+    },
+    {
+      "path": "DRMD-6DOF/tests/weapon_feed_unit.lua",
+      "size": 13483,
+      "sha256": "1328e061c2a1a0b307cb9f7e8c7e33525635d247d356454dc0aab3b71e5df80f"
+    },
+    {
+      "path": "DRMD-6DOF/tests/ПРОВЕРКА.md",
+      "size": 3938,
+      "sha256": "454e3c7f497ff7f0606b15184ec3ec37d923c02a1adff8e704f40372b442515b"
+    },
+    {
+      "path": "DRMD-6DOF/tools/build_elite_finishes.py",
+      "size": 4218,
+      "sha256": "d6c7a9c084b2c95d6fcfe750c6064586a328bab84aed35c83057e26c655af11d"
+    },
+    {
+      "path": "DRMD-6DOF/tools/build_elite_studio.py",
+      "size": 13350,
+      "sha256": "ee4444e8b918adf425152b177073ca5e0048918a8e40574abb190479c44f77b7"
+    },
+    {
+      "path": "DRMD-6DOF/tools/build_episode.py",
+      "size": 19477,
+      "sha256": "a94629fe535e2ca83e5f76d3bed9f466cb85d4b1b0f53d9c3c5785a002ae7124"
+    },
+    {
+      "path": "DRMD-6DOF/tools/compile_models.py",
+      "size": 3134,
+      "sha256": "3a3c15128ea287b0e9d1f9d02132d04d37cb8ce814a513bf84f552fc5a508bb0"
+    },
+    {
+      "path": "DRMD-6DOF/tools/package_windows.py",
+      "size": 4742,
+      "sha256": "7c494da60170819eba774b98b1c2c7975527168b5fec399000a7a3d900e0cb11"
+    }
+  ]
+}

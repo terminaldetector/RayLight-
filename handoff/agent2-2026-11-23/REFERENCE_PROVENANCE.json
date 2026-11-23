@@ -1,0 +1,147 @@
+[
+  {
+    "archive_path": "reference/DRMD-6DOF/ABADDON_QUICKFIX_2026-11-22_RU.md",
+    "repository_path": "DRMD-6DOF/ABADDON_QUICKFIX_2026-11-22_RU.md",
+    "source_sha256": "d78c5303e1f17ddabdd41f23e43b275252f3c5edc7ba54053a2a894f57e01b6e",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/COMBAT_IMPLEMENTATION_RU.md",
+    "repository_path": "DRMD-6DOF/COMBAT_IMPLEMENTATION_RU.md",
+    "source_sha256": "0e95d0767ebabbb8217ca09929c995f52c49e2c4271ab108dc6adf66ad27f339",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/DRONE_ART_TASK_RU.md",
+    "repository_path": "DRMD-6DOF/DRONE_ART_TASK_RU.md",
+    "source_sha256": "7e2869d230bf421f6ac5ea977babb1d3670fc03869265f1958f40536053d3a4c",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/GRANADA_SUPPORTS_RU.md",
+    "repository_path": "DRMD-6DOF/GRANADA_SUPPORTS_RU.md",
+    "source_sha256": "658b6dc1230e9e5a8054b2575aafa3f5bc661f6720695d223c87c8a313a6a446",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/GRANADA_SUPPORT_AI_RESEARCH_RU.md",
+    "repository_path": "DRMD-6DOF/GRANADA_SUPPORT_AI_RESEARCH_RU.md",
+    "source_sha256": "245f24894e0bb6c8b0635b0613b86d9cbfd2c8ce33b267718e3fb4137066c767",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/INSTALL_RU.md",
+    "repository_path": "DRMD-6DOF/INSTALL_RU.md",
+    "source_sha256": "9f541f22a2ed4f39bbd0c04aaf02f30f84dfed36248cc8fb290e39533aa96508",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/MAPS_RU.md",
+    "repository_path": "DRMD-6DOF/MAPS_RU.md",
+    "source_sha256": "5a288c03a05c446e4641a09ff42a0ee421e8a47a0200e91fb973f560d4649b1b",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/README.md",
+    "repository_path": "DRMD-6DOF/README.md",
+    "source_sha256": "ebd9d04dbbd57f2eeb2e9559fb11992b836d227bb27fad94c0d614316e5545ec",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/WEAPON_WORKSHOP_README.md",
+    "repository_path": "DRMD-6DOF/WEAPON_WORKSHOP_README.md",
+    "source_sha256": "91a4f2f433c1fdb9c8a7d60e653dd3312ae9ea934883db12fcdaba0a61e35b89",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/WINDOWS_LAUNCHER_HANDOFF_RU.md",
+    "repository_path": "DRMD-6DOF/WINDOWS_LAUNCHER_HANDOFF_RU.md",
+    "source_sha256": "9cf6545f42c1d41eec0848db00deb2e1f8ba59848c352e77318f48332d3e3b33",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/art/elites/README.md",
+    "repository_path": "DRMD-6DOF/art/elites/README.md",
+    "source_sha256": "13d323b724d321ea663641455b1d65b6da1fce53f20601deed059372c1d4a088",
+    "rewritten_links": [
+      {
+        "from": "citadel-enforcer.blend",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/art/elites/citadel-enforcer.blend"
+      },
+      {
+        "from": "citadel-enforcer.glb",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/art/elites/citadel-enforcer.glb"
+      },
+      {
+        "from": "arc-elite.blend",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/art/elites/arc-elite.blend"
+      },
+      {
+        "from": "arc-elite.glb",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/art/elites/arc-elite.glb"
+      },
+      {
+        "from": "../../descent_scanner/lua/d6_art_elites.lua",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/descent_scanner/lua/d6_art_elites.lua"
+      },
+      {
+        "from": "../../tools/compile_models.py",
+        "to": "https://github.com/terminaldetector/RayLight-/blob/d9cf3c15e3f9fdeaa1c3e608eaa2a3f21791697d/DRMD-6DOF/tools/compile_models.py"
+      }
+    ]
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/launcher/README_RU.md",
+    "repository_path": "DRMD-6DOF/launcher/README_RU.md",
+    "source_sha256": "32e14da565e0b965fce63a314e2a1710b87cfaf4c8d30bf68137595687af7842",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/README.md",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/README.md",
+    "source_sha256": "092cc1fa459774b5041073c4ae3695d648f0b9cedce39d9bf6bda6a25fa511d4",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/motion-1.png",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/motion-1.png",
+    "source_sha256": "38f34385f2434529017b5505c02ead1876a5ed34eb6f1c4b90a0cf58e4d0fe44",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/observations.json",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/observations.json",
+    "source_sha256": "d8a9fe6b0773e418cbdf8b1a3af6ed1fd48a7f4771a5004310e34da6903b5f25",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/rom-001869-hold-2.png",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/rom-001869-hold-2.png",
+    "source_sha256": "eaa534a47fe201605f7887715627d3afd8a40b4d807bdea48ad426b727b34b8d",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/rom-002169-north-east.png",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/rom-002169-north-east.png",
+    "source_sha256": "810bba129f76b8cfbed53145eb0e397e464713b63de2a8db5e23c015999538fd",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/research/granada_stage1/rom-002312-observe-result.png",
+    "repository_path": "DRMD-6DOF/research/granada_stage1/rom-002312-observe-result.png",
+    "source_sha256": "da17fb3a56997f171baceb43387d544bbe21dccd55c295aeea06f0c949aec99e",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/tests/RESULTS.txt",
+    "repository_path": "DRMD-6DOF/tests/RESULTS.txt",
+    "source_sha256": "4af65772c1739ed0fd57e8095edf64a495ab8404f84f638fd0f2d471b101f63f",
+    "rewritten_links": []
+  },
+  {
+    "archive_path": "reference/DRMD-6DOF/tests/ПРОВЕРКА.md",
+    "repository_path": "DRMD-6DOF/tests/ПРОВЕРКА.md",
+    "source_sha256": "454e3c7f497ff7f0606b15184ec3ec37d923c02a1adff8e704f40372b442515b",
+    "rewritten_links": []
+  }
+]
