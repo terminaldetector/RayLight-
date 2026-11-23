@@ -1,0 +1,4 @@
+source-2013-sp.patch whitespace=-blank-at-eol,-space-before-tab
+linux_gcc14_compat/clientmode-null-check.patch whitespace=-blank-at-eol,-space-before-tab
+LICENSE whitespace=-blank-at-eol
+thirdpartylegalnotices.txt whitespace=-blank-at-eol

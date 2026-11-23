@@ -1,0 +1,312 @@
+--- a/src/game/client/hl2/c_basehlplayer.cpp
++++ b/src/game/client/hl2/c_basehlplayer.cpp
+@@ -31,6 +31,7 @@
+ IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
+ 	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
+ 	RecvPropBool( RECVINFO( m_fIsSprinting ) ),
++	RecvPropBool( RECVINFO( m_bAbaddonFlight ) ),
+ END_RECV_TABLE()
+ 
+ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
+@@ -58,6 +59,7 @@
+ //-----------------------------------------------------------------------------
+ C_BaseHLPlayer::C_BaseHLPlayer()
+ {
++	m_bAbaddonFlight = false;
+ 	AddVar( &m_Local.m_vecPunchAngle, &m_Local.m_iv_vecPunchAngle, LATCH_SIMULATION_VAR );
+ 	AddVar( &m_Local.m_vecPunchAngleVel, &m_Local.m_iv_vecPunchAngleVel, LATCH_SIMULATION_VAR );
+ 
+@@ -628,7 +630,7 @@
+ {
+ 	bool bResult = BaseClass::CreateMove( flInputSampleTime, pCmd );
+ 
+-	if ( !IsInAVehicle() )
++	if ( !IsInAVehicle() && !IsAbaddonFlightEnabled() )
+ 	{
+ 		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
+ 		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
+--- a/src/game/client/hl2/c_basehlplayer.h
++++ b/src/game/client/hl2/c_basehlplayer.h
+@@ -22,6 +22,8 @@
+ 	DECLARE_CLASS( C_BaseHLPlayer, C_BasePlayer );
+ 	DECLARE_CLIENTCLASS();
+ 	DECLARE_PREDICTABLE();
++
++	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight; }
+ 
+ 						C_BaseHLPlayer();
+ 
+@@ -58,6 +60,7 @@
+ 	EHANDLE				m_hClosestNPC;
+ 	float				m_flSpeedModTime;
+ 	bool				m_fIsSprinting;
++	bool m_bAbaddonFlight;
+ 
+ private:
+ 	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
+--- a/src/game/client/in_main.cpp
++++ b/src/game/client/in_main.cpp
+@@ -43,6 +43,10 @@
+ 
+ // For showing/hiding the scoreboard
+ #include <game/client/iviewport.h>
++
++#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
++#include "hl2/abaddon_flight_input.h"
++#endif
+ 
+ // memdbgon must be the last include file in a .cpp file!!!
+ #include "tier0/memdbgon.h"
+@@ -777,6 +781,16 @@
+ 
+ 	// Retrieve latest view direction from engine
+ 	engine->GetViewAngles( viewangles );
++
++#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
++	if ( AbaddonFlightInputActive() )
++	{
++		const float roll = ( KeyState( &in_alt2 ) - KeyState( &in_alt1 ) ) * 128.0f * frametime;
++		AbaddonApplyLocalLook( viewangles, 0.0f, 0.0f, roll );
++		engine->SetViewAngles( viewangles );
++		return;
++	}
++#endif
+ 
+ 	// Adjust YAW
+ 	AdjustYaw( speed, viewangles );
+--- a/src/game/client/in_mouse.cpp
++++ b/src/game/client/in_mouse.cpp
+@@ -29,6 +29,10 @@
+ #include "cam_thirdperson.h"
+ #include "inputsystem/iinputsystem.h"
+ 
++#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
++#include "hl2/abaddon_flight_input.h"
++#endif
++
+ #if defined( _X360 )
+ #include "xbox/xbox_win32stubs.h"
+ #endif
+@@ -452,6 +456,15 @@
+ //-----------------------------------------------------------------------------
+ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float mouse_y )
+ {
++#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
++	if ( AbaddonFlightInputActive() )
++	{
++		AbaddonApplyLocalLook( viewangles, m_pitch->GetFloat() * mouse_y, -m_yaw.GetFloat() * mouse_x, 0.0f );
++		cmd->mousedx = (int)mouse_x;
++		cmd->mousedy = (int)mouse_y;
++		return;
++	}
++#endif
+ 	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
+ 	{
+ #ifdef PORTAL
+--- a/src/game/server/hl2/hl2_player.cpp
++++ b/src/game/server/hl2/hl2_player.cpp
+@@ -321,6 +321,7 @@
+ 	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
+ 	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
+ 	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
++	DEFINE_FIELD( m_bAbaddonFlight, FIELD_BOOLEAN ),
+ 	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
+ 
+ 	/*
+@@ -389,6 +390,7 @@
+ 
+ CHL2_Player::CHL2_Player()
+ {
++	m_bAbaddonFlight = false;
+ 	m_nNumMissPositions	= 0;
+ 	m_pPlayerAISquad = 0;
+ 	m_bSprintEnabled = true;
+@@ -419,6 +421,7 @@
+ IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
+ 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
+ 	SendPropBool( SENDINFO(m_fIsSprinting) ),
++	SendPropBool( SENDINFO(m_bAbaddonFlight) ),
+ END_SEND_TABLE()
+ 
+ 
+@@ -1047,8 +1050,65 @@
+ }
+ 
+ 
++bool CHL2_Player::CanAbaddonFly()
++{
++	return gpGlobals->maxClients == 1 && IsAlive() && !IsObserver() &&
++		GetMoveType() == MOVETYPE_WALK && !IsInAVehicle() && !GetMoveParent() &&
++		!IsDucked() && !IsDucking() && !( GetFlags() & ( FL_FROZEN | FL_ONTRAIN ) ) &&
++		!( m_afPhysicsFlags & PFLAG_ONBARNACLE );
++}
++
++void CHL2_Player::SetAbaddonFlightEnabled( bool enabled )
++{
++	if ( IsAbaddonFlightEnabled() == enabled || ( enabled && !CanAbaddonFly() ) )
++		return;
++	m_bAbaddonFlight = enabled;
++	m_Local.m_flFallVelocity = 0.0f;
++	if ( !enabled && IsAlive() && GetMoveType() == MOVETYPE_WALK && !IsInAVehicle() && !GetMoveParent() )
++	{
++		SetAbsVelocity( vec3_origin );
++		QAngle level = LocalEyeAngles();
++		level[PITCH] = clamp( AngleNormalize( level[PITCH] ), -89.0f, 89.0f );
++		level[ROLL] = 0.0f;
++		SnapEyeAngles( level );
++	}
++}
++
++CON_COMMAND( abaddon_flight, "Toggle experimental 6DOF flight in a standing single-player session" )
++{
++	CHL2_Player *pilot = dynamic_cast<CHL2_Player *>( UTIL_GetCommandClient() );
++	if ( !pilot )
++		return;
++	const bool enable = !pilot->IsAbaddonFlightEnabled();
++	if ( enable && !pilot->CanAbaddonFly() )
++	{
++		ClientPrint( pilot, HUD_PRINTCONSOLE, "Abaddon: flight requires a live, standing single-player pilot.\n" );
++		return;
++	}
++	pilot->SetAbaddonFlightEnabled( enable );
++	ClientPrint( pilot, HUD_PRINTCONSOLE, enable ? "Abaddon 6DOF enabled.\n" : "Abaddon 6DOF disabled.\n" );
++}
++
++CON_COMMAND( abaddon_flight_status, "Print flight mode, position, velocity and view angles" )
++{
++	CHL2_Player *pilot = dynamic_cast<CHL2_Player *>( UTIL_GetCommandClient() );
++	if ( !pilot )
++		return;
++	const Vector &origin = pilot->GetAbsOrigin();
++	const Vector &velocity = pilot->GetAbsVelocity();
++	const QAngle &angles = pilot->LocalEyeAngles();
++	char status[192];
++	V_snprintf( status, sizeof( status ),
++		"ABADDON_FLIGHT %d pos %.1f %.1f %.1f vel %.1f %.1f %.1f ang %.1f %.1f %.1f\n",
++		pilot->IsAbaddonFlightEnabled() ? 1 : 0, origin.x, origin.y, origin.z,
++		velocity.x, velocity.y, velocity.z, angles.x, angles.y, angles.z );
++	ClientPrint( pilot, HUD_PRINTCONSOLE, status );
++}
++
+ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
+ {
++	if ( IsAbaddonFlightEnabled() && !CanAbaddonFly() )
++		SetAbaddonFlightEnabled( false );
+ 	// Handle FL_FROZEN.
+ 	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
+ 	{
+@@ -1108,6 +1168,7 @@
+ //-----------------------------------------------------------------------------
+ void CHL2_Player::Spawn(void)
+ {
++	m_bAbaddonFlight = false;
+ 
+ #ifndef HL2MP
+ #ifndef PORTAL
+@@ -2461,6 +2522,7 @@
+ //-----------------------------------------------------------------------------
+ void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
+ {
++	m_bAbaddonFlight = false;
+ 	BaseClass::Event_Killed( info );
+ 
+ 	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
+@@ -3279,6 +3341,7 @@
+ void CHL2_Player::OnRestore()
+ {
+ 	BaseClass::OnRestore();
++	SetAbaddonFlightEnabled( false );
+ 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
+ }
+ 
+--- a/src/game/server/hl2/hl2_player.h
++++ b/src/game/server/hl2/hl2_player.h
+@@ -91,6 +91,10 @@
+ 
+ 	DECLARE_SERVERCLASS();
+ 	DECLARE_DATADESC();
++
++	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight.Get(); }
++	bool CanAbaddonFly();
++	void SetAbaddonFlightEnabled( bool enabled );
+ 
+ 	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
+ 
+@@ -311,6 +315,7 @@
+ 	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
+ 
+ 	CNetworkVar( bool, m_fIsSprinting );
++	CNetworkVar( bool, m_bAbaddonFlight );
+ 	CNetworkVarForDerived( bool, m_fIsWalking );
+ 
+ protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
+--- a/src/game/shared/hl2/hl_gamemovement.cpp
++++ b/src/game/shared/hl2/hl_gamemovement.cpp
+@@ -8,6 +8,7 @@
+ #include "in_buttons.h"
+ #include "utlrbtree.h"
+ #include "hl2_shareddefs.h"
++#include "abaddon_flight_math.h"
+ 
+ // memdbgon must be the last include file in a .cpp file!!!
+ #include "tier0/memdbgon.h"
+@@ -31,6 +32,49 @@
+ // Input  : type - 
+ // Output : int
+ //-----------------------------------------------------------------------------
++void CHL2GameMovement::PlayerMove()
++{
++	if ( !GetHL2Player()->IsAbaddonFlightEnabled() || IsDead() || player->IsObserver() ||
++		player->IsInAVehicle() || player->GetMoveParent() || player->GetMoveType() != MOVETYPE_WALK ||
++		( player->GetFlags() & ( FL_FROZEN | FL_ONTRAIN ) ) )
++	{
++		BaseClass::PlayerMove();
++		return;
++	}
++
++	mv->m_outWishVel.Init();
++	mv->m_outJumpVel.Init();
++	MoveHelper()->ResetTouchList();
++	ReduceTimers();
++	SetGroundEntity( NULL );
++	player->m_Local.m_flFallVelocity = 0.0f;
++	CheckWater();
++	if ( CheckInterval( STUCK ) && CheckStuck() )
++		return;
++
++	Vector forward, right, up;
++	AngleVectors( mv->m_vecAbsViewAngles, &forward, &right, &up );
++	const abaddon::FlightBasis basis = {
++		abaddon::Vec3( forward.x, forward.y, forward.z ),
++		abaddon::Vec3( right.x, right.y, right.z ),
++		abaddon::Vec3( up.x, up.y, up.z ),
++	};
++	const float thrust = float( !!( mv->m_nButtons & IN_FORWARD ) - !!( mv->m_nButtons & IN_BACK ) );
++	const float slide = float( !!( mv->m_nButtons & IN_MOVERIGHT ) - !!( mv->m_nButtons & IN_MOVELEFT ) );
++	const float lift = float( !!( mv->m_nButtons & IN_JUMP ) - !!( mv->m_nButtons & IN_DUCK ) );
++	const abaddon::Vec3 wish = abaddon::FlightWish( basis, thrust, slide, lift );
++	const Vector &velocity = mv->m_vecVelocity;
++	const abaddon::Vec3 next = abaddon::StepFlight( abaddon::Vec3( velocity.x, velocity.y, velocity.z ),
++		wish, gpGlobals->frametime );
++	mv->m_vecVelocity.Init( next.x, next.y, next.z );
++	// The camera and movement basis can roll freely; Source's normal player hull stays upright.
++	mv->m_vecAngles.Init( 0.0f, mv->m_vecViewAngles[YAW], 0.0f );
++
++	CheckVelocity();
++	TryPlayerMove();
++	CheckVelocity();
++}
++
+ int CHL2GameMovement::GetCheckInterval( IntervalType_t type )
+ {
+ 	// HL2 ladders need to check every frame!!!
+--- a/src/game/shared/hl2/hl_gamemovement.h
++++ b/src/game/shared/hl2/hl_gamemovement.h
+@@ -37,6 +37,7 @@
+ 	CHL2GameMovement();
+ 
+ // Overrides
++	virtual void PlayerMove();
+ 	virtual void FullLadderMove();
+ 	virtual bool LadderMove( void );
+ 	virtual bool OnLadder( trace_t &trace );

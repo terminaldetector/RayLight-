@@ -1,0 +1,11 @@
+--- a/src/game/client/clientmode_shared.cpp
++++ b/src/game/client/clientmode_shared.cpp
+@@ -1115,7 +1115,7 @@
+ 			}
+ 		}
+ 
+-		if ( team == 0 && GetLocalTeam() > 0 )
++		if ( team == 0 && GetLocalTeam() != NULL )
+ 		{
+ 			bValidTeam = false;
+ 		}
