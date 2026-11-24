@@ -1,4 +1,4 @@
--- Functional support-device greyboxes. Local +X is forward and the common
+-- Support-device meshes. Local +X is forward and the common
 -- docking face is x=-18. Their operating sockets live in the support catalogue;
 -- keep the actual mouths/receptors aligned with those coordinates when editing.
 -- These register with the same mesh renderer as the weapons, without borrowing
@@ -47,28 +47,46 @@ local function port(body, x, y, z, radius, length)
     body:Collar(x-length,x,y,z,radius,"dark")
 end
 
--- A split, flattened horseshoe. The two offset jaws leave real air around the
--- dark faceted receptor at (16,0,0); no cannon barrel masquerades as a mirror.
+-- Flattened split reflector. The insulated jaws protect the glass splitter
+-- without closing off the optical field. The receiving face sits at (16,0,0).
 local reflector = G.New("support_reflector")
 dock(reflector)
-reflector.section = "Split refractor yoke"
-reflector:Box("black_steel",-7.5,0,0,5,18,4.5)
+reflector.section = "Dock spine and machined saddle"
+reflector:Loft("siege_cast",0,-0.3,{{-12,4.2,2.8},{-8.4,9.2,3.95},{-5.5,9.5,3.4},{-2,4.2,2.45}})
+reflector:Box("black_steel",-6.3,0,-2.7,6.8,24.4,2.9)
+reflector:Box("siege_plate",-7.1,0,2.55,6.4,8.8,2.5)
 for _, s in ipairs(sides) do
-    local y, z = s*9.7, s*1.3
-    local tip = s > 0 and 20 or 17.5
-    reflector:Loft("siege_cast",y,z,{{-11,2.4,2.9},{-6,6.3,4.4},{8,6.0,4.1},{tip,2.7,2.8}})
-    reflector:Loft("siege_plate",y,z+1.1,{{-8,2.4,2.2},{-3,5.6,3.1},{8.5,5.2,2.7},{tip-1.2,2.5,1.5}})
-    reflector:Loft("ceramic",y,z+4.0,{{-4,2.5,0.45},{1,3.4,0.65},{9,2.7,0.6},{tip-3,1.4,0.35}})
-    reflector:Box("dark",2,y+s*5.4,z,10,0.5,1.6)
-    reflector:Cable({{-10,s*4,0},{-8,s*6,-3.2},{3,s*7,-3.4}},0.38)
-    reflector:Fastener(-3,y,z+4.7,0.55)
-    status(reflector,8,y,z+4.7,1.9)
+    reflector:Fastener(-7.2,s*3.32,3.83,0.52)
 end
-reflector.section = "Recessed prism receiver"
-reflector:Loft("black_steel",0,0,{{-5,2.7,1.6},{3,3.3,2.3},{11.9,4.4,3.9},{15.5,3.7,3.3}})
-reflector:Loft("glass",0,0,{{12.1,3.8,3.3},{15.5,3.5,3.05},{16,2.5,2.3}})
-reflector:Box("hot",15.7,2.7,0,0.2,0.28,1.9)
-reflector:Box("emit",15.7,-2.7,0,0.2,0.28,1.9)
+
+for _, s in ipairs(sides) do
+    local y, z = s*10.35, s*0.55
+    local tip = s > 0 and 21 or 18.5
+    reflector.section = s < 0 and "Right steering jaw" or "Left steering jaw"
+    reflector:Loft("black_steel",y,z,{{-11,2.4,2.4},{-6,5.9,3.8},{4,5.65,3.45},{11,4.5,2.9},{tip,2.3,2.05}})
+    mirroredPlate(reflector,"siege_plate",s,{{-8,8},{-5,15.4},{4,15.15},{tip-1.3,11.63},{tip-3.8,8.4}},
+        z+1.6,z+3.8)
+    reflector:Loft("siege_cast",y,z-2.5,{{-7,2.5,0.75},{-3,4.65,1.25},{7,4,0.9},{tip-2,1.35,0.5}})
+    reflector:Loft("ceramic",y+s*0.4,z+3.96,{{-5,2.6,0.28},{0,3.25,0.34},{7,2.65,0.3},{tip-3,1.2,0.26}})
+    reflector:Rod("turned_steel",{-0.7,s*8.8,z-0.7},{tip-0.65,s*9.82,z-0.7},0.96,8)
+    reflector:Cable({{-10,s*4,z-1.7},{-6,s*6,z-3.4},{2,s*7,z-3.5},{10,s*8.1,z-2.35}},0.34)
+    reflector:Fastener(-2,y,z+4.33,0.49)
+    reflector:Fastener(8,s*11.6,z+4.27,0.42)
+    for i = 0, 2 do
+        reflector:Box("dark",-3.2+i*1.55,s*15.05,z+1.1,0.78,0.55,2.1)
+    end
+    reflector:Box("hazard",tip-2.15,y+s*0.4,z+2.33,1.45,1.25,0.42)
+end
+
+reflector.section = "Recessed optical receiver"
+reflector:Loft("siege_cast",0,-0.3,{{-5,2.3,1.4},{1,3.05,2.35},{7.7,4.85,3.4},{13.2,4.5,3.6},{14.3,4.1,3.65}})
+ring(reflector,"turned_steel",14.85,0,0,4.85,3.8,0.53,8)
+reflector:Loft("glass",0,0,{{12.9,3.18,3.05},{15.27,3.42,3.14},{16,2.25,2.28}})
+for _, s in ipairs(sides) do
+    reflector:Rod("copper",{-4.8,s*3.1,-2.35},{6.9,s*3.55,-3.05},0.41,8)
+    reflector:Rod("dark",{14.81,s*3.28,-1.65},{14.81,s*3.28,1.65},0.46,8)
+    reflector:Rod("emit",{15.31,s*3.29,-1.39},{15.31,s*3.29,1.39},0.15,8)
+end
 
 -- Two broad shield leaves, with thick shoulders and a narrow central optic.
 -- The four firing outlets are forward at x18, y=+/-10, z=+/-6. The leaves stay

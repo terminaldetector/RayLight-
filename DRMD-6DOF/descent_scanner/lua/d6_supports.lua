@@ -5,8 +5,8 @@ local S = D6_Supports
 S.MaxActive, S.Ammo, S.MaxAmmo = 3, "d6_support_cell", 6
 S.Defaults = {"reflector", "bulwark", "interceptor"}
 S.Order = {
-    {id="reflector", name="Призма", mesh="support_reflector", color=Color(108,207,222),
-        description="Поставить отражатель: до четырёх своих пуль/плазмоидов в видимую цель.",
+    {id="reflector", name="Призма", mesh="support_reflector", model="models/drmd/support_reflector.mdl", color=Color(108,207,222),
+        description="Вывести отражатель вперёд. Обычные выстрелы перенаправляются, попадание тяжёлым зарядом даёт одну короткую очередь.",
         energy=10, cooldown=7, duration=6, ports={{16,0,0}}},
     {id="bulwark", name="Створ", mesh="support_bulwark", color=Color(131,181,217),
         description="Короткий фронтальный перехват, пространственный веер и возврат.",
@@ -73,6 +73,7 @@ local records = S.Players
 local bodyRadius = 28
 local bounds = Vector(bodyRadius,bodyRadius,bodyRadius)
 local homes = {{8,-58,-18},{-8,0,50},{8,58,-18}}
+local prismFire = {range=1250, duration=1.8, rounds=3, cadence=0.22, search=0.18, sightGrace=0.28}
 
 local function record(ply)
     if not records[ply] then records[ply] = {entities={}} end
@@ -106,6 +107,10 @@ end
 local function setState(ent, state)
     ent.D6_SupportMode = state
     ent:SetNWString("D6_SupportState", state)
+end
+
+local function setPrismCombat(ent, state)
+    ent:SetNWString("D6_SupportCombat",state)
 end
 
 function S.GrantInitial(ply, all)
@@ -206,6 +211,10 @@ function S.Recall(ply, slot)
             local ent = rec.entities[i]
             if IsValid(ent) and ent:GetOwner() == ply then
                 ent.D6_SupportUntil, ent.D6_SupportRemaining, ent.D6_SupportTarget = 0,0,nil
+                if ent.D6_Prism then
+                    ent.D6_Prism=nil
+                    setPrismCombat(ent,"idle")
+                end
                 ent:SetNWFloat("D6_SupportPower",0)
                 if ent.D6_SupportMode ~= "docked" then
                     if ent.D6_SupportMode ~= "returning" then ent.D6_SupportReturnBy=CurTime()+4 end
@@ -251,9 +260,9 @@ function S.Visible(ply, from, target, support)
     return not tr.StartSolid and (not tr.Hit or tr.Entity == target)
 end
 
-function S.FindTarget(ply, from, range, support)
+function S.FindTarget(ply, from, range, support, forward)
     local best, score = nil, math.huge
-    local forward = aim(ply):Forward()
+    forward = forward or aim(ply):Forward()
     for _, target in ipairs(ents.FindInSphere(from, range)) do
         if S.IsHostile(ply,target) then
             local delta = target:WorldSpaceCenter()-from
@@ -353,6 +362,9 @@ function S.Activate(ply, slot)
     ent.D6_SupportBasis = Angle(a.p,a.y,a.r)
     ent:SetAngles(ent.D6_SupportBasis)
     ent.D6_SupportUntil = CurTime()+def.duration
+    if def.id == "reflector" then
+        ent.D6_Prism={originOffset=goal-ply:GetShootPos(), since=CurTime()}
+    end
     ent.D6_SupportRemaining = def.id == "reflector" and 4 or def.id == "bulwark" and 6 or 4
     ent.D6_SupportNextShot, ent.D6_SupportShots = CurTime()+0.25,0
     ent:SetNWFloat("D6_SupportPower",1)
@@ -418,24 +430,33 @@ local function armed(ent)
     return IsValid(ent) and ent.D6_SupportMode == "active" and CurTime() < (ent.D6_SupportUntil or 0)
 end
 
-local function reflectable(projectile,ply)
-    if projectile:GetOwner() ~= ply or projectile.D6_SupportReflected
-        or projectile.D6_SupportShot or IsValid(projectile.D6_SourceSupport) then return false end
+local function ownRound(projectile,ply)
+    return projectile:GetOwner() == ply and not projectile.D6_SupportReflected
+        and not projectile.D6_SupportShot and not IsValid(projectile.D6_SourceSupport)
+end
+
+local function prismContact(ent,projectile,ply)
+    local prism=ent.D6_Prism
+    if not prism or not ownRound(projectile,ply) then return end
     local class=projectile.D6_WeaponClass
-    if class == "weapon_d6_bfg" then return false end
-    return projectile.D6_DamageClass == "kinetic" or projectile.D6_DamageClass == "energy"
-        or class == "weapon_d6_plasma"
+    if class == "weapon_d6_heavy" then
+        if not prism.charged then return "charge" end
+        return
+    end
+    if class == "weapon_d6_bfg" or prism.chargeUntil or (ent.D6_SupportRemaining or 0)<=0 then return end
+    if projectile.D6_DamageClass == "kinetic" or projectile.D6_DamageClass == "energy"
+        or class == "weapon_d6_plasma" then return "redirect" end
 end
 
 function S.TraceProjectile(projectile,from,to,radius,maxFraction)
-    if not IsValid(projectile) then return end
+    if not IsValid(projectile) or projectile.D6_PrismConsumed then return end
     local best,limit=nil,maxFraction or 1
     for ply,rec in pairs(records) do
         if S.CanUse(ply) then
             for _,ent in pairs(rec.entities) do
                 if armed(ent) and ent:GetOwner() == ply then
                     local fraction,kind=nil,ent.D6_SupportKind
-                    if kind == "reflector" and (ent.D6_SupportRemaining or 0)>0 and reflectable(projectile,ply) then
+                    if kind == "reflector" and prismContact(ent,projectile,ply) then
                         fraction=S.SegmentSphere(from,to,S.Socket(ent,1),14+(radius or 0))
                     elseif kind == "bulwark" and CurTime() < (ent.D6_SupportGuardUntil or 0) and (ent.D6_SupportRemaining or 0)>0
                         and S.IsHostileShot(ply,projectile) then
@@ -474,9 +495,25 @@ end
 
 function S.HandleProjectile(projectile,hit,velocity)
     local ent=hit and hit.support
-    if not IsValid(projectile) or not armed(ent) then return end
+    if not IsValid(projectile) or projectile.D6_PrismConsumed or not armed(ent) then return end
     local ply=ent:GetOwner()
-    if ent.D6_SupportKind == "reflector" and reflectable(projectile,ply) and (ent.D6_SupportRemaining or 0)>0 then
+    if not S.CanUse(ply) then return end
+    if ent.D6_SupportKind == "reflector" then
+        local action=prismContact(ent,projectile,ply)
+        if action == "charge" then
+            local now, prism = CurTime(), ent.D6_Prism
+            projectile.D6_PrismConsumed=true
+            prism.charged=true
+            prism.chargeUntil=math.min(now+prismFire.duration,ent.D6_SupportUntil)
+            prism.rounds=prismFire.rounds
+            prism.nextSeek=now
+            prism.nextShot=now+0.15
+            setPrismCombat(ent,"charged_fire")
+            ent:SetNWFloat("D6_SupportHitAt",now)
+            D6_Wep.MuzzleFX(hit.pos,ent:GetAngles():Forward(),"energy")
+            return {kind="consume"}
+        end
+        if action ~= "redirect" then return end
         local target=S.FindTarget(ply,hit.pos,1600,ent)
         if not target or not velocity or velocity:LengthSqr() < 1 then return end
         ent.D6_SupportRemaining=ent.D6_SupportRemaining-1
@@ -493,6 +530,53 @@ function S.HandleProjectile(projectile,hit,velocity)
     elseif ent.D6_SupportKind == "resonator" and projectile:GetOwner() == ply
         and projectile.D6_WeaponClass == "weapon_d6_heavy" and not projectile.D6_SupportShot and detonate(ent) then
         return {kind="consume"}
+    end
+end
+
+local function prismPosition(ent,ply,state,home,now)
+    local basis=ent.D6_SupportBasis
+    if state == "docked" then
+        basis=aim(ply)
+        local t=now*1.7+ent.D6_SupportSlot
+        return home+basis:Forward()*(10*math.sin(t))+basis:Up()*(10*math.cos(t))
+    end
+    if state ~= "active" or not ent.D6_Prism then return end
+    -- Keep the deployment bearing as the pilot looks away. The node follows
+    -- translation and drifts only within the size of its receiving aperture.
+    local prism=ent.D6_Prism
+    local t=(now-prism.since)*2.5
+    return ply:GetShootPos()+prism.originOffset+basis:Right()*(8*math.sin(t))+basis:Up()*(5*math.sin(t*0.7))
+end
+
+local function stepPrism(ent,ply,now)
+    local prism=ent.D6_Prism
+    if not prism or not prism.chargeUntil then return end
+    if now >= prism.chargeUntil or prism.rounds == 0 then
+        prism.chargeUntil, prism.target=nil,nil
+        ent:SetAngles(ent.D6_SupportBasis)
+        setPrismCombat(ent,"redirect")
+        return
+    end
+    local from=S.Socket(ent,1)
+    local target=prism.target
+    local inRange=S.IsHostile(ply,target) and target:WorldSpaceCenter():DistToSqr(from)<=prismFire.range^2
+    local visible=inRange and S.Visible(ply,from,target,ent)
+    if visible then
+        prism.lastSeen=now
+    elseif now>=prism.nextSeek and (not inRange or now-(prism.lastSeen or 0)>=prismFire.sightGrace) then
+        target=S.FindTarget(ply,from,prismFire.range,ent,ent.D6_SupportBasis:Forward())
+        prism.target, prism.nextSeek=target, now+prismFire.search
+        visible=IsValid(target)
+        if visible then prism.lastSeen=now end
+    end
+    if not visible or now<prism.nextShot then return end
+    prism.nextShot=now+prismFire.cadence
+    local center=target:WorldSpaceCenter()
+    ent:SetAngles((center-ent:GetPos()):Angle())
+    local muzzle=S.Socket(ent,1)
+    if center:DistToSqr(muzzle)<=prismFire.range^2 and S.Visible(ply,muzzle,target,ent)
+        and fire(ent,(center-muzzle):GetNormalized(),1,false) then
+        prism.rounds=prism.rounds-1
     end
 end
 
@@ -539,15 +623,18 @@ end
 function S.Step(ply,dt)
     if not S.CanUse(ply) then S.Cleanup(ply); return end
     local rec=record(ply)
+    local now=CurTime()
     for slot,ent in pairs(rec.entities) do
         if IsValid(ent) then
             local state,kind=ent.D6_SupportMode,ent.D6_SupportKind
-            if state ~= "docked" and state ~= "returning" and CurTime()>=(ent.D6_SupportUntil or 0) then
+            if state ~= "docked" and state ~= "returning" and now>=(ent.D6_SupportUntil or 0) then
                 S.Recall(ply,slot); state="returning"
             end
             local home=S.Home(ply,slot)
             local wanted=(state=="docked" or state=="returning" or kind=="missile") and home or ent.D6_SupportGoal
-            if kind=="interceptor" and (state=="deploying" or state=="active") then
+            if kind=="reflector" then
+                wanted=prismPosition(ent,ply,state,home,now) or wanted
+            elseif kind=="interceptor" and (state=="deploying" or state=="active") then
                 local target=ent.D6_SupportTarget
                 if not S.IsHostile(ply,target) or target:WorldSpaceCenter():DistToSqr(ply:GetShootPos())>1600^2 then
                     S.Recall(ply,slot); state,wanted="returning",home
@@ -567,10 +654,14 @@ function S.Step(ply,dt)
                 if kind=="bulwark" then
                     ent.D6_SupportGuardUntil=CurTime()+1
                     ent.D6_SupportNextShot=ent.D6_SupportGuardUntil
+                elseif kind=="reflector" then
+                    setPrismCombat(ent,"redirect")
                 end
             end
             if state=="docked" or state=="returning" then
                 ent:SetAngles(aim(ply))
+            elseif kind=="reflector" and armed(ent) then
+                stepPrism(ent,ply,now)
             elseif kind=="bulwark" and armed(ent) then
                 if CurTime()>=(ent.D6_SupportNextShot or 0) then
                     local a=ent.D6_SupportBasis

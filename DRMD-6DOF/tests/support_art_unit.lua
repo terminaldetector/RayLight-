@@ -116,6 +116,10 @@ end
 
 local receptor, material = frontAt(G.models.support_reflector,0,0)
 check("reflector receptor meets x16 without a cannon muzzle", material == "glass" and math.abs(receptor-16) < 0.00001)
+for _, side in ipairs({-1,1}) do
+    local gap = frontAt(G.models.support_reflector,side*5.5,0)
+    check("reflector has an open optical gap on side " .. side, not gap or gap < 14)
+end
 local plate, plateMaterial = frontAt(G.models.support_resonator,0,0)
 check("resonator has a solid strike plate at x14", plateMaterial == "ceramic" and math.abs(plate-14) < 0.00001)
 

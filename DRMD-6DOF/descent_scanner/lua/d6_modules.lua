@@ -285,7 +285,7 @@ local D6_COMBAT_STYLE = {
     -- assault: aggressive diver — tight orbit, frequent diving runs. 30° max orbital tilt.
     pressure = { orbitR=480, inclMax=0.52, orbitMin=0.8, orbitMax=1.6, runMin=0.8, runMax=1.4,
                  breakMin=0.7, breakMax=1.1, breakIn=220, vbias=0.55, aggression=0.85, spdMul=1.0 },
-    -- interceptor: fast aggressive circler — tilted orbits up to 60°, true overhead dives.
+    -- Fallback for Workshop profiles with the original flank/orbit controls.
     flank    = { orbitR=380, inclMax=1.05, orbitMin=1.2, orbitMax=2.6, runMin=0.6, runMax=1.0,
                  breakMin=0.6, breakMax=1.0, breakIn=200, vbias=0.7,  aggression=0.75, spdMul=1.12 },
     -- artillery: near-flat orbit (10° max) — deliberate shell platform silhouette.
@@ -867,9 +867,17 @@ hook.Add("Think", "D6_RoleDispatch", function()
         if not phys then continue end
 
         local loadout = npc.D6_Loadout or {}
+        local plan = D6_Swarm.GetPlan(npc)
+        local interceptor = npc.D6_AI == "flank" and loadout.intercept and (not plan or plan.phase ~= "escort")
         local myPos   = npc:GetPos()
         local scanDist = math.max(loadout.rangeMax or 900, 900) * 2
-        local target, dist = NearestPlayer(myPos, scanDist)
+        local target, dist
+        if interceptor then
+            target = D6_Actors.FindTarget(npc, scanDist, false)
+            dist = IsValid(target) and myPos:Distance(target:WorldSpaceCenter()) or scanDist
+        else
+            target, dist = NearestPlayer(myPos, scanDist)
+        end
         if IsValid(target) and npc.D6_Variant=="arc_elite" and ct>=(npc.D6_BankUpdate or 0) then
             npc.D6_BankUpdate=ct+.056
             D6_Drones.TrackBanks(npc,target:WorldSpaceCenter()+target:GetVelocity()*.075,.056)
@@ -880,7 +888,13 @@ hook.Add("Think", "D6_RoleDispatch", function()
         npc.D6_DesiredVelRate = 5
 
         local behavior = D6_RunBehavior[npc.D6_AI]
-        local inAttack = behavior and behavior(npc, phys, loadout, target, dist, ct) or false
+        local inAttack
+        if interceptor then
+            inAttack = D6_RunInterceptor(npc, loadout, target, ct)
+        else
+            if npc.D6_Intercept then D6_RunInterceptor(npc, loadout, nil, ct) end
+            inAttack = behavior and behavior(npc, phys, loadout, target, dist, ct) or false
+        end
 
         local fp = npc.D6_PhysProfile or D6_DEFAULT_PHYS
 
@@ -918,16 +932,17 @@ hook.Add("Think", "D6_RoleDispatch", function()
             npc.D6_NavPath = nil; npc.D6_PathIdx = nil  -- engaged: abandon patrol path
         end
 
-        -- Phase D: combat motion drives every engaged drone (fight through
-        -- movement). Retreat/charge stay with the behavior's own intent.
+        -- Retreats, charges and coordinated interceptors own their route.
         -- NPC Workshop: персональный стиль профиля приоритетнее ролевого.
         local style = npc.D6_CombatStyle or D6_COMBAT_STYLE[npc.D6_AI]
-        if style and D6_ShouldFightMoving(npc, target, dist, loadout) then
+        if not interceptor and style and D6_ShouldFightMoving(npc, target, dist, loadout) then
             D6_CombatMotion(npc, loadout, target, dist, ct, style)
         end
 
-        local plan = D6_Swarm.GetPlan(npc)
-        if plan and plan.count > 1 and not npc.D6_ChargeOn then
+        if interceptor and npc.D6_DesiredVel then
+            local hull = math.max(14, 16*(loadout.scale or 1)*(loadout.collisionScale or 1))
+            npc.D6_DesiredVel = D6_Swarm.Avoid(npc, npc.D6_DesiredVel, hull)
+        elseif not interceptor and plan and plan.count > 1 and not npc.D6_ChargeOn then
             npc.D6_DesiredVel = D6_Swarm.Steering(npc,npc.D6_DesiredVel,fp.maxSpeed)
         else
             D6_AvoidObstacles(npc, fp, ft)
