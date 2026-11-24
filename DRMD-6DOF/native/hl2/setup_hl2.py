@@ -12,6 +12,7 @@ HERE = Path(__file__).resolve().parent
 HEADERS = {
     "abaddon_flight_input.h": "src/game/client/hl2/abaddon_flight_input.h",
     "abaddon_flight_math.h": "src/game/shared/hl2/abaddon_flight_math.h",
+    "abaddon_mounts.h": "src/game/shared/hl2/abaddon_mounts.h",
 }
 
 

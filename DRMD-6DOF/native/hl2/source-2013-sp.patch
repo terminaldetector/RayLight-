@@ -1,6 +1,17 @@
+diff --git a/src/game/client/hl2/c_basehlplayer.cpp b/src/game/client/hl2/c_basehlplayer.cpp
+index fbc40eb..c143425 100644
 --- a/src/game/client/hl2/c_basehlplayer.cpp
 +++ b/src/game/client/hl2/c_basehlplayer.cpp
-@@ -31,6 +31,7 @@
+@@ -11,6 +11,8 @@
+ #include "c_ai_basenpc.h"
+ #include "in_buttons.h"
+ #include "collisionutils.h"
++#include "c_te_effect_dispatch.h"
++#include "effect_dispatch_data.h"
+ 
+ // memdbgon must be the last include file in a .cpp file!!!
+ #include "tier0/memdbgon.h"
+@@ -31,6 +33,7 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
  IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
  	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
  	RecvPropBool( RECVINFO( m_fIsSprinting ) ),
@@ -8,7 +19,26 @@
  END_RECV_TABLE()
  
  BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
-@@ -58,6 +59,7 @@
+@@ -38,6 +41,18 @@ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
+ 	DEFINE_PRED_FIELD( m_fIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+ END_PREDICTION_DATA()
+ 
++static void AbaddonMGShotCallback( const CEffectData &shot )
++{
++	CEffectData flash;
++	flash.m_vOrigin = shot.m_vStart;
++	VectorAngles( shot.m_vNormal, flash.m_vAngles );
++	flash.m_fFlags = MUZZLEFLASH_SMG1;
++	DispatchEffect( "MuzzleFlash", flash );
++	UTIL_Tracer( shot.m_vStart, shot.m_vOrigin, 0, TRACER_DONT_USE_ATTACHMENT, 5000.0f, false, "AR2Tracer" );
++}
++
++DECLARE_CLIENT_EFFECT( "AbaddonMGShot", AbaddonMGShotCallback );
++
+ //-----------------------------------------------------------------------------
+ // Purpose: Drops player's primary weapon
+ //-----------------------------------------------------------------------------
+@@ -58,6 +73,7 @@ static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops
  //-----------------------------------------------------------------------------
  C_BaseHLPlayer::C_BaseHLPlayer()
  {
@@ -16,7 +46,21 @@
  	AddVar( &m_Local.m_vecPunchAngle, &m_Local.m_iv_vecPunchAngle, LATCH_SIMULATION_VAR );
  	AddVar( &m_Local.m_vecPunchAngleVel, &m_Local.m_iv_vecPunchAngleVel, LATCH_SIMULATION_VAR );
  
-@@ -628,7 +630,7 @@
+@@ -624,11 +640,21 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
+ //-----------------------------------------------------------------------------
+ // Purpose: Input handling
+ //-----------------------------------------------------------------------------
++void C_BaseHLPlayer::ItemPostFrame()
++{
++	if ( IsAbaddonFlightEnabled() )
++	{
++		CalcViewModelView( EyePosition(), EyeAngles() );
++		return;
++	}
++	BaseClass::ItemPostFrame();
++}
++
+ bool C_BaseHLPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
  {
  	bool bResult = BaseClass::CreateMove( flInputSampleTime, pCmd );
  
@@ -25,18 +69,28 @@
  	{
  		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
  		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
+diff --git a/src/game/client/hl2/c_basehlplayer.h b/src/game/client/hl2/c_basehlplayer.h
+index c6507e9..9bdf3ba 100644
 --- a/src/game/client/hl2/c_basehlplayer.h
 +++ b/src/game/client/hl2/c_basehlplayer.h
-@@ -22,6 +22,8 @@
- 	DECLARE_CLASS( C_BaseHLPlayer, C_BasePlayer );
+@@ -23,6 +23,8 @@ public:
  	DECLARE_CLIENTCLASS();
  	DECLARE_PREDICTABLE();
-+
-+	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight; }
  
++	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight; }
++
  						C_BaseHLPlayer();
  
-@@ -58,6 +60,7 @@
+ 	virtual void		OnDataChanged( DataUpdateType_t updateType );
+@@ -47,6 +49,7 @@ public:
+ 	
+ 	// Input handling
+ 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
++	virtual void	ItemPostFrame();
+ 	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
+ 	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
+ 
+@@ -58,6 +61,7 @@ public:
  	EHANDLE				m_hClosestNPC;
  	float				m_flSpeedModTime;
  	bool				m_fIsSprinting;
@@ -44,24 +98,25 @@
  
  private:
  	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
+diff --git a/src/game/client/in_main.cpp b/src/game/client/in_main.cpp
+index 21eb30a..fbfb354 100644
 --- a/src/game/client/in_main.cpp
 +++ b/src/game/client/in_main.cpp
-@@ -43,6 +43,10 @@
- 
+@@ -44,6 +44,10 @@ extern ConVar cam_idealyaw;
  // For showing/hiding the scoreboard
  #include <game/client/iviewport.h>
-+
+ 
 +#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
 +#include "hl2/abaddon_flight_input.h"
 +#endif
- 
++
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
-@@ -777,6 +781,16 @@
  
+@@ -778,6 +782,16 @@ void CInput::AdjustAngles ( float frametime )
  	// Retrieve latest view direction from engine
  	engine->GetViewAngles( viewangles );
-+
+ 
 +#if defined( HL2_CLIENT_DLL ) && !defined( HL2MP ) && !defined( PORTAL )
 +	if ( AbaddonFlightInputActive() )
 +	{
@@ -71,9 +126,12 @@
 +		return;
 +	}
 +#endif
- 
++
  	// Adjust YAW
  	AdjustYaw( speed, viewangles );
+ 
+diff --git a/src/game/client/in_mouse.cpp b/src/game/client/in_mouse.cpp
+index bcf715a..bbfc086 100644
 --- a/src/game/client/in_mouse.cpp
 +++ b/src/game/client/in_mouse.cpp
 @@ -29,6 +29,10 @@
@@ -87,7 +145,7 @@
  #if defined( _X360 )
  #include "xbox/xbox_win32stubs.h"
  #endif
-@@ -452,6 +456,15 @@
+@@ -452,6 +456,15 @@ void CInput::ScaleMouse( float *x, float *y )
  //-----------------------------------------------------------------------------
  void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float mouse_y )
  {
@@ -103,9 +161,27 @@
  	if ( !((in_strafe.state & 1) || lookstrafe.GetInt()) )
  	{
  #ifdef PORTAL
+diff --git a/src/game/server/hl2/hl2_player.cpp b/src/game/server/hl2/hl2_player.cpp
+index e7583f5..be2854b 100644
 --- a/src/game/server/hl2/hl2_player.cpp
 +++ b/src/game/server/hl2/hl2_player.cpp
-@@ -321,6 +321,7 @@
+@@ -13,6 +13,7 @@
+ #include "basehlcombatweapon_shared.h"
+ #include "vcollide_parse.h"
+ #include "in_buttons.h"
++#include "ipredictionsystem.h"
+ #include "ai_interactions.h"
+ #include "ai_squad.h"
+ #include "igamemovement.h"
+@@ -78,6 +79,7 @@ extern ConVar autoaim_max_dist;
+ extern int gEvilImpulse101;
+ 
+ ConVar sv_autojump( "sv_autojump", "0" );
++static ConVar abaddon_mount_trace( "abaddon_mount_trace", "0", FCVAR_NONE, "Report Flight Lab mount clearance and accepted shots" );
+ 
+ ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
+ ConVar hl2_normspeed( "hl2_normspeed", "190" );
+@@ -321,6 +323,7 @@ BEGIN_DATADESC( CHL2_Player )
  	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
  	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
  	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
@@ -113,15 +189,16 @@
  	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
  
  	/*
-@@ -389,6 +390,7 @@
+@@ -389,6 +392,8 @@ END_DATADESC()
  
  CHL2_Player::CHL2_Player()
  {
 +	m_bAbaddonFlight = false;
++	ResetAbaddonMounts();
  	m_nNumMissPositions	= 0;
  	m_pPlayerAISquad = 0;
  	m_bSprintEnabled = true;
-@@ -419,6 +421,7 @@
+@@ -419,6 +424,7 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
  IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
  	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
  	SendPropBool( SENDINFO(m_fIsSprinting) ),
@@ -129,14 +206,22 @@
  END_SEND_TABLE()
  
  
-@@ -1047,8 +1050,65 @@
+@@ -435,6 +441,7 @@ void CHL2_Player::Precache( void )
+ 	PrecacheScriptSound( "HL2Player.TrainUse" );
+ 	PrecacheScriptSound( "HL2Player.Use" );
+ 	PrecacheScriptSound( "HL2Player.BurnPain" );
++	PrecacheScriptSound( "Weapon_SMG1.Single" );
+ }
+ 
+ //-----------------------------------------------------------------------------
+@@ -1047,8 +1054,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
  }
  
  
 +bool CHL2_Player::CanAbaddonFly()
 +{
 +	return gpGlobals->maxClients == 1 && IsAlive() && !IsObserver() &&
-+		GetMoveType() == MOVETYPE_WALK && !IsInAVehicle() && !GetMoveParent() &&
++		GetMoveType() == MOVETYPE_WALK && !IsInAVehicle() && !GetMoveParent() && !GetUseEntity() &&
 +		!IsDucked() && !IsDucking() && !( GetFlags() & ( FL_FROZEN | FL_ONTRAIN ) ) &&
 +		!( m_afPhysicsFlags & PFLAG_ONBARNACLE );
 +}
@@ -195,15 +280,16 @@
  	// Handle FL_FROZEN.
  	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
  	{
-@@ -1108,6 +1168,7 @@
+@@ -1108,6 +1172,8 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
  //-----------------------------------------------------------------------------
  void CHL2_Player::Spawn(void)
  {
 +	m_bAbaddonFlight = false;
++	ResetAbaddonMounts();
  
  #ifndef HL2MP
  #ifndef PORTAL
-@@ -2461,6 +2522,7 @@
+@@ -2461,6 +2527,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
  //-----------------------------------------------------------------------------
  void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
  {
@@ -211,35 +297,169 @@
  	BaseClass::Event_Killed( info );
  
  	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-@@ -3279,6 +3341,7 @@
+@@ -3279,6 +3346,8 @@ void CHL2_Player::UpdateClientData( void )
  void CHL2_Player::OnRestore()
  {
  	BaseClass::OnRestore();
 +	SetAbaddonFlightEnabled( false );
++	ResetAbaddonMounts();
  	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
  }
  
+@@ -3586,9 +3655,115 @@ void CHL2_Player::PlayUseDenySound()
+ }
+ 
+ 
++void CHL2_Player::ResetAbaddonMounts()
++{
++	for ( int i = 0; i < abaddon::MountCount; ++i )
++		m_abaddonMounts[i] = abaddon::MountCycle();
++	m_nAbaddonShotSequence = 0;
++}
++
++static abaddon::Vec3 AbaddonOffset( const Vector &vec )
++{
++	return abaddon::Vec3( vec.x, vec.y, vec.z );
++}
++
++static bool AbaddonClearance( const Vector &start, const Vector &end, CHL2_Player *pilot )
++{
++	trace_t trace;
++	UTIL_TraceLine( start, end, MASK_SHOT, pilot, COLLISION_GROUP_NONE, &trace );
++	return !trace.DidHit();
++}
++
++void CHL2_Player::FireAbaddonMounts( int buttons )
++{
++	static const int mountButtons[abaddon::MountCount] = {IN_ATTACK, IN_ATTACK2, IN_GRENADE1, IN_GRENADE2};
++	if ( !( buttons & ( IN_ATTACK | IN_ATTACK2 | IN_GRENADE1 | IN_GRENADE2 ) ) )
++		return;
++
++	Vector forward, right, up;
++	AngleVectors( EyeAngles(), &forward, &right, &up );
++	const Vector center = WorldSpaceCenter();
++	const Vector eye = EyePosition();
++	const abaddon::FlightBasis basis = {AbaddonOffset( forward ), AbaddonOffset( right ), AbaddonOffset( up )};
++	trace_t aim;
++	UTIL_TraceLine( eye, eye + forward * abaddon::MountRange, MASK_SHOT, this, COLLISION_GROUP_NONE, &aim );
++	const Vector aimPoint = eye + forward * MAX( aim.fraction * abaddon::MountRange, 96.0f );
++	const float now = gpGlobals->curtime;
++
++	// Damage and presentation come from the same server shot, with no predicted stock shot.
++	CDisablePredictionFiltering sendToOwner;
++	for ( int i = 0; i < abaddon::MountCount; ++i )
++	{
++		abaddon::MountCycle &cycle = m_abaddonMounts[i];
++		if ( !( buttons & mountButtons[i] ) || !cycle.BeginAttempt( now ) )
++			continue;
++
++		const int socket = cycle.socket;
++		const abaddon::MountGeometry geometry = abaddon::GetMountGeometry( AbaddonOffset( center ), basis, i, socket );
++		const Vector mount( geometry.mount.x, geometry.mount.y, geometry.mount.z );
++		const Vector muzzle( geometry.muzzle.x, geometry.muzzle.y, geometry.muzzle.z );
++		if ( !AbaddonClearance( center, mount, this ) || !AbaddonClearance( mount, muzzle, this ) )
++		{
++			if ( abaddon_mount_trace.GetBool() )
++				Msg( "ABADDON_MOUNT blocked mount=%d socket=%d time=%.3f\n", i + 1, socket + 1, now );
++			continue;
++		}
++
++		Vector direction = aimPoint - muzzle;
++		VectorNormalize( direction );
++		trace_t hit;
++		UTIL_TraceLine( muzzle, muzzle + direction * abaddon::MountRange, MASK_SHOT, this, COLLISION_GROUP_NONE, &hit );
++		if ( hit.startsolid || hit.allsolid )
++			continue;
++
++		cycle.Fired();
++		const unsigned int sequence = ++m_nAbaddonShotSequence;
++		if ( hit.DidHit() )
++		{
++			UTIL_ImpactTrace( &hit, DMG_BULLET );
++			if ( hit.m_pEnt && !hit.DidHitWorld() )
++			{
++				ClearMultiDamage();
++				CTakeDamageInfo damage( this, this, abaddon::MountDamage, DMG_BULLET | DMG_NEVERGIB );
++				damage.SetDamageForce( direction * 1500.0f );
++				damage.SetDamagePosition( hit.endpos );
++				hit.m_pEnt->DispatchTraceAttack( damage, direction, &hit );
++				ApplyMultiDamage();
++			}
++		}
++
++		// This named effect represents weapon_d6_mg/hitscan. The client uses the
++		// same world line for flash and tracer without a viewmodel attachment.
++		CEffectData shot;
++		shot.m_vStart = muzzle;
++		shot.m_vOrigin = hit.endpos;
++		shot.m_vNormal = direction;
++		shot.m_fFlags = i + 1;
++		shot.m_nHitBox = socket + 1;
++		shot.m_nDamageType = sequence;
++		shot.m_flScale = now;
++		CSingleUserRecipientFilter owner( this );
++		DispatchEffect( "AbaddonMGShot", shot, owner );
++		EmitSound( owner, SOUND_FROM_WORLD, "Weapon_SMG1.Single", &muzzle );
++		if ( abaddon_mount_trace.GetBool() )
++			Msg( "ABADDON_MOUNT shot mount=%d socket=%d seq=%u time=%.3f muzzle=%.2f,%.2f,%.2f hit=%d\n",
++				i + 1, socket + 1, sequence, now, muzzle.x, muzzle.y, muzzle.z, hit.DidHit() );
++	}
++}
++
+ void CHL2_Player::ItemPostFrame()
+ {
+-	BaseClass::ItemPostFrame();
++	if ( IsAbaddonFlightEnabled() )
++	{
++		CalcViewModelView( EyePosition(), EyeAngles() );
++		ImpulseCommands();
++		if ( CanAbaddonFly() )
++			FireAbaddonMounts( m_nButtons );
++	}
++	else
++	{
++		BaseClass::ItemPostFrame();
++	}
+ 
+ 	if ( m_bPlayUseDenySound )
+ 	{
+diff --git a/src/game/server/hl2/hl2_player.h b/src/game/server/hl2/hl2_player.h
+index 6e72bb9..b03377c 100644
 --- a/src/game/server/hl2/hl2_player.h
 +++ b/src/game/server/hl2/hl2_player.h
-@@ -91,6 +91,10 @@
+@@ -14,6 +14,7 @@
+ #include "hl2_playerlocaldata.h"
+ #include "simtimer.h"
+ #include "soundenvelope.h"
++#include "abaddon_mounts.h"
  
+ class CAI_Squad;
+ class CPropCombineBall;
+@@ -92,6 +93,10 @@ public:
  	DECLARE_SERVERCLASS();
  	DECLARE_DATADESC();
-+
+ 
 +	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight.Get(); }
 +	bool CanAbaddonFly();
 +	void SetAbaddonFlightEnabled( bool enabled );
- 
++
  	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
  
-@@ -311,6 +315,7 @@
+ 	virtual void		Precache( void );
+@@ -311,6 +316,11 @@ private:
  	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
  
  	CNetworkVar( bool, m_fIsSprinting );
 +	CNetworkVar( bool, m_bAbaddonFlight );
++	abaddon::MountCycle m_abaddonMounts[abaddon::MountCount];
++	unsigned int m_nAbaddonShotSequence;
++	void ResetAbaddonMounts();
++	void FireAbaddonMounts( int buttons );
  	CNetworkVarForDerived( bool, m_fIsWalking );
  
  protected:	// Jeep: Portal_Player needs access to this variable to overload PlayerUse for picking up objects through portals
+diff --git a/src/game/shared/hl2/hl_gamemovement.cpp b/src/game/shared/hl2/hl_gamemovement.cpp
+index e7e573e..e569bf3 100644
 --- a/src/game/shared/hl2/hl_gamemovement.cpp
 +++ b/src/game/shared/hl2/hl_gamemovement.cpp
 @@ -8,6 +8,7 @@
@@ -250,7 +470,7 @@
  
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
-@@ -31,6 +32,49 @@
+@@ -31,6 +32,49 @@ CHL2GameMovement::CHL2GameMovement()
  // Input  : type - 
  // Output : int
  //-----------------------------------------------------------------------------
@@ -300,9 +520,11 @@
  int CHL2GameMovement::GetCheckInterval( IntervalType_t type )
  {
  	// HL2 ladders need to check every frame!!!
+diff --git a/src/game/shared/hl2/hl_gamemovement.h b/src/game/shared/hl2/hl_gamemovement.h
+index 1e9abef..fddc522 100644
 --- a/src/game/shared/hl2/hl_gamemovement.h
 +++ b/src/game/shared/hl2/hl_gamemovement.h
-@@ -37,6 +37,7 @@
+@@ -37,6 +37,7 @@ public:
  	CHL2GameMovement();
  
  // Overrides
