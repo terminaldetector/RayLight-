@@ -23,6 +23,42 @@ def marker_volume(map_, name, bounds, message):
     map_.event(volume, 'OnStartTouch', label['targetname'], 'Display')
 
 
+def ballistic_range(map_):
+    firing_x, bore_z = 896, 128
+    lanes = (
+        ('near', -444, 512, 24, COOL_STRIP, 'NEAR // 512 SU'),
+        ('far', -328, 1024, 36, COOL_STRIP, 'FAR // 1024 SU'),
+        ('shielded', -216, 768, 24, ALARM_STRIP, 'SHIELDED // LINE PASSES, BOLT STOPS'),
+    )
+    for name, y, distance, health, strip, caption in lanes:
+        firing_name = f'd6_lab_shot_{name}'
+        target_x = firing_x + distance
+        map_.endpoint(firing_name, (firing_x, y, bore_z))
+        map_.endpoint(f'd6_lab_aim_{name}', (target_x, y, bore_z))
+        map_.box((firing_x - 48, y - 30, 0), (firing_x + 48, y + 30, 4), METAL)
+        map_.box((firing_x - 48, y - 30, 4), (firing_x - 42, y + 30, 6), strip)
+        map_.box((firing_x + 42, y - 30, 4), (firing_x + 48, y + 30, 6), strip)
+        marker_volume(map_, firing_name + '_zone',
+                      ((firing_x - 42, y - 26, 7), (firing_x + 42, y + 26, 170)), caption)
+
+        target = map_.ent('func_breakable', name=f'd6_lab_target_{name}',
+                          health=health, material=2, spawnflags='0')
+        map_.box((target_x, y - 26, bore_z - 32), (target_x + 16, y + 26, bore_z + 32), strip, target)
+        map_.box((target_x + 8, y - 12, 0), (target_x + 28, y + 12, bore_z - 32), METAL)
+        confirmation = map_.text(f'd6_lab_down_{name}', 'TARGET DOWN // ' + name.upper(), hold=2)
+        confirmation['spawnflags'] = '1'
+        map_.event(target, 'OnBreak', confirmation['targetname'], 'Display')
+        map_.light((target_x - 50, y, bore_z + 54), '133 193 220 260')
+
+    # The center ray clears this four-unit slit. The 3-SU radius bolt hits its
+    # leading face even though the shutter is only four units thick.
+    shield_x, shield_y = 1320, -216
+    map_.box((shield_x, shield_y - 44, 64), (shield_x + 4, shield_y + 44, bore_z - 2), CONCRETE)
+    map_.box((shield_x, shield_y - 44, bore_z + 2), (shield_x + 4, shield_y + 44, 192), CONCRETE)
+    map_.box((shield_x - 1, shield_y - 44, 184), (shield_x, shield_y + 44, 192), ALARM_STRIP)
+    map_.light((firing_x, -330, 230), '183 221 246 520')
+
+
 def flightlab():
     map_ = Map(NAME)
     map_.shell((-128, -576, 0), (2048, 576, 784))
@@ -103,6 +139,7 @@ def flightlab():
                   'HULL SLEEVE // 64 UNITS WIDE')
     marker_volume(map_, 'd6_lab_finish_route', ((1664, -88, 9), (1888, 88, 104)),
                   'LANDING PAD // RETURN TO NORMAL MOVEMENT')
+    ballistic_range(map_)
     return map_
 
 

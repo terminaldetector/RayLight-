@@ -13,6 +13,8 @@ HEADERS = {
     "abaddon_flight_input.h": "src/game/client/hl2/abaddon_flight_input.h",
     "abaddon_flight_math.h": "src/game/shared/hl2/abaddon_flight_math.h",
     "abaddon_mounts.h": "src/game/shared/hl2/abaddon_mounts.h",
+    "abaddon_projectile_server.h": "src/game/server/hl2/abaddon_projectile_server.h",
+    "abaddon_arsenal_hud.h": "src/game/client/hl2/abaddon_arsenal_hud.h",
 }
 
 
