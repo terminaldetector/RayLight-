@@ -75,12 +75,37 @@ jobs:
           $env:_CL_ = '/WX-'
           # Hosted images supply v143, while VPC generates v120_xp. This is
           # an explicit compatibility build and must pass linking to publish.
-          & $msbuild abaddon.sln /m /v:minimal /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0
-          if ($LASTEXITCODE -ne 0) { throw 'The HL2 Win32 client and server did not build.' }
+          $build = @('/m', '/v:minimal', '/p:Configuration=Release', '/p:Platform=Win32',
+            '/p:PlatformToolset=v143', '/p:WindowsTargetPlatformVersion=10.0')
+          $libraries = @('tier1/tier1.vcxproj', 'mathlib/mathlib.vcxproj',
+            'raytrace/raytrace.vcxproj', 'vgui2/vgui_controls/vgui_controls.vcxproj')
+          $modules = @('game/client/client_hl2.vcxproj', 'game/server/server_hl2.vcxproj')
+          $bin = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32-bin'
+          New-Item -ItemType Directory -Path $bin | Out-Null
+          # An older VPC solution can return success with no projects selected.
+          # Build the generated VCXPROJs directly and use an empty module output directory.
+          foreach ($project in $libraries + $modules) {
+            if (-not (Test-Path $project -PathType Leaf)) { throw "VPC did not generate $project." }
+            [xml]$definition = Get-Content -LiteralPath $project -Raw
+            $configs = $definition.SelectNodes("//*[local-name()='ProjectConfiguration']/@Include")
+            if ($configs.Value -notcontains 'Release|Win32') {
+              throw "$project lacks Release|Win32. Generated configurations: $($configs.Value -join ', ')"
+            }
+            Write-Host "Building $project Release|Win32"
+            $output = @()
+            if ($modules -contains $project) { $output = @("/p:OutDir=$bin/") }
+            & $msbuild $project @build @output
+            if ($LASTEXITCODE -ne 0) { throw "MSBuild failed for $project." }
+          }
+          foreach ($name in 'client.dll', 'server.dll') {
+            if (-not (Test-Path (Join-Path $bin $name) -PathType Leaf)) {
+              throw "MSBuild did not link $name into $bin."
+            }
+          }
       - name: Validate and stage the two game DLLs
         shell: pwsh
         run: |
-          $bin = Join-Path $env:GITHUB_WORKSPACE 'source-sdk-2013/game/mod_hl2/bin'
+          $bin = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32-bin'
           $artifact = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32'
           $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
           $vsPath = & $vswhere -latest -products '*' -property installationPath
