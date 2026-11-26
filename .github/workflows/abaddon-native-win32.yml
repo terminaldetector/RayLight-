@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'DRMD-6DOF/native/hl2/**'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.*'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.*'
+      - 'DRMD-6DOF/descent_scanner/materials/**'
       - '.github/workflows/abaddon-native-win32.yml'
   workflow_dispatch:
 
@@ -81,6 +84,15 @@ jobs:
           $panelText = [IO.File]::ReadAllText($panel)
           if (-not $panelText.Contains($old)) { throw 'Unexpected Valve Panel declaration.' }
           [IO.File]::WriteAllText($panel, $panelText.Replace($old, $new))
+          # Use Valve's UCRT allocator adapter with the SP tier0 headers and
+          # libraries. Sharing the engine allocator across DLLs is essential.
+          $allocator = Join-Path (Get-Location) 'public/tier0/memoverride.cpp'
+          $adapterRev = '3e957b70b167929f120360115d359d1ecb4c1699'
+          $adapterURL = "https://raw.githubusercontent.com/ValveSoftware/source-sdk-2013/$adapterRev/src/public/tier0/memoverride.cpp"
+          Invoke-WebRequest -Uri $adapterURL -OutFile $allocator
+          if ((Get-FileHash $allocator).Hash -ne '95937d20eb4995245346f02ccdd192c457c9e53181a50075446d337a2a696d43') {
+            throw 'The Valve UCRT adapter does not match the pinned file.'
+          }
           # Hosted images supply v143, while VPC generates v120_xp. This is
           # an explicit compatibility build and must pass linking to publish.
           $build = @('/m', '/v:minimal', '/p:Configuration=Release', '/p:Platform=Win32',

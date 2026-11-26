@@ -22,8 +22,8 @@ struct AbaddonBoltSpec
 };
 
 static const char *const AbaddonBoltClass = "abaddon_flight_bolt";
-static const char *const AbaddonBoltModel = "models/crossbow_bolt.mdl";
-static const char *const AbaddonPlasmaModel = "models/effects/combineball.mdl";
+static const char *const AbaddonBoltModel = "models/drmd/shot_kinetic.mdl";
+static const char *const AbaddonPlasmaModel = "models/drmd/shot_arcpulse.mdl";
 static const char *const AbaddonBoltTrail = "sprites/bluelaser1.vmt";
 static const char *const AbaddonPlasmaImpactSound = "NPC_CombineBall.Explosion";
 static int g_nAbaddonFlightBolts = 0;
@@ -104,6 +104,13 @@ void CAbaddonFlightBolt::SetFlight( CBasePlayer *owner, const Vector &origin,
 	SetAbsOrigin( origin );
 	QAngle angles;
 	VectorAngles( velocity, angles );
+	// StudioMDL exported the nose along local +Y. Apply the correction in
+	// model space so a vertical or banked launch still points along velocity.
+	matrix3x4_t flight, modelToFlight, modelToWorld;
+	AngleMatrix( angles, flight );
+	AngleMatrix( QAngle( 0, -90, 0 ), modelToFlight );
+	ConcatTransforms( flight, modelToFlight, modelToWorld );
+	MatrixAngles( modelToWorld, angles );
 	SetAbsAngles( angles );
 	m_vecFlightVelocity = velocity;
 	m_flLastStep = gpGlobals->curtime;
@@ -125,8 +132,6 @@ void CAbaddonFlightBolt::Spawn()
 	SetSolid( SOLID_NONE );
 	SetMoveType( MOVETYPE_NONE );
 	AddEffects( EF_NOSHADOW );
-	if ( plasma )
-		SetModelScale( 0.65f );
 
 	if ( GetOwnerEntity() )
 	{
@@ -134,9 +139,9 @@ void CAbaddonFlightBolt::Spawn()
 		if ( m_hTrail )
 		{
 			m_hTrail->FollowEntity( this );
-			m_hTrail->SetTransparency( kRenderTransAdd, plasma ? 66 : 174, plasma ? 216 : 215,
-				255, 225, kRenderFxNone );
-			m_hTrail->SetStartWidth( plasma ? 14.0f : 3.0f );
+			m_hTrail->SetTransparency( kRenderTransAdd, plasma ? 88 : 249, plasma ? 216 : 203,
+				plasma ? 229 : 133, 225, kRenderFxNone );
+			m_hTrail->SetStartWidth( plasma ? 5.5f : 1.6f );
 			m_hTrail->SetEndWidth( plasma ? 2.0f : 0.0f );
 			m_hTrail->SetLifeTime( plasma ? 0.17f : 0.065f );
 		}

@@ -65,6 +65,18 @@ def deploy(bins, destination):
         Path("LICENSE"): HERE / "LICENSE",
         Path("thirdpartylegalnotices.txt"): HERE / "thirdpartylegalnotices.txt",
     }
+    # Both engines load the same compiled models and surface finishes.
+    art = HERE.parents[1] / "descent_scanner"
+    for model in ("shot_kinetic", "shot_arcpulse"):
+        for suffix in (".mdl", ".vvd", ".dx80.vtx", ".dx90.vtx"):
+            path = Path("models/drmd") / (model + suffix)
+            payload[path] = art / path
+    for material in ("copper", "emit", "glass", "hot", "steel"):
+        path = Path("materials/models/drmd") / (material + ".vmt")
+        payload[path] = art / path
+    for texture in ("alloy", "glass"):
+        path = Path("materials/drmd") / ("drmd_finish_" + texture + ".vtf")
+        payload[path] = art / path
     available = {}
     for extension in ("so", "dll"):
         modules = tuple(f"{name}.{extension}" for name in ("client", "server"))
