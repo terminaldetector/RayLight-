@@ -48,6 +48,13 @@ jobs:
           # Stock VPC queries the VS2013 project-extension key to write the solution.
           reg.exe add 'HKLM\SOFTWARE\Microsoft\VisualStudio\12.0\Projects\{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}' /v DefaultProjectExtension /t REG_SZ /d vcxproj /f /reg:32
           if ($LASTEXITCODE -ne 0) { throw 'Unable to register the VPC solution extension.' }
+          # The v143 target uses kernel32's EncodePointer and DecodePointer.
+          # Omit Valve's XP SP1 compatibility object before VPC emits link inputs.
+          $vpc = Join-Path (Get-Location) 'vpc_scripts/source_dll_win32_base.vpc'
+          $dllProject = [IO.File]::ReadAllText($vpc)
+          $xpObject = [regex]'(?ms)^\t\t\$File[ \t]+"\$SRCDIR\\public\\tier0\\pointeroverride\.asm" \[\$WIN32\]\s*\{.*?^\t\t\}[ \t]*\r?$'
+          if ($xpObject.Matches($dllProject).Count -ne 1) { throw 'Unexpected XP pointer shim definition.' }
+          [IO.File]::WriteAllText($vpc, $xpObject.Replace($dllProject, ''))
           & .\devtools\bin\vpc.exe /win32 /hl2 /2013 +game /mksln abaddon.sln
           if ($LASTEXITCODE -ne 0 -or -not (Test-Path abaddon.sln)) {
             throw 'Valve VPC did not generate the HL2 solution.'
