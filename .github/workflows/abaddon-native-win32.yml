@@ -80,6 +80,7 @@ jobs:
           #ifndef _CRTRESTRICT
           #define _CRTRESTRICT __declspec(restrict)
           #endif
+          #pragma comment(lib, "legacy_stdio_definitions.lib")
           '@ | Set-Content -Path $annotations -Encoding ascii
           $env:CL = ('/I"{0}" /FI"{1}"' -f $compat, $annotations)
           $env:_CL_ = '/WX- /Zc:implicitNoexcept-'
@@ -100,6 +101,15 @@ jobs:
           if ((Get-FileHash $allocator).Hash -ne '95937d20eb4995245346f02ccdd192c457c9e53181a50075446d337a2a696d43') {
             throw 'The Valve UCRT adapter does not match the pinned file.'
           }
+          # The old x86 particles archive exports its own inline C99 hypot
+          # wrapper. Keep its calls to the CRT _hypot implementation intact.
+          $objcopy = Get-Command llvm-objcopy.exe -ErrorAction SilentlyContinue
+          if (-not $objcopy) { $objcopy = Get-Item "${env:ProgramFiles}\LLVM\bin\llvm-objcopy.exe" }
+          $particles = Join-Path (Get-Location) 'lib/public/particles.lib'
+          $adapted = Join-Path $compat 'particles.lib'
+          & $objcopy --redefine-sym '_hypot=_AbaddonLegacyParticleHypot' $particles $adapted
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to isolate the legacy particles CRT wrapper.' }
+          Copy-Item $adapted $particles -Force
           # Hosted images supply v143, while VPC generates v120_xp. This is
           # an explicit compatibility build and must pass linking to publish.
           $build = @('/m', '/v:minimal', '/p:Configuration=Release', '/p:Platform=Win32',
