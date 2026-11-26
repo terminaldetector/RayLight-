@@ -130,7 +130,11 @@ jobs:
             }
             Write-Host "Building $project Release|Win32"
             $output = @()
-            if ($modules -contains $project) { $output = @("/p:OutDir=$bin/") }
+            if ($modules -contains $project) {
+              # The stock post-build copies output into a developer game
+              # install. This job stages the already linked DLLs below.
+              $output = @("/p:OutDir=$bin/", '/p:PostBuildEventUseInBuild=false')
+            }
             & $msbuild $project @build @output
             if ($LASTEXITCODE -ne 0) { throw "MSBuild failed for $project." }
           }
