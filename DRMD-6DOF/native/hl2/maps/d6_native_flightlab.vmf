@@ -7472,6 +7472,82 @@ world
 			"visgroupautoshown" "1"
 		}
 	}
+	solid
+	{
+		"id" "110"
+		side
+		{
+			"id" "655"
+			"plane" "(354 284 0) (376 284 0) (376 320 0)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "656"
+			"plane" "(354 320 96) (376 320 96) (376 284 96)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "660"
+			"plane" "(354 320 0) (376 320 0) (376 320 96)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "659"
+			"plane" "(376 284 0) (354 284 0) (354 284 96)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "658"
+			"plane" "(376 320 0) (376 284 0) (376 284 96)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "657"
+			"plane" "(354 320 96) (354 284 96) (354 284 0)"
+			"material" "metal/metalwall048a"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		editor
+		{
+			"color" "255 255 255"
+			"visgroupshown" "1"
+			"visgroupautoshown" "1"
+		}
+	}
 	editor
 	{
 		"color" "255 255 255"
@@ -9430,6 +9506,323 @@ entity
 		"visgroupshown" "1"
 		"visgroupautoshown" "1"
 		"logicalpos" "[0 68]"
+	}
+}
+entity
+{
+	"id" "69"
+	"classname" "abaddon_mine_supply"
+	"origin" "252 256 64"
+	"targetname" "d6_lab_mine_stock_1"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 69]"
+	}
+}
+entity
+{
+	"id" "70"
+	"_light" "141 195 153 200"
+	"classname" "light"
+	"origin" "252 256 104"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 70]"
+	}
+}
+entity
+{
+	"id" "71"
+	"classname" "abaddon_mine_supply"
+	"origin" "488 332 290"
+	"targetname" "d6_lab_mine_stock_2"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 71]"
+	}
+}
+entity
+{
+	"id" "72"
+	"_light" "141 195 153 200"
+	"classname" "light"
+	"origin" "488 332 330"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 72]"
+	}
+}
+entity
+{
+	"id" "73"
+	"classname" "abaddon_mine_supply"
+	"origin" "1776 128 108"
+	"targetname" "d6_lab_mine_stock_3"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 73]"
+	}
+}
+entity
+{
+	"id" "74"
+	"_light" "141 195 153 200"
+	"classname" "light"
+	"origin" "1776 128 148"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 74]"
+	}
+}
+entity
+{
+	"id" "75"
+	"MaxLiveChildren" "1"
+	"MaxNPCCount" "16"
+	"NPCType" "npc_manhack"
+	"SpawnFrequency" "2"
+	"StartDisabled" "1"
+	"classname" "npc_maker"
+	"origin" "510 364 180"
+	"targetname" "d6_lab_mine_target"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 75]"
+	}
+}
+entity
+{
+	"id" "76"
+	"classname" "func_button"
+	"spawnflags" "1025"
+	"targetname" "d6_lab_mine_switch"
+	"wait" "2"
+	solid
+	{
+		"id" "111"
+		side
+		{
+			"id" "661"
+			"plane" "(346 286 64) (354 286 64) (354 318 64)"
+			"material" "lights/blue001"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "662"
+			"plane" "(346 318 92) (354 318 92) (354 286 92)"
+			"material" "lights/blue001"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "666"
+			"plane" "(346 318 64) (354 318 64) (354 318 92)"
+			"material" "lights/blue001"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "665"
+			"plane" "(354 286 64) (346 286 64) (346 286 92)"
+			"material" "lights/blue001"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "664"
+			"plane" "(354 318 64) (354 286 64) (354 286 92)"
+			"material" "lights/blue001"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "663"
+			"plane" "(346 318 92) (346 286 92) (346 286 64)"
+			"material" "lights/blue001"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		editor
+		{
+			"color" "255 255 255"
+			"visgroupshown" "1"
+			"visgroupautoshown" "1"
+		}
+	}
+	connections
+	{
+		"OnPressed" "d6_lab_mine_targetSpawn0-1"
+	}
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 76]"
+	}
+}
+entity
+{
+	"id" "77"
+	"channel" "1"
+	"classname" "game_text"
+	"color" "176 218 209"
+	"color2" "226 179 99"
+	"fadein" ".25"
+	"fadeout" ".85"
+	"holdtime" "4"
+	"message" "MINE BAY // RELOAD TO DEPLOY // USE PANEL FOR MANHACK"
+	"origin" "128 0 96"
+	"targetname" "d6_lab_mine_zone_caption"
+	"x" "0.05"
+	"y" "0.16"
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 77]"
+	}
+}
+entity
+{
+	"id" "78"
+	"StartDisabled" "0"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "d6_lab_mine_zone"
+	"wait" "1"
+	solid
+	{
+		"id" "112"
+		side
+		{
+			"id" "667"
+			"plane" "(204 208 12) (342 208 12) (342 344 12)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "668"
+			"plane" "(204 344 146) (342 344 146) (342 208 146)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 -1 0 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "672"
+			"plane" "(204 344 12) (342 344 12) (342 344 146)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "671"
+			"plane" "(342 208 12) (204 208 12) (204 208 146)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[1 0 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "670"
+			"plane" "(342 344 12) (342 208 12) (342 208 146)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		side
+		{
+			"id" "669"
+			"plane" "(204 344 146) (204 208 146) (204 208 12)"
+			"material" "tools/toolstrigger"
+			"uaxis" "[0 1 0 0] 0.25"
+			"vaxis" "[0 0 -1 0] 0.25"
+			"rotation" "0"
+			"lightmapscale" "16"
+			"smoothing_groups" "0"
+		}
+		editor
+		{
+			"color" "255 255 255"
+			"visgroupshown" "1"
+			"visgroupautoshown" "1"
+		}
+	}
+	connections
+	{
+		"OnStartTouch" "d6_lab_mine_zone_captionDisplay0-1"
+	}
+	editor
+	{
+		"color" "255 255 255"
+		"visgroupshown" "1"
+		"visgroupautoshown" "1"
+		"logicalpos" "[0 78]"
 	}
 }
 cameras

@@ -59,6 +59,23 @@ def ballistic_range(map_):
     map_.light((firing_x, -330, 230), '183 221 246 520')
 
 
+def mine_range(map_):
+    for index, pos in enumerate(((252, 256, 64), (488, 332, 290), (1776, 128, 108)), start=1):
+        map_.ent('abaddon_mine_supply', pos, f'd6_lab_mine_stock_{index}')
+        map_.light((pos[0], pos[1], pos[2] + 40), '141 195 153 200')
+    # The training target only spawns on demand. One live child keeps repeat
+    # use from adding enemies to the ordinary movement and projectile lanes.
+    map_.ent('npc_maker', (510, 364, 180), 'd6_lab_mine_target',
+             NPCType='npc_manhack', MaxNPCCount=16, MaxLiveChildren=1,
+             StartDisabled=1, SpawnFrequency=2)
+    map_.box((354, 284, 0), (376, 320, 96), METAL)
+    button = map_.ent('func_button', name='d6_lab_mine_switch', spawnflags=1025, wait=2)
+    map_.box((346, 286, 64), (354, 318, 92), COOL_STRIP, button)
+    map_.event(button, 'OnPressed', 'd6_lab_mine_target', 'Spawn')
+    marker_volume(map_, 'd6_lab_mine_zone', ((204, 208, 12), (342, 344, 146)),
+                  'MINE BAY // RELOAD TO DEPLOY // USE PANEL FOR MANHACK')
+
+
 def flightlab():
     map_ = Map(NAME)
     map_.shell((-128, -576, 0), (2048, 576, 784))
@@ -140,6 +157,7 @@ def flightlab():
     marker_volume(map_, 'd6_lab_finish_route', ((1664, -88, 9), (1888, 88, 104)),
                   'LANDING PAD // RETURN TO NORMAL MOVEMENT')
     ballistic_range(map_)
+    mine_range(map_)
     return map_
 
 

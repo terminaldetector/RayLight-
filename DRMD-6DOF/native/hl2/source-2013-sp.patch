@@ -1,5 +1,5 @@
 diff --git a/src/game/client/hl2/c_basehlplayer.cpp b/src/game/client/hl2/c_basehlplayer.cpp
-index fbc40eb..476510f 100644
+index fbc40eb..ae840f7 100644
 --- a/src/game/client/hl2/c_basehlplayer.cpp
 +++ b/src/game/client/hl2/c_basehlplayer.cpp
 @@ -11,6 +11,10 @@
@@ -13,7 +13,7 @@ index fbc40eb..476510f 100644
  
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
-@@ -31,6 +35,10 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
+@@ -31,6 +35,12 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
  IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
  	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
  	RecvPropBool( RECVINFO( m_fIsSprinting ) ),
@@ -21,10 +21,12 @@ index fbc40eb..476510f 100644
 +	RecvPropInt( RECVINFO( m_nAbaddonPlasmaMount ) ),
 +	RecvPropFloat( RECVINFO( m_flAbaddonEnergy ) ),
 +	RecvPropInt( RECVINFO( m_nAbaddonPlasmaRounds ) ),
++	RecvPropInt( RECVINFO( m_nAbaddonMines ) ),
++	RecvPropBool( RECVINFO( m_bAbaddonGravityMine ) ),
  END_RECV_TABLE()
  
  BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
-@@ -38,6 +46,17 @@ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
+@@ -38,6 +48,17 @@ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
  	DEFINE_PRED_FIELD( m_fIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
  END_PREDICTION_DATA()
  
@@ -42,7 +44,7 @@ index fbc40eb..476510f 100644
  //-----------------------------------------------------------------------------
  // Purpose: Drops player's primary weapon
  //-----------------------------------------------------------------------------
-@@ -58,6 +77,10 @@ static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops
+@@ -58,6 +79,12 @@ static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops
  //-----------------------------------------------------------------------------
  C_BaseHLPlayer::C_BaseHLPlayer()
  {
@@ -50,10 +52,12 @@ index fbc40eb..476510f 100644
 +	m_nAbaddonPlasmaMount = -1;
 +	m_flAbaddonEnergy = 0.0f;
 +	m_nAbaddonPlasmaRounds = 0;
++	m_nAbaddonMines = 0;
++	m_bAbaddonGravityMine = false;
  	AddVar( &m_Local.m_vecPunchAngle, &m_Local.m_iv_vecPunchAngle, LATCH_SIMULATION_VAR );
  	AddVar( &m_Local.m_vecPunchAngleVel, &m_Local.m_iv_vecPunchAngleVel, LATCH_SIMULATION_VAR );
  
-@@ -624,11 +647,21 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
+@@ -624,11 +651,21 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
  //-----------------------------------------------------------------------------
  // Purpose: Input handling
  //-----------------------------------------------------------------------------
@@ -77,22 +81,24 @@ index fbc40eb..476510f 100644
  		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
  		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
 diff --git a/src/game/client/hl2/c_basehlplayer.h b/src/game/client/hl2/c_basehlplayer.h
-index c6507e9..e4ab5fc 100644
+index c6507e9..78ab056 100644
 --- a/src/game/client/hl2/c_basehlplayer.h
 +++ b/src/game/client/hl2/c_basehlplayer.h
-@@ -23,6 +23,11 @@ public:
+@@ -23,6 +23,13 @@ public:
  	DECLARE_CLIENTCLASS();
  	DECLARE_PREDICTABLE();
  
 +	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight; }
 +	int GetAbaddonPlasmaMount() const { return m_nAbaddonPlasmaMount; }
 +	float GetAbaddonEnergy() const { return m_flAbaddonEnergy; }
++	int GetAbaddonMines() const { return m_nAbaddonMines; }
++	bool HasAbaddonGravityMine() const { return m_bAbaddonGravityMine; }
 +	int GetAbaddonPlasmaRounds() const { return m_nAbaddonPlasmaRounds; }
 +
  						C_BaseHLPlayer();
  
  	virtual void		OnDataChanged( DataUpdateType_t updateType );
-@@ -47,6 +52,7 @@ public:
+@@ -47,6 +54,7 @@ public:
  	
  	// Input handling
  	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
@@ -100,7 +106,7 @@ index c6507e9..e4ab5fc 100644
  	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
  	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
  
-@@ -58,8 +64,13 @@ public:
+@@ -58,8 +66,15 @@ public:
  	EHANDLE				m_hClosestNPC;
  	float				m_flSpeedModTime;
  	bool				m_fIsSprinting;
@@ -110,6 +116,8 @@ index c6507e9..e4ab5fc 100644
 +	int m_nAbaddonPlasmaMount;
 +	float m_flAbaddonEnergy;
 +	int m_nAbaddonPlasmaRounds;
++	int m_nAbaddonMines;
++	bool m_bAbaddonGravityMine;
 +
  	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
  	
@@ -178,7 +186,7 @@ index bcf715a..bbfc086 100644
  	{
  #ifdef PORTAL
 diff --git a/src/game/server/hl2/hl2_player.cpp b/src/game/server/hl2/hl2_player.cpp
-index e7583f5..7b14acf 100644
+index e7583f5..82a5fb5 100644
 --- a/src/game/server/hl2/hl2_player.cpp
 +++ b/src/game/server/hl2/hl2_player.cpp
 @@ -13,6 +13,7 @@
@@ -189,16 +197,17 @@ index e7583f5..7b14acf 100644
  #include "ai_interactions.h"
  #include "ai_squad.h"
  #include "igamemovement.h"
-@@ -55,6 +56,8 @@
+@@ -55,6 +56,9 @@
  #include "portal_player.h"
  #endif // PORTAL
  
 +#include "abaddon_projectile_server.h"
++#include "abaddon_mine_server.h"
 +
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
  
-@@ -78,6 +81,7 @@ extern ConVar autoaim_max_dist;
+@@ -78,6 +82,7 @@ extern ConVar autoaim_max_dist;
  extern int gEvilImpulse101;
  
  ConVar sv_autojump( "sv_autojump", "0" );
@@ -206,7 +215,7 @@ index e7583f5..7b14acf 100644
  
  ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
  ConVar hl2_normspeed( "hl2_normspeed", "190" );
-@@ -321,6 +325,12 @@ BEGIN_DATADESC( CHL2_Player )
+@@ -321,6 +326,16 @@ BEGIN_DATADESC( CHL2_Player )
  	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
  	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
  	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
@@ -215,11 +224,15 @@ index e7583f5..7b14acf 100644
 +	DEFINE_FIELD( m_flAbaddonEnergy, FIELD_FLOAT ),
 +	DEFINE_FIELD( m_nAbaddonPlasmaRounds, FIELD_INTEGER ),
 +	DEFINE_FIELD( m_flAbaddonPlasmaReady, FIELD_TIME ),
++	DEFINE_FIELD( m_nAbaddonMines, FIELD_INTEGER ),
++	DEFINE_FIELD( m_bAbaddonGravityMine, FIELD_BOOLEAN ),
++	DEFINE_FIELD( m_bAbaddonMineBayInitialized, FIELD_BOOLEAN ),
++	DEFINE_FIELD( m_flAbaddonMineReady, FIELD_TIME ),
 +	DEFINE_FIELD( m_nAbaddonShotSequence, FIELD_INTEGER ),
  	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
  
  	/*
-@@ -389,6 +399,10 @@ END_DATADESC()
+@@ -389,6 +404,10 @@ END_DATADESC()
  
  CHL2_Player::CHL2_Player()
  {
@@ -230,7 +243,7 @@ index e7583f5..7b14acf 100644
  	m_nNumMissPositions	= 0;
  	m_pPlayerAISquad = 0;
  	m_bSprintEnabled = true;
-@@ -419,6 +433,10 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
+@@ -419,6 +438,12 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
  IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
  	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
  	SendPropBool( SENDINFO(m_fIsSprinting) ),
@@ -238,20 +251,24 @@ index e7583f5..7b14acf 100644
 +	SendPropInt( SENDINFO(m_nAbaddonPlasmaMount), 4 ),
 +	SendPropFloat( SENDINFO(m_flAbaddonEnergy), 10, 0, 0.0f, abaddon::FlightEnergyMax ),
 +	SendPropInt( SENDINFO(m_nAbaddonPlasmaRounds), 3, SPROP_UNSIGNED ),
++	SendPropInt( SENDINFO(m_nAbaddonMines), 3, SPROP_UNSIGNED ),
++	SendPropBool( SENDINFO(m_bAbaddonGravityMine) ),
  END_SEND_TABLE()
  
  
-@@ -435,6 +453,9 @@ void CHL2_Player::Precache( void )
+@@ -435,6 +460,11 @@ void CHL2_Player::Precache( void )
  	PrecacheScriptSound( "HL2Player.TrainUse" );
  	PrecacheScriptSound( "HL2Player.Use" );
  	PrecacheScriptSound( "HL2Player.BurnPain" );
 +	PrecacheScriptSound( "Weapon_SMG1.Single" );
 +	PrecacheScriptSound( "Weapon_AR2.Single" );
 +	UTIL_PrecacheOther( "abaddon_flight_bolt" );
++	UTIL_PrecacheOther( "abaddon_flight_mine" );
++	PrecacheScriptSound( "Weapon_PhysCannon.Drop" );
  }
  
  //-----------------------------------------------------------------------------
-@@ -1047,8 +1068,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
+@@ -1047,8 +1077,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
  }
  
  
@@ -317,7 +334,7 @@ index e7583f5..7b14acf 100644
  	// Handle FL_FROZEN.
  	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
  	{
-@@ -1108,6 +1186,9 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
+@@ -1108,6 +1195,9 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
  //-----------------------------------------------------------------------------
  void CHL2_Player::Spawn(void)
  {
@@ -327,7 +344,7 @@ index e7583f5..7b14acf 100644
  
  #ifndef HL2MP
  #ifndef PORTAL
-@@ -2461,6 +2542,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
+@@ -2461,6 +2551,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
  //-----------------------------------------------------------------------------
  void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
  {
@@ -335,16 +352,18 @@ index e7583f5..7b14acf 100644
  	BaseClass::Event_Killed( info );
  
  	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-@@ -3279,6 +3361,8 @@ void CHL2_Player::UpdateClientData( void )
+@@ -3279,6 +3370,10 @@ void CHL2_Player::UpdateClientData( void )
  void CHL2_Player::OnRestore()
  {
  	BaseClass::OnRestore();
 +	SetAbaddonFlightEnabled( false );
 +	ResetAbaddonMounts();
++	if ( !m_bAbaddonMineBayInitialized )
++		ResetAbaddonMineBay();
  	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
  }
  
-@@ -3586,9 +3670,172 @@ void CHL2_Player::PlayUseDenySound()
+@@ -3586,9 +3681,234 @@ void CHL2_Player::PlayUseDenySound()
  }
  
  
@@ -358,6 +377,7 @@ index e7583f5..7b14acf 100644
 +{
 +	// The upper mount starts with the single plasma module. Other ports use MG.
 +	m_nAbaddonPlasmaMount = 2;
++	ResetAbaddonMineBay();
 +	const abaddon::PlasmaFeed initial = {abaddon::FlightEnergyMax, 0.0f, abaddon::PlasmaCapacity};
 +	WriteAbaddonPlasma( initial );
 +}
@@ -383,8 +403,9 @@ index e7583f5..7b14acf 100644
 +void CHL2_Player::PrintAbaddonArsenal()
 +{
 +	char status[144];
-+	V_snprintf( status, sizeof( status ), "ABADDON_ARSENAL plasma_mount=%d energy=%.2f cycles=%d next=%.3f\n",
-+		m_nAbaddonPlasmaMount.Get() + 1, m_flAbaddonEnergy.Get(), m_nAbaddonPlasmaRounds.Get(), m_flAbaddonPlasmaReady );
++	V_snprintf( status, sizeof( status ), "ABADDON_ARSENAL plasma_mount=%d energy=%.2f cycles=%d next=%.3f mine=%s stock=%d mine_next=%.3f\n",
++		m_nAbaddonPlasmaMount.Get() + 1, m_flAbaddonEnergy.Get(), m_nAbaddonPlasmaRounds.Get(), m_flAbaddonPlasmaReady,
++		m_bAbaddonGravityMine ? "gravity" : "plasma", m_nAbaddonMines.Get(), m_flAbaddonMineReady );
 +	ClientPrint( this, HUD_PRINTCONSOLE, status );
 +}
 +
@@ -421,6 +442,62 @@ index e7583f5..7b14acf 100644
 +	const Vector extents( radius, radius, radius );
 +	UTIL_TraceHull( start, end, -extents, extents, MASK_SHOT_HULL, pilot, COLLISION_GROUP_NONE, &trace );
 +	return !trace.DidHit();
++}
++
++void CHL2_Player::ResetAbaddonMineBay()
++{
++	m_bAbaddonMineBayInitialized = true;
++	m_nAbaddonMines = abaddon::InitialMines;
++	m_bAbaddonGravityMine = false;
++	m_flAbaddonMineReady = 0.0f;
++}
++
++bool CHL2_Player::RefillAbaddonMines()
++{
++	const abaddon::MineFeed bay = {m_nAbaddonMines.Get(), m_flAbaddonMineReady};
++	const int next = bay.Restock();
++	if ( next == bay.reserve )
++		return false;
++	m_nAbaddonMines = next;
++	EmitSound( "HL2Player.PickupWeapon" );
++	return true;
++}
++
++CON_COMMAND( abaddon_mine_set, "Select the fifth bay payload: plasma or gravity" )
++{
++	CHL2_Player *pilot = dynamic_cast<CHL2_Player *>( UTIL_GetCommandClient() );
++	if ( !pilot || !pilot->IsAbaddonFlightEnabled() || !pilot->CanAbaddonFly() )
++		return;
++	if ( args.ArgC() != 2 || (V_stricmp( args[1], "plasma" ) && V_stricmp( args[1], "gravity" )) )
++	{
++		ClientPrint( pilot, HUD_PRINTCONSOLE, "Usage: abaddon_mine_set <plasma|gravity>\n" );
++		return;
++	}
++	pilot->SetAbaddonMineType( !V_stricmp( args[1], "gravity" ) );
++	pilot->PrintAbaddonArsenal();
++}
++
++void CHL2_Player::DropAbaddonMine()
++{
++	const float now = gpGlobals->curtime;
++	float energy = m_flAbaddonEnergy.Get();
++	abaddon::MineFeed bay = {m_nAbaddonMines.Get(), m_flAbaddonMineReady};
++	const abaddon::MineType kind = m_bAbaddonGravityMine ? abaddon::GravityMine : abaddon::PlasmaMine;
++	if ( !bay.Ready( now, energy, kind ) )
++		return;
++	Vector forward, right, up;
++	AngleVectors( EyeAngles(), &forward, &right, &up );
++	const Vector center = WorldSpaceCenter();
++	const abaddon::FlightBasis basis = {AbaddonOffset( forward ), AbaddonOffset( right ), AbaddonOffset( up )};
++	const abaddon::Vec3 point = abaddon::MineReleasePoint( AbaddonOffset( center ), basis );
++	const Vector origin( point.x, point.y, point.z );
++	if ( !AbaddonClearance( center, origin, abaddon::MineHull, this ) || !CAbaddonMine::Deploy( this, origin, kind ) )
++		return;
++	bay.Fired( now, energy, kind );
++	m_flAbaddonEnergy = energy;
++	m_nAbaddonMines = bay.reserve;
++	m_flAbaddonMineReady = bay.readyAt;
++	EmitSound( "Weapon_PhysCannon.Drop" );
 +}
 +
 +void CHL2_Player::FireAbaddonMounts( int buttons )
@@ -509,7 +586,11 @@ index e7583f5..7b14acf 100644
 +		CalcViewModelView( EyePosition(), EyeAngles() );
 +		ImpulseCommands();
 +		if ( CanAbaddonFly() )
++		{
 +			FireAbaddonMounts( m_nButtons );
++			if ( m_afButtonPressed & IN_RELOAD )
++				DropAbaddonMine();
++		}
 +	}
 +	else
 +	{
@@ -519,7 +600,7 @@ index e7583f5..7b14acf 100644
  	if ( m_bPlayUseDenySound )
  	{
 diff --git a/src/game/server/hl2/hl2_player.h b/src/game/server/hl2/hl2_player.h
-index 6e72bb9..07c8e8d 100644
+index 6e72bb9..0fd1572 100644
 --- a/src/game/server/hl2/hl2_player.h
 +++ b/src/game/server/hl2/hl2_player.h
 @@ -14,6 +14,7 @@
@@ -530,7 +611,7 @@ index 6e72bb9..07c8e8d 100644
  
  class CAI_Squad;
  class CPropCombineBall;
-@@ -92,6 +93,12 @@ public:
+@@ -92,6 +93,14 @@ public:
  	DECLARE_SERVERCLASS();
  	DECLARE_DATADESC();
  
@@ -539,11 +620,13 @@ index 6e72bb9..07c8e8d 100644
 +	void SetAbaddonFlightEnabled( bool enabled );
 +	void RefitAbaddonMount( int mount, bool plasma );
 +	void PrintAbaddonArsenal();
++	void SetAbaddonMineType( bool gravity ) { m_bAbaddonGravityMine = gravity; }
++	bool RefillAbaddonMines();
 +
  	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
  
  	virtual void		Precache( void );
-@@ -311,6 +318,18 @@ private:
+@@ -311,6 +320,24 @@ private:
  	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
  
  	CNetworkVar( bool, m_fIsSprinting );
@@ -552,6 +635,12 @@ index 6e72bb9..07c8e8d 100644
 +	CNetworkVar( float, m_flAbaddonEnergy );
 +	CNetworkVar( int, m_nAbaddonPlasmaRounds );
 +	float m_flAbaddonPlasmaReady;
++	CNetworkVar( int, m_nAbaddonMines );
++	CNetworkVar( bool, m_bAbaddonGravityMine );
++	bool m_bAbaddonMineBayInitialized;
++	float m_flAbaddonMineReady;
++	void ResetAbaddonMineBay();
++	void DropAbaddonMine();
 +	abaddon::MountCycle m_abaddonMounts[abaddon::MountCount];
 +	unsigned int m_nAbaddonShotSequence;
 +	void ResetAbaddonMounts();
