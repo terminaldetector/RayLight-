@@ -72,7 +72,15 @@ jobs:
           #endif
           '@ | Set-Content -Path $annotations -Encoding ascii
           $env:CL = ('/I"{0}" /FI"{1}"' -f $compat, $annotations)
-          $env:_CL_ = '/WX-'
+          $env:_CL_ = '/WX- /Zc:implicitNoexcept-'
+          # Modern MSVC needs derived VGUI panels to access the virtual
+          # layout marker when it synthesizes constructors and destructors.
+          $panel = Join-Path (Get-Location) 'public/vgui_controls/Panel.h'
+          $old = 'class Panel : public IClientPanel, virtual IForceVirtualInheritancePanel'
+          $new = 'class Panel : public IClientPanel, public virtual IForceVirtualInheritancePanel'
+          $panelText = [IO.File]::ReadAllText($panel)
+          if (-not $panelText.Contains($old)) { throw 'Unexpected Valve Panel declaration.' }
+          [IO.File]::WriteAllText($panel, $panelText.Replace($old, $new))
           # Hosted images supply v143, while VPC generates v120_xp. This is
           # an explicit compatibility build and must pass linking to publish.
           $build = @('/m', '/v:minimal', '/p:Configuration=Release', '/p:Platform=Win32',
