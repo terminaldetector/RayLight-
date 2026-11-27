@@ -186,7 +186,7 @@ index bcf715a..bbfc086 100644
  	{
  #ifdef PORTAL
 diff --git a/src/game/server/hl2/hl2_player.cpp b/src/game/server/hl2/hl2_player.cpp
-index e7583f5..82a5fb5 100644
+index e7583f5..0522172 100644
 --- a/src/game/server/hl2/hl2_player.cpp
 +++ b/src/game/server/hl2/hl2_player.cpp
 @@ -13,6 +13,7 @@
@@ -197,17 +197,18 @@ index e7583f5..82a5fb5 100644
  #include "ai_interactions.h"
  #include "ai_squad.h"
  #include "igamemovement.h"
-@@ -55,6 +56,9 @@
+@@ -55,6 +56,10 @@
  #include "portal_player.h"
  #endif // PORTAL
  
 +#include "abaddon_projectile_server.h"
 +#include "abaddon_mine_server.h"
++#include "abaddon_recovery_server.h"
 +
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
  
-@@ -78,6 +82,7 @@ extern ConVar autoaim_max_dist;
+@@ -78,6 +83,7 @@ extern ConVar autoaim_max_dist;
  extern int gEvilImpulse101;
  
  ConVar sv_autojump( "sv_autojump", "0" );
@@ -215,7 +216,7 @@ index e7583f5..82a5fb5 100644
  
  ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
  ConVar hl2_normspeed( "hl2_normspeed", "190" );
-@@ -321,6 +326,16 @@ BEGIN_DATADESC( CHL2_Player )
+@@ -321,6 +327,16 @@ BEGIN_DATADESC( CHL2_Player )
  	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
  	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
  	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
@@ -232,7 +233,7 @@ index e7583f5..82a5fb5 100644
  	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
  
  	/*
-@@ -389,6 +404,10 @@ END_DATADESC()
+@@ -389,6 +405,10 @@ END_DATADESC()
  
  CHL2_Player::CHL2_Player()
  {
@@ -243,7 +244,7 @@ index e7583f5..82a5fb5 100644
  	m_nNumMissPositions	= 0;
  	m_pPlayerAISquad = 0;
  	m_bSprintEnabled = true;
-@@ -419,6 +438,12 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
+@@ -419,6 +439,12 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
  IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
  	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
  	SendPropBool( SENDINFO(m_fIsSprinting) ),
@@ -256,7 +257,7 @@ index e7583f5..82a5fb5 100644
  END_SEND_TABLE()
  
  
-@@ -435,6 +460,11 @@ void CHL2_Player::Precache( void )
+@@ -435,6 +461,12 @@ void CHL2_Player::Precache( void )
  	PrecacheScriptSound( "HL2Player.TrainUse" );
  	PrecacheScriptSound( "HL2Player.Use" );
  	PrecacheScriptSound( "HL2Player.BurnPain" );
@@ -264,11 +265,12 @@ index e7583f5..82a5fb5 100644
 +	PrecacheScriptSound( "Weapon_AR2.Single" );
 +	UTIL_PrecacheOther( "abaddon_flight_bolt" );
 +	UTIL_PrecacheOther( "abaddon_flight_mine" );
++	UTIL_PrecacheOther( "abaddon_energy_cloud" );
 +	PrecacheScriptSound( "Weapon_PhysCannon.Drop" );
  }
  
  //-----------------------------------------------------------------------------
-@@ -1047,8 +1077,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
+@@ -1047,8 +1079,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
  }
  
  
@@ -334,7 +336,7 @@ index e7583f5..82a5fb5 100644
  	// Handle FL_FROZEN.
  	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
  	{
-@@ -1108,6 +1195,9 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
+@@ -1108,6 +1197,9 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
  //-----------------------------------------------------------------------------
  void CHL2_Player::Spawn(void)
  {
@@ -344,7 +346,15 @@ index e7583f5..82a5fb5 100644
  
  #ifndef HL2MP
  #ifndef PORTAL
-@@ -2461,6 +2551,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
+@@ -2441,6 +2533,7 @@ void CHL2_Player::CombineBallSocketed( CPropCombineBall *pCombineBall )
+ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+ {
+ 	BaseClass::Event_KilledOther( pVictim, info );
++	CAbaddonRecovery::DropFrom( this, pVictim );
+ 
+ #ifdef HL2_EPISODIC
+ 
+@@ -2461,6 +2554,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
  //-----------------------------------------------------------------------------
  void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
  {
@@ -352,7 +362,7 @@ index e7583f5..82a5fb5 100644
  	BaseClass::Event_Killed( info );
  
  	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-@@ -3279,6 +3370,10 @@ void CHL2_Player::UpdateClientData( void )
+@@ -3279,6 +3373,10 @@ void CHL2_Player::UpdateClientData( void )
  void CHL2_Player::OnRestore()
  {
  	BaseClass::OnRestore();
@@ -363,7 +373,7 @@ index e7583f5..82a5fb5 100644
  	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
  }
  
-@@ -3586,9 +3681,234 @@ void CHL2_Player::PlayUseDenySound()
+@@ -3586,9 +3684,247 @@ void CHL2_Player::PlayUseDenySound()
  }
  
  
@@ -475,6 +485,19 @@ index e7583f5..82a5fb5 100644
 +	}
 +	pilot->SetAbaddonMineType( !V_stricmp( args[1], "gravity" ) );
 +	pilot->PrintAbaddonArsenal();
++}
++
++bool CHL2_Player::ApplyFlightRecovery( const abaddon::RecoveryAmount &offer )
++{
++	const abaddon::RecoveryAmount gain = abaddon::FitRecovery( offer, m_flAbaddonEnergy.Get(),
++		GetHealth(), GetMaxHealth(), ArmorValue() );
++	if ( !gain.Any() )
++		return false;
++	if ( gain.energy > 0 ) m_flAbaddonEnergy = m_flAbaddonEnergy.Get() + gain.energy;
++	const int oldHull = GetHealth();
++	if ( gain.hull > 0 ) TakeHealth( gain.hull, DMG_GENERIC );
++	if ( gain.armor > 0 ) IncrementArmorValue( gain.armor, 100 );
++	return gain.energy > 0 || gain.armor > 0 || GetHealth() > oldHull;
 +}
 +
 +void CHL2_Player::DropAbaddonMine()
@@ -600,18 +623,20 @@ index e7583f5..82a5fb5 100644
  	if ( m_bPlayUseDenySound )
  	{
 diff --git a/src/game/server/hl2/hl2_player.h b/src/game/server/hl2/hl2_player.h
-index 6e72bb9..0fd1572 100644
+index 6e72bb9..42f81bf 100644
 --- a/src/game/server/hl2/hl2_player.h
 +++ b/src/game/server/hl2/hl2_player.h
-@@ -14,6 +14,7 @@
+@@ -14,7 +14,9 @@
  #include "hl2_playerlocaldata.h"
  #include "simtimer.h"
  #include "soundenvelope.h"
 +#include "abaddon_mounts.h"
  
++namespace abaddon { struct RecoveryAmount; }
  class CAI_Squad;
  class CPropCombineBall;
-@@ -92,6 +93,14 @@ public:
+ 
+@@ -92,6 +94,15 @@ public:
  	DECLARE_SERVERCLASS();
  	DECLARE_DATADESC();
  
@@ -622,11 +647,12 @@ index 6e72bb9..0fd1572 100644
 +	void PrintAbaddonArsenal();
 +	void SetAbaddonMineType( bool gravity ) { m_bAbaddonGravityMine = gravity; }
 +	bool RefillAbaddonMines();
++	bool ApplyFlightRecovery( const abaddon::RecoveryAmount &offer );
 +
  	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
  
  	virtual void		Precache( void );
-@@ -311,6 +320,24 @@ private:
+@@ -311,6 +322,24 @@ private:
  	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
  
  	CNetworkVar( bool, m_fIsSprinting );
