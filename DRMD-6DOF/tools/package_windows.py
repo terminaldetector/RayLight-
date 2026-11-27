@@ -75,7 +75,7 @@ def main():
                 return digest
 
             for path, mode, object_id in tracked:
-                if args.runtime_only and path not in planned and not path.startswith((payload_root + "/", "DRMD-6DOF/native/hl2/")):
+                if args.runtime_only and path not in planned and not path.startswith((payload_root + "/", "DRMD-6DOF/native/hl2/", "DRMD-6DOF/swep_construction_kit/")):
                     continue
                 if not mode.startswith("100"):
                     raise SystemExit(f"Unsupported tracked entry: {path}")
