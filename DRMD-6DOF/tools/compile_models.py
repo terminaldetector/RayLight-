@@ -32,7 +32,7 @@ def uv(p, n):
     return p[0]/24,-p[1]/24
 
 
-def compile_one(work, exe, game, name, parts):
+def compile_one(work, exe, game, name, parts, attachments):
     mesh = work / (name+'.smd')
     with mesh.open('w') as stream:
         stream.write(SKELETON + 'triangles\n')
@@ -45,8 +45,15 @@ def compile_one(work, exe, game, name, parts):
                     stream.write('0 ' + ' '.join(f'{x:.5f}' for x in fields) + '\n')
         stream.write('end\n')
     qc = work / (name+'.qc')
+    sockets = ''.join(
+        f'$attachment "{socket}" "root" {x:g} {y:g} {z:g} rotate 0 0 0\n'
+        for socket, (x, y, z) in attachments.items()
+    )
+    # Socket-bearing meshes use the gameplay +X forward basis.
+    orientation = '$origin 0 0 0 -90\n' if attachments else ''
     qc.write_text(f'$modelname "drmd/{name}.mdl"\n$staticprop\n$cdmaterials "models/drmd"\n'
-                  f'$surfaceprop "metal"\n$body "body" "{mesh.name}"\n$sequence "idle" "idle.smd" fps 1\n')
+                  f'$surfaceprop "metal"\n{orientation}$body "body" "{mesh.name}"\n'
+                  f'{sockets}$sequence "idle" "idle.smd" fps 1\n')
     out=subprocess.run([str(exe),'-game',str(game),str(qc)],cwd=work,capture_output=True,text=True)
     if out.returncode or not (game/'models/drmd'/f'{name}.mdl').exists():
         raise RuntimeError(f'{name}: {out.stdout}\n{out.stderr}')
@@ -63,10 +70,12 @@ def main():
     game=args.game.resolve()
     (game/'models/drmd').mkdir(parents=True,exist_ok=True)
     write_materials(game,manifest['palette'],manifest['finishes'])
+    attachments = manifest.get('attachments', {})
     with tempfile.TemporaryDirectory(prefix='drmd-smd-') as tmp, concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
         work=pathlib.Path(tmp)
         (work/'idle.smd').write_text(SKELETON)
-        jobs=[pool.submit(compile_one, work, args.compiler.resolve(), game, name, parts) for name, parts in manifest['models'].items()]
+        jobs = [pool.submit(compile_one, work, args.compiler.resolve(), game, name, parts, attachments.get(name, {}))
+                for name, parts in manifest['models'].items()]
         for job in concurrent.futures.as_completed(jobs): print('PASS | MDL | '+job.result(),flush=True)
     print(f'Compiled {len(jobs)} original Source models')
 

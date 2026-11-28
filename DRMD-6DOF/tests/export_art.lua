@@ -1,4 +1,5 @@
 local root = "../descent_scanner/lua/"
+local selected = arg[1]
 function Color(r, g, b) return {r, g, b} end
 FCVAR_ARCHIVE, FCVAR_REPLICATED = 0, 0
 function CreateConVar() return {} end
@@ -10,6 +11,8 @@ dofile(root .. "d6_art_elites.lua")
 dofile(root .. "d6_art_ordnance.lua")
 dofile(root .. "d6_support_art.lua")
 dofile(root .. "d6_drone_catalog.lua")
+dofile(root .. "d6_supports.lua")
+assert(not selected or D6_ArtGeometry.models[selected], "Unknown model: " .. tostring(selected))
 
 local function json(value)
     if type(value) == "number" then return string.format("%.5f", value) end
@@ -26,11 +29,12 @@ local function json(value)
     return "{" .. table.concat(fields, ",") .. "}"
 end
 
-local output = io.open("art-models.json", "w")
+local output = assert(io.open(arg[2] or "art-models.json", "w"))
 local count, faces = 0, 0
 local data = {
     palette = D6_ArtGeometry.palette, finishes = D6_ArtGeometry.finishes,
     scanner = D6_Arsenal.Scanner, enforcer = D6_Session.Enforcer, mounts = {}, models = {}, drones = {}, weapons = {}, payloads = {},
+    attachments = {support_reflector = {receptor = D6_Supports.Definitions.reflector.ports[1]}},
 }
 for index, class in ipairs(D6_Arsenal.Defaults) do
     local item = D6_Arsenal.Entries[class]
@@ -54,17 +58,19 @@ for key, payload in pairs(D6_Arsenal.Ordnance) do
 end
 assert(D6_ArtGeometry.models[D6_Arsenal.ToolVisual.mesh] and D6_ArtGeometry.models[D6_Arsenal.MechVisual.mesh])
 for name, model in pairs(D6_ArtGeometry.models) do
-    count = count + 1
-    for material, part in pairs(model.parts) do
-        assert(D6_ArtGeometry.palette[material] and #part > 0 and #part * 3 < 65535)
-        faces = faces + #part
-        for _, face in ipairs(part) do
-            for i = 1, 4 do
-                for _, coordinate in ipairs(face[i]) do assert(coordinate == coordinate and math.abs(coordinate) < 500) end
+    if not selected or selected == name then
+        count = count + 1
+        for material, part in pairs(model.parts) do
+            assert(D6_ArtGeometry.palette[material] and #part > 0 and #part * 3 < 65535)
+            faces = faces + #part
+            for _, face in ipairs(part) do
+                for i = 1, 4 do
+                    for _, coordinate in ipairs(face[i]) do assert(coordinate == coordinate and math.abs(coordinate) < 500) end
+                end
             end
         end
+        data.models[name] = model.parts
     end
-    data.models[name] = model.parts
 end
 output:write(json(data))
 output:close()

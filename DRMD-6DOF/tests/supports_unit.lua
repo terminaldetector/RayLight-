@@ -244,6 +244,73 @@ local extra=projectile(p,"kinetic","weapon_d6_mg")
 check("one paid reflector window redirects at most four shots",prism.D6_SupportRemaining==0 and S.TraceProjectile(extra,from,to,3,1)==nil)
 S.Recall(p,1);advance(p,0.5)
 
+local stillPosition=prism:GetPos()
+advance(p,0.65)
+check("cold prism drifts around a stationary pilot without gaining combat power",not same(stillPosition,prism:GetPos())
+    and prism:GetPos():DistToSqr(S.Home(p,1))<=11^2 and prism:GetNWFloat("D6_SupportPower")==0)
+local heavyRound=projectile(p,"explosive","weapon_d6_heavy")
+check("docked prism cannot charge from the pilot's heavy round",not S.TraceProjectile(heavyRound,
+    prism:GetPos()-Vector(100,0,0),prism:GetPos()+Vector(100,0,0),10,1))
+ready(p,1);S.Activate(p,1);advance(p,0.45)
+check("deployed prism advertises redirect mode",prism:GetNWString("D6_SupportCombat")=="redirect")
+local settled=prism:GetPos()
+p.D6Ang=Angle(0,180,90);advance(p,0.2)
+check("changing view does not pull the deployed prism to the new aim",prism:GetPos():DistToSqr(settled)<20^2)
+p.pos=Vector(0,55,0);advance(p,0.25)
+check("deployment translates with the pilot through swept movement",prism:GetPos().y>settled.y+35)
+p.D6Ang=Angle();p.pos=Vector();advance(p,0.25)
+local function prismSweep(projectile,cap)
+    local core=S.Socket(prism,1)
+    return S.TraceProjectile(projectile,core-Vector(100,0,0),core+Vector(100,0,0),10,cap or 1)
+end
+local fHeavy=projectile(p2,"explosive","weapon_d6_heavy")
+check("prism rejects foreign heavy rounds and world-first crossings",not prismSweep(fHeavy) and not prismSweep(heavyRound,0.1))
+local supportHeavy=projectile(p,"explosive","weapon_d6_heavy"); supportHeavy.D6_SupportShot=true
+check("support-generated heavy rounds cannot charge a prism",not prismSweep(supportHeavy))
+local chargeHit=prismSweep(heavyRound)
+local budgetSince=p:GetNW2Float("D6_SupportReady1")
+check("compatible heavy contact is absorbed once and advertises charged fire",chargeHit
+    and S.HandleProjectile(heavyRound,chargeHit,Vector(1100,0,0)).kind=="consume"
+    and prism:GetNWString("D6_SupportCombat")=="charged_fire"
+    and not S.HandleProjectile(heavyRound,chargeHit,Vector(1100,0,0)))
+check("a charged prism pauses normal redirects and rejects further charges",
+    not prismSweep(projectile(p,"kinetic","weapon_d6_mg")) and not prismSweep(projectile(p,"explosive","weapon_d6_heavy")))
+wallX=300;shotCount=#shots
+advance(p,0.45)
+check("charged prism waits without a visible target, spending no rounds through cover",
+    #shots==shotCount and prism.D6_Prism.rounds==3 and prism:GetNWString("D6_SupportCombat")=="charged_fire")
+wallX=nil
+p.D6Ang=Angle(0,180,90);advance(p,1.25)
+check("charged fire acquires in the device's sector independent of camera",#shots==shotCount+3
+    and shots[#shots].sourceSupport==prism and shots[#shots].swept and shots[#shots].dir.x>0.8)
+check("three paid rounds resume redirect without a second heavy charge or new resources",
+    prism:GetNWString("D6_SupportCombat")=="redirect" and not prismSweep(projectile(p,"explosive","weapon_d6_heavy"))
+    and prismSweep(projectile(p,"kinetic","weapon_d6_mg")) and prism.D6_SupportRemaining==4
+    and p:GetAmmoCount(S.Ammo)==5 and p.energy==90 and p:GetNW2Float("D6_SupportReady1")==budgetSince)
+advance(p,0.7)
+check("finished prism cannot autonomously fire again during this deployment",#shots==shotCount+3)
+S.Recall(p,1); advance(p,0.5); p.D6Ang=Angle()
+
+ready(p,1);S.Activate(p,1);advance(p,0.45)
+heavyRound=projectile(p,"explosive","weapon_d6_heavy")
+wallX=300;shotCount=#shots
+check("owner can feed one heavy round before any target arrives",S.HandleProjectile(heavyRound,
+    prismSweep(heavyRound),Vector(1100,0,0)).kind=="consume")
+advance(p,2)
+check("absence of targets expires the charged window independently of deployment",
+    #shots==shotCount and S.GetState(p,1)=="active" and prism:GetNWString("D6_SupportCombat")=="redirect")
+wallX=nil;advance(p,0.4)
+check("an enemy appearing after charge expiry does not restart the burst",#shots==shotCount)
+S.Recall(p,1);advance(p,0.5)
+ready(p,1);S.Activate(p,1);advance(p,5.5)
+heavyRound=projectile(p,"explosive","weapon_d6_heavy")
+S.HandleProjectile(heavyRound,prismSweep(heavyRound),Vector(1100,0,0))
+check("charge near deadline cannot extend the paid activation",
+    prism.D6_Prism.chargeUntil==prism.D6_SupportUntil)
+S.Recall(p,1);advance(p,0.65)
+check("recall clears charged fire and returns cold before the first round",
+    #shots==shotCount and S.GetState(p,1)=="docked" and prism:GetNWString("D6_SupportCombat")=="idle")
+
 ready(p,2);S.Activate(p,2);advance(p,0.3)
 local shield=S.GetEntity(p,2)
 local front=shield:GetPos()+Vector(100,0,0)

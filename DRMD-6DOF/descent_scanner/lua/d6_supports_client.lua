@@ -11,6 +11,8 @@ local pendingSlot, pendingUntil, nextRequest = nil, 0, 0
 local held, actionWasDown, cycleWasDown = false, false, false
 local frame
 local stateLabels = {docked="ГОТОВ", deploying="ВЫНОС", active="АКТИВЕН", returning="ВОЗВРАТ"}
+local prismCombatLabels = {redirect="ОТРАЖЕНИЕ", charged_fire="РАЗРЯД"}
+local prismChargeColor = Color(255,178,89)
 
 local function keyCode(setting)
     local code = setting:GetInt()
@@ -72,12 +74,15 @@ function UI.Snapshot(ply)
     }
     for slot, id in ipairs(S.GetLoadout(ply)) do
         local spec = S.Definitions[id]
-        local mode = IsValid(S.GetEntity(ply, slot)) and S.GetState(ply, slot) or "missing"
+        local ent = S.GetEntity(ply, slot)
+        local mode = IsValid(ent) and S.GetState(ply, slot) or "missing"
+        local combat = id == "reflector" and mode == "active" and ent:GetNWString("D6_SupportCombat", "idle")
         local remaining = math.max(0, ply:GetNW2Float("D6_SupportReady"..slot, 0)-CurTime())
-        local label = stateLabels[mode] or "ОЖИДАНИЕ"
+        local label = prismCombatLabels[combat] or stateLabels[mode] or "ОЖИДАНИЕ"
         if mode == "docked" and remaining > 0 then label = string.format("%.1f С", remaining)
         elseif mode == "docked" and state.ammo < 1 then label = "НЕТ ЗАРЯДА" end
-        state.slots[slot] = {id=id, name=spec.name, color=spec.color, label=label, mode=mode}
+        local color = combat == "charged_fire" and prismChargeColor or spec.color
+        state.slots[slot] = {id=id, name=spec.name, color=color, label=label, mode=mode}
     end
     return state
 end

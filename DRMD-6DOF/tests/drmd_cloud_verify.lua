@@ -330,9 +330,9 @@ end
 
 local function verifyAssetsAndSwarm(bot,ground,done)
     local native=file.Find("models/drmd/*.mdl","GAME")
-    local valid=#native==79
+    local valid=#native==80
     for _,name in ipairs(native) do if not util.IsValidModel("models/drmd/"..name) then valid=false end end
-    check("51 · 79 native Source model files mount and validate",valid,#native)
+    check("51 · 80 native Source model files mount and validate",valid,#native)
     local source=ground+Vector(-170,-1105,320)
     bot:SetPos(source)
     bot:SetEyeAngles(Angle(0,0,0))

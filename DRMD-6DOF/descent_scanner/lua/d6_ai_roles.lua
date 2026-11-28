@@ -1,6 +1,5 @@
 -- ═══════════════════════════════════════════════════════════
--- d6_ai_roles.lua — Ролевые AI для Descent 6DOF
--- Пять ролей мигрированы на модульную систему (d6_modules.lua).
+-- d6_ai_roles.lua — роли и координация перехватчиков.
 -- SpawnD6Role() — публичный API: энкаунтеры, сущности, консоль.
 -- ═══════════════════════════════════════════════════════════
 if not SERVER then return end
@@ -38,6 +37,7 @@ local LOADOUTS = {
     },
     interceptor = {
         ai    = "flank",
+        intercept = true,
         slots = { primaryL = "Laser", primaryR = "Laser" },
         hp = 150, scale = 1.0, color = Color(80, 255, 200),
         speed = 860, rangeMin = 250, rangeMax = 500,
@@ -129,6 +129,181 @@ for name, parts in pairs(salvageRoles) do
     role.resist = {kinetic = 0.10, energy = 0, explosive = 0}
     LOADOUTS[name] = role
     D6_FragsBoidsExclude[name] = true
+end
+
+-- The approach frame is fixed for the engagement. It follows the target's
+-- position and does not swivel whenever the pilot rolls or moves the camera.
+local interceptGroups = setmetatable({}, {__mode = "k"})
+local sectors = {
+    {1,.72,.36}, {1,-.72,.36}, {1,.56,-.55}, {1,-.56,-.55},
+    {-.55,.93,.51}, {-.55,-.93,.51},
+}
+local windupTime, passTime, recoveryTime = .27, .55, .72
+
+local function endInterceptWarning(npc)
+    npc:SetNWFloat("D6_ThreatAt", 0)
+    npc:StopSound("ambient/energy/zap_loop1.wav")
+end
+
+local function releaseIntercept(npc)
+    local run = npc.D6_Intercept
+    if not run then return end
+    local group = run.group
+    if group.active == run then group.active = nil end
+    group.lanes[run.lane] = nil
+    if next(group.lanes) == nil then group.groups[group.faction] = nil end
+    if IsValid(npc) and run.phase == "windup" then endInterceptWarning(npc) end
+    npc.D6_Intercept = nil
+end
+
+hook.Add("OnNPCKilled", "D6_ReleaseIntercept", releaseIntercept)
+
+local function laneTrace(npc, from, to, extents)
+    return util.TraceHull({start=from, endpos=to, mins=-extents, maxs=extents,
+        filter=npc, mask=MASK_NPCSOLID_BRUSHONLY})
+end
+
+local function claimIntercept(npc, target, origin, center, radius, extents)
+    local groups = interceptGroups[target]
+    if not groups then
+        groups = {}
+        interceptGroups[target] = groups
+    end
+    local art = D6_Drones.Get(npc)
+    local faction = art and art.faction or "combine"
+    local group = groups[faction]
+    if not group then
+        local radial = origin - center
+        local heading = radial:LengthSqr() > 1 and radial:Angle() or npc:GetAngles()
+        group = {lanes={}, heading=heading, faction=faction, groups=groups}
+    end
+
+    local lane, ray, cost
+    local heading = group.heading
+    local forward, right, up = heading:Forward(), heading:Right(), heading:Up()
+    for index, sector in ipairs(sectors) do
+        if not group.lanes[index] then
+            local radial = (forward*sector[1] + right*sector[2] + up*sector[3]):GetNormalized()
+            local goal = center + radial*radius
+            if util.IsInWorld(goal) and not laneTrace(npc, goal, goal, extents).Hit then
+                local blocked = laneTrace(npc, origin, goal, extents).Hit
+                local score = origin:DistToSqr(goal) + (blocked and radius*radius*4 or 0)
+                if not cost or score < cost then lane, ray, cost = index, radial, score end
+            end
+        end
+    end
+    if not lane then return end
+
+    local run = {group=group, lane=lane, ray=ray, target=target, phase="approach"}
+    groups[faction], group.lanes[lane] = group, run
+    npc.D6_Intercept = run
+    npc:CallOnRemove("D6_ReleaseIntercept", releaseIntercept)
+    return run
+end
+
+local function steerTo(npc, offset, speed)
+    local distance = offset:Length()
+    npc.D6_DesiredVel = distance > 1 and offset/distance*math.min(speed, distance*3.2) or vector_origin
+end
+
+local function interceptSight(npc, target, origin, center)
+    return not util.TraceLine({start=origin, endpos=center, filter={npc,target}, mask=MASK_SHOT}).Hit
+end
+
+local function canCommit(run)
+    if run.group.active then return false end
+    for _, other in pairs(run.group.lanes) do
+        if other.ready and (other.ready < run.ready or (other.ready == run.ready and other.lane < run.lane)) then
+            return false
+        end
+    end
+    return true
+end
+
+-- Returns the existing dispatcher fire permission. The module still owns
+-- the socket trace, projectile, energy and cooldown, including swarm turns.
+function D6_RunInterceptor(npc, loadout, target, now)
+    npc.D6_RoleState = 1
+    local run = npc.D6_Intercept
+    if run and (run.target ~= target or not IsValid(target)) then
+        releaseIntercept(npc)
+        npc.D6_InterceptRetryAt = nil
+        run = nil
+    end
+    if not IsValid(target) then
+        npc.D6_InterceptRetryAt = nil
+        return false
+    end
+
+    npc.D6_RoleState = 2
+    local origin, center = npc:GetPos(), target:WorldSpaceCenter()
+    local rMax = loadout.rangeMax or 500
+    local radius, speed = rMax*.86, loadout.speed or 750
+    local hull = math.max(14, 16*(loadout.scale or 1)*(loadout.collisionScale or 1))
+    local extents = Vector(hull,hull,hull)
+    if not run and now >= (npc.D6_InterceptRetryAt or 0) then
+        run = claimIntercept(npc, target, origin, center, radius, extents)
+        npc.D6_InterceptRetryAt = now + .36
+    end
+    if not run then
+        if origin:DistToSqr(center) > (radius*1.6)^2 then steerTo(npc, center-origin, speed*.45) end
+        return false
+    end
+
+    local distanceSqr = origin:DistToSqr(center)
+    local tooClose = distanceSqr < (math.min(loadout.rangeMin or 250, rMax*.55)*.75)^2
+    local canSee = distanceSqr <= rMax*rMax and interceptSight(npc, target, origin, center)
+    if run.phase == "windup" then
+        if now >= run.untilTime and canSee and not tooClose then
+            local side = run.group.heading:Right()*(sectors[run.lane][2] < 0 and -1 or 1)
+            local exit = center + target:GetVelocity()*.16 + side*radius*.42
+            local direction = (exit-origin):GetNormalized()
+            if not laneTrace(npc, origin, origin + direction*115, extents).Hit then
+                endInterceptWarning(npc)
+                run.phase, run.untilTime, run.direction = "pass", now + passTime, direction
+            end
+        end
+    end
+    if run.phase == "pass" and now < run.untilTime and canSee and not tooClose then
+        npc.D6_RoleState = 3
+        npc.D6_DesiredVel = run.direction*speed
+        run.goal = origin + run.direction*radius
+        return true
+    end
+    if (run.phase == "windup" and (now >= run.untilTime or not canSee or tooClose)) or run.phase == "pass" then
+        -- Hide a cancelled warning immediately, then clear the lane of fire.
+        if run.phase == "windup" then endInterceptWarning(npc) end
+        run.phase, run.untilTime, run.group.active = "recover", now + recoveryTime, nil
+    end
+    if run.phase == "recover" and now >= run.untilTime then
+        releaseIntercept(npc)
+        npc.D6_InterceptRetryAt = now + .45
+        return false
+    end
+
+    local goal = center + run.ray*radius*(run.phase == "recover" and 1.22 or 1)
+    run.goal = goal
+    if run.phase == "approach" then
+        if now >= (run.nextLaneCheck or 0) then
+            run.nextLaneCheck = now + .45
+            if not util.IsInWorld(goal) or laneTrace(npc, goal, goal, extents).Hit then
+                releaseIntercept(npc)
+                return false
+            end
+        end
+        if canSee and not tooClose and origin:DistToSqr(goal) < 110^2 and npc:GetVelocity():LengthSqr() < 450^2 then
+            run.ready = run.ready or now
+            if canCommit(run) then
+                run.group.active, run.ready = run, nil
+                run.phase, run.untilTime = "windup", now + windupTime
+                D6_Patterns.Warn(npc, center, windupTime, false)
+            end
+        else
+            run.ready = nil
+        end
+    end
+    steerTo(npc, goal-origin, speed*(run.phase == "recover" and 1 or .64))
+    return false
 end
 
 -- ─── Public API — thin wrapper over D6_BuildDrone ─────────

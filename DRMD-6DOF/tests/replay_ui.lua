@@ -246,6 +246,19 @@ if page == "supports" or page == "support_cockpit" then
     ply.GetNW2Entity=function() return nil end
     assert(D6_SupportUI.Snapshot(ply).slots[1].label~="ГОТОВ", "missing body is not falsely ready")
     ply.GetNW2Entity=original
+    local prism = supportEntities[1]
+    local getNetworked = prism.GetNWString
+    for phase, label in pairs({redirect="ОТРАЖЕНИЕ", charged_fire="РАЗРЯД"}) do
+        function prism:GetNWString(key, fallback)
+            if key == "D6_SupportState" then return "active" end
+            if key == "D6_SupportCombat" then return phase end
+            return fallback
+        end
+        local slot = D6_SupportUI.Snapshot(ply).slots[1]
+        assert(slot.label == label, "Prisma HUD does not match its server combat phase")
+        if phase == "charged_fire" then assert(slot.color.r > slot.color.b, "Prisma burst color is amber") end
+    end
+    prism.GetNWString = getNetworked
 end
 
 if page == "intro" then
