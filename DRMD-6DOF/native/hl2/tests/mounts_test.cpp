@@ -64,6 +64,33 @@ int main()
     Check(mounts[0].socket == 0 && mounts[0].BeginAttempt(0.0f),
           "new pilot life starts with a ready mount and first socket");
 
+    Check(Near(GetMountGeometry(center, rolled, 2, 0, true).muzzle, Vec3(108.55f, 174, 313)),
+          "the plasma emitter stays centered in the rolled mount");
+    Check(RefitPlasmaMount(2, 0, true) == 0 && RefitPlasmaMount(2, 0, false) == 2,
+          "refit moves the single plasma module and keeps the other mounts kinetic");
+    Check(RefitPlasmaMount(2, 2, false) == -1 && RefitPlasmaMount(2, 4, true) == 2,
+          "refit can stow plasma and ignores an invalid mount");
+    PlasmaFeed plasma = {FlightEnergyMax, 0.0f, PlasmaCapacity};
+    Check(plasma.Ready(1.0f), "a charged plasma module is ready");
+    plasma.Fired(1.0f);
+    Check(plasma.energy == 92.0f && plasma.rounds == 5 &&
+          !plasma.Ready(1.44f) && plasma.Ready(1.46f),
+          "accepted shot spends energy and one cycle, with its own cadence");
+    for (int round = 1; round < PlasmaCapacity; ++round)
+        plasma.Fired(1.0f + round * 0.5f);
+    plasma.Advance(5.19f, 0.0f);
+    Check(plasma.rounds == 0 && !plasma.Ready(5.19f),
+          "empty capacitor blocks another shot before the refill interval");
+    plasma.Advance(5.21f, 0.0f);
+    Check(plasma.rounds == PlasmaCapacity && plasma.energy == 52.0f && plasma.Ready(5.21f),
+          "capacitor refill restores cycles without restoring spent energy");
+    plasma.energy = 7.0f;
+    Check(!plasma.Ready(6.0f), "loaded plasma cannot spend unavailable energy");
+    plasma.Advance(6.5f, 0.5f);
+    Check(plasma.Ready(6.5f) && plasma.energy > PlasmaCost, "energy recharges at the balanced feed rate");
+    plasma.Advance(30.0f, 23.5f);
+    Check(plasma.energy == FlightEnergyMax, "recharge is capped at the flight reservoir");
+
     std::printf("%d passed, %d failed\n", passed, failed);
     return failed ? 1 : 0;
 }

@@ -1,52 +1,59 @@
 diff --git a/src/game/client/hl2/c_basehlplayer.cpp b/src/game/client/hl2/c_basehlplayer.cpp
-index fbc40eb..c143425 100644
+index fbc40eb..476510f 100644
 --- a/src/game/client/hl2/c_basehlplayer.cpp
 +++ b/src/game/client/hl2/c_basehlplayer.cpp
-@@ -11,6 +11,8 @@
+@@ -11,6 +11,10 @@
  #include "c_ai_basenpc.h"
  #include "in_buttons.h"
  #include "collisionutils.h"
 +#include "c_te_effect_dispatch.h"
 +#include "effect_dispatch_data.h"
++#include "hl2/abaddon_mounts.h"
++#include "abaddon_arsenal_hud.h"
  
  // memdbgon must be the last include file in a .cpp file!!!
  #include "tier0/memdbgon.h"
-@@ -31,6 +33,7 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
+@@ -31,6 +35,10 @@ ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDL
  IMPLEMENT_CLIENTCLASS_DT(C_BaseHLPlayer, DT_HL2_Player, CHL2_Player)
  	RecvPropDataTable( RECVINFO_DT(m_HL2Local),0, &REFERENCE_RECV_TABLE(DT_HL2Local) ),
  	RecvPropBool( RECVINFO( m_fIsSprinting ) ),
 +	RecvPropBool( RECVINFO( m_bAbaddonFlight ) ),
++	RecvPropInt( RECVINFO( m_nAbaddonPlasmaMount ) ),
++	RecvPropFloat( RECVINFO( m_flAbaddonEnergy ) ),
++	RecvPropInt( RECVINFO( m_nAbaddonPlasmaRounds ) ),
  END_RECV_TABLE()
  
  BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
-@@ -38,6 +41,18 @@ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
+@@ -38,6 +46,17 @@ BEGIN_PREDICTION_DATA( C_BaseHLPlayer )
  	DEFINE_PRED_FIELD( m_fIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
  END_PREDICTION_DATA()
  
-+static void AbaddonMGShotCallback( const CEffectData &shot )
++static void AbaddonMountShotCallback( const CEffectData &shot )
 +{
 +	CEffectData flash;
 +	flash.m_vOrigin = shot.m_vStart;
 +	VectorAngles( shot.m_vNormal, flash.m_vAngles );
-+	flash.m_fFlags = MUZZLEFLASH_SMG1;
++	flash.m_fFlags = ( shot.m_fFlags & abaddon::PlasmaShotFlag ) ? MUZZLEFLASH_AR2 : MUZZLEFLASH_SMG1;
 +	DispatchEffect( "MuzzleFlash", flash );
-+	UTIL_Tracer( shot.m_vStart, shot.m_vOrigin, 0, TRACER_DONT_USE_ATTACHMENT, 5000.0f, false, "AR2Tracer" );
 +}
 +
-+DECLARE_CLIENT_EFFECT( "AbaddonMGShot", AbaddonMGShotCallback );
++DECLARE_CLIENT_EFFECT( "AbaddonMountShot", AbaddonMountShotCallback );
 +
  //-----------------------------------------------------------------------------
  // Purpose: Drops player's primary weapon
  //-----------------------------------------------------------------------------
-@@ -58,6 +73,7 @@ static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops
+@@ -58,6 +77,10 @@ static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops
  //-----------------------------------------------------------------------------
  C_BaseHLPlayer::C_BaseHLPlayer()
  {
 +	m_bAbaddonFlight = false;
++	m_nAbaddonPlasmaMount = -1;
++	m_flAbaddonEnergy = 0.0f;
++	m_nAbaddonPlasmaRounds = 0;
  	AddVar( &m_Local.m_vecPunchAngle, &m_Local.m_iv_vecPunchAngle, LATCH_SIMULATION_VAR );
  	AddVar( &m_Local.m_vecPunchAngleVel, &m_Local.m_iv_vecPunchAngleVel, LATCH_SIMULATION_VAR );
  
-@@ -624,11 +640,21 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
+@@ -624,11 +647,21 @@ void C_BaseHLPlayer::PerformClientSideNPCSpeedModifiers( float flFrameTime, CUse
  //-----------------------------------------------------------------------------
  // Purpose: Input handling
  //-----------------------------------------------------------------------------
@@ -70,19 +77,22 @@ index fbc40eb..c143425 100644
  		PerformClientSideObstacleAvoidance( TICK_INTERVAL, pCmd );
  		PerformClientSideNPCSpeedModifiers( TICK_INTERVAL, pCmd );
 diff --git a/src/game/client/hl2/c_basehlplayer.h b/src/game/client/hl2/c_basehlplayer.h
-index c6507e9..9bdf3ba 100644
+index c6507e9..e4ab5fc 100644
 --- a/src/game/client/hl2/c_basehlplayer.h
 +++ b/src/game/client/hl2/c_basehlplayer.h
-@@ -23,6 +23,8 @@ public:
+@@ -23,6 +23,11 @@ public:
  	DECLARE_CLIENTCLASS();
  	DECLARE_PREDICTABLE();
  
 +	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight; }
++	int GetAbaddonPlasmaMount() const { return m_nAbaddonPlasmaMount; }
++	float GetAbaddonEnergy() const { return m_flAbaddonEnergy; }
++	int GetAbaddonPlasmaRounds() const { return m_nAbaddonPlasmaRounds; }
 +
  						C_BaseHLPlayer();
  
  	virtual void		OnDataChanged( DataUpdateType_t updateType );
-@@ -47,6 +49,7 @@ public:
+@@ -47,6 +52,7 @@ public:
  	
  	// Input handling
  	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
@@ -90,14 +100,20 @@ index c6507e9..9bdf3ba 100644
  	void			PerformClientSideObstacleAvoidance( float flFrameTime, CUserCmd *pCmd );
  	void			PerformClientSideNPCSpeedModifiers( float flFrameTime, CUserCmd *pCmd );
  
-@@ -58,6 +61,7 @@ public:
+@@ -58,8 +64,13 @@ public:
  	EHANDLE				m_hClosestNPC;
  	float				m_flSpeedModTime;
  	bool				m_fIsSprinting;
 +	bool m_bAbaddonFlight;
  
  private:
++	int m_nAbaddonPlasmaMount;
++	float m_flAbaddonEnergy;
++	int m_nAbaddonPlasmaRounds;
++
  	C_BaseHLPlayer( const C_BaseHLPlayer & ); // not defined, not accessible
+ 	
+ 	bool				TestMove( const Vector &pos, float fVertDist, float radius, const Vector &objPos, const Vector &objDir );
 diff --git a/src/game/client/in_main.cpp b/src/game/client/in_main.cpp
 index 21eb30a..fbfb354 100644
 --- a/src/game/client/in_main.cpp
@@ -162,7 +178,7 @@ index bcf715a..bbfc086 100644
  	{
  #ifdef PORTAL
 diff --git a/src/game/server/hl2/hl2_player.cpp b/src/game/server/hl2/hl2_player.cpp
-index e7583f5..be2854b 100644
+index e7583f5..7b14acf 100644
 --- a/src/game/server/hl2/hl2_player.cpp
 +++ b/src/game/server/hl2/hl2_player.cpp
 @@ -13,6 +13,7 @@
@@ -173,7 +189,16 @@ index e7583f5..be2854b 100644
  #include "ai_interactions.h"
  #include "ai_squad.h"
  #include "igamemovement.h"
-@@ -78,6 +79,7 @@ extern ConVar autoaim_max_dist;
+@@ -55,6 +56,8 @@
+ #include "portal_player.h"
+ #endif // PORTAL
+ 
++#include "abaddon_projectile_server.h"
++
+ // memdbgon must be the last include file in a .cpp file!!!
+ #include "tier0/memdbgon.h"
+ 
+@@ -78,6 +81,7 @@ extern ConVar autoaim_max_dist;
  extern int gEvilImpulse101;
  
  ConVar sv_autojump( "sv_autojump", "0" );
@@ -181,40 +206,52 @@ index e7583f5..be2854b 100644
  
  ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
  ConVar hl2_normspeed( "hl2_normspeed", "190" );
-@@ -321,6 +323,7 @@ BEGIN_DATADESC( CHL2_Player )
+@@ -321,6 +325,12 @@ BEGIN_DATADESC( CHL2_Player )
  	DEFINE_FIELD( m_bSprintEnabled, FIELD_BOOLEAN ),
  	DEFINE_FIELD( m_flTimeAllSuitDevicesOff, FIELD_TIME ),
  	DEFINE_FIELD( m_fIsSprinting, FIELD_BOOLEAN ),
 +	DEFINE_FIELD( m_bAbaddonFlight, FIELD_BOOLEAN ),
++	DEFINE_FIELD( m_nAbaddonPlasmaMount, FIELD_INTEGER ),
++	DEFINE_FIELD( m_flAbaddonEnergy, FIELD_FLOAT ),
++	DEFINE_FIELD( m_nAbaddonPlasmaRounds, FIELD_INTEGER ),
++	DEFINE_FIELD( m_flAbaddonPlasmaReady, FIELD_TIME ),
++	DEFINE_FIELD( m_nAbaddonShotSequence, FIELD_INTEGER ),
  	DEFINE_FIELD( m_fIsWalking, FIELD_BOOLEAN ),
  
  	/*
-@@ -389,6 +392,8 @@ END_DATADESC()
+@@ -389,6 +399,10 @@ END_DATADESC()
  
  CHL2_Player::CHL2_Player()
  {
 +	m_bAbaddonFlight = false;
++	m_nAbaddonShotSequence = 0;
 +	ResetAbaddonMounts();
++	ResetAbaddonArsenal();
  	m_nNumMissPositions	= 0;
  	m_pPlayerAISquad = 0;
  	m_bSprintEnabled = true;
-@@ -419,6 +424,7 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
+@@ -419,6 +433,10 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100
  IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
  	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
  	SendPropBool( SENDINFO(m_fIsSprinting) ),
 +	SendPropBool( SENDINFO(m_bAbaddonFlight) ),
++	SendPropInt( SENDINFO(m_nAbaddonPlasmaMount), 4 ),
++	SendPropFloat( SENDINFO(m_flAbaddonEnergy), 10, 0, 0.0f, abaddon::FlightEnergyMax ),
++	SendPropInt( SENDINFO(m_nAbaddonPlasmaRounds), 3, SPROP_UNSIGNED ),
  END_SEND_TABLE()
  
  
-@@ -435,6 +441,7 @@ void CHL2_Player::Precache( void )
+@@ -435,6 +453,9 @@ void CHL2_Player::Precache( void )
  	PrecacheScriptSound( "HL2Player.TrainUse" );
  	PrecacheScriptSound( "HL2Player.Use" );
  	PrecacheScriptSound( "HL2Player.BurnPain" );
 +	PrecacheScriptSound( "Weapon_SMG1.Single" );
++	PrecacheScriptSound( "Weapon_AR2.Single" );
++	UTIL_PrecacheOther( "abaddon_flight_bolt" );
  }
  
  //-----------------------------------------------------------------------------
-@@ -1047,8 +1054,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
+@@ -1047,8 +1068,65 @@ bool CHL2_Player::HandleInteraction(int interactionType, void *data, CBaseCombat
  }
  
  
@@ -280,16 +317,17 @@ index e7583f5..be2854b 100644
  	// Handle FL_FROZEN.
  	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
  	{
-@@ -1108,6 +1172,8 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
+@@ -1108,6 +1186,9 @@ void CHL2_Player::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
  //-----------------------------------------------------------------------------
  void CHL2_Player::Spawn(void)
  {
 +	m_bAbaddonFlight = false;
 +	ResetAbaddonMounts();
++	ResetAbaddonArsenal();
  
  #ifndef HL2MP
  #ifndef PORTAL
-@@ -2461,6 +2527,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
+@@ -2461,6 +2542,7 @@ void CHL2_Player::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
  //-----------------------------------------------------------------------------
  void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
  {
@@ -297,7 +335,7 @@ index e7583f5..be2854b 100644
  	BaseClass::Event_Killed( info );
  
  	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-@@ -3279,6 +3346,8 @@ void CHL2_Player::UpdateClientData( void )
+@@ -3279,6 +3361,8 @@ void CHL2_Player::UpdateClientData( void )
  void CHL2_Player::OnRestore()
  {
  	BaseClass::OnRestore();
@@ -306,7 +344,7 @@ index e7583f5..be2854b 100644
  	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
  }
  
-@@ -3586,9 +3655,115 @@ void CHL2_Player::PlayUseDenySound()
+@@ -3586,9 +3670,172 @@ void CHL2_Player::PlayUseDenySound()
  }
  
  
@@ -314,7 +352,62 @@ index e7583f5..be2854b 100644
 +{
 +	for ( int i = 0; i < abaddon::MountCount; ++i )
 +		m_abaddonMounts[i] = abaddon::MountCycle();
-+	m_nAbaddonShotSequence = 0;
++}
++
++void CHL2_Player::ResetAbaddonArsenal()
++{
++	// The upper mount starts with the single plasma module. Other ports use MG.
++	m_nAbaddonPlasmaMount = 2;
++	const abaddon::PlasmaFeed initial = {abaddon::FlightEnergyMax, 0.0f, abaddon::PlasmaCapacity};
++	WriteAbaddonPlasma( initial );
++}
++
++abaddon::PlasmaFeed CHL2_Player::ReadAbaddonPlasma() const
++{
++	const abaddon::PlasmaFeed feed = {m_flAbaddonEnergy.Get(), m_flAbaddonPlasmaReady, m_nAbaddonPlasmaRounds.Get()};
++	return feed;
++}
++
++void CHL2_Player::WriteAbaddonPlasma( const abaddon::PlasmaFeed &feed )
++{
++	m_flAbaddonEnergy = feed.energy;
++	m_flAbaddonPlasmaReady = feed.readyAt;
++	m_nAbaddonPlasmaRounds = feed.rounds;
++}
++
++void CHL2_Player::RefitAbaddonMount( int mount, bool plasma )
++{
++	m_nAbaddonPlasmaMount = abaddon::RefitPlasmaMount( m_nAbaddonPlasmaMount.Get(), mount, plasma );
++}
++
++void CHL2_Player::PrintAbaddonArsenal()
++{
++	char status[144];
++	V_snprintf( status, sizeof( status ), "ABADDON_ARSENAL plasma_mount=%d energy=%.2f cycles=%d next=%.3f\n",
++		m_nAbaddonPlasmaMount.Get() + 1, m_flAbaddonEnergy.Get(), m_nAbaddonPlasmaRounds.Get(), m_flAbaddonPlasmaReady );
++	ClientPrint( this, HUD_PRINTCONSOLE, status );
++}
++
++CON_COMMAND( abaddon_mount_set, "Set mount 1-4 to mg or plasma while flying" )
++{
++	CHL2_Player *pilot = dynamic_cast<CHL2_Player *>( UTIL_GetCommandClient() );
++	if ( !pilot || !pilot->IsAbaddonFlightEnabled() || !pilot->CanAbaddonFly() )
++		return;
++	if ( args.ArgC() != 3 || V_strlen( args[1] ) != 1 || args[1][0] < '1' || args[1][0] > '4' ||
++		( V_stricmp( args[2], "mg" ) && V_stricmp( args[2], "plasma" ) ) )
++	{
++		ClientPrint( pilot, HUD_PRINTCONSOLE, "Usage: abaddon_mount_set <1-4> <mg|plasma>\n" );
++		return;
++	}
++	pilot->RefitAbaddonMount( args[1][0] - '1', !V_stricmp( args[2], "plasma" ) );
++	pilot->PrintAbaddonArsenal();
++}
++
++CON_COMMAND( abaddon_arsenal_status, "Print Flight Lab module position, energy and capacitor" )
++{
++	CHL2_Player *pilot = dynamic_cast<CHL2_Player *>( UTIL_GetCommandClient() );
++	if ( pilot )
++		pilot->PrintAbaddonArsenal();
 +}
 +
 +static abaddon::Vec3 AbaddonOffset( const Vector &vec )
@@ -322,16 +415,21 @@ index e7583f5..be2854b 100644
 +	return abaddon::Vec3( vec.x, vec.y, vec.z );
 +}
 +
-+static bool AbaddonClearance( const Vector &start, const Vector &end, CHL2_Player *pilot )
++static bool AbaddonClearance( const Vector &start, const Vector &end, float radius, CHL2_Player *pilot )
 +{
 +	trace_t trace;
-+	UTIL_TraceLine( start, end, MASK_SHOT, pilot, COLLISION_GROUP_NONE, &trace );
++	const Vector extents( radius, radius, radius );
++	UTIL_TraceHull( start, end, -extents, extents, MASK_SHOT_HULL, pilot, COLLISION_GROUP_NONE, &trace );
 +	return !trace.DidHit();
 +}
 +
 +void CHL2_Player::FireAbaddonMounts( int buttons )
 +{
 +	static const int mountButtons[abaddon::MountCount] = {IN_ATTACK, IN_ATTACK2, IN_GRENADE1, IN_GRENADE2};
++	const float now = gpGlobals->curtime;
++	abaddon::PlasmaFeed feed = ReadAbaddonPlasma();
++	feed.Advance( now, gpGlobals->frametime );
++	WriteAbaddonPlasma( feed );
 +	if ( !( buttons & ( IN_ATTACK | IN_ATTACK2 | IN_GRENADE1 | IN_GRENADE2 ) ) )
 +		return;
 +
@@ -343,21 +441,25 @@ index e7583f5..be2854b 100644
 +	trace_t aim;
 +	UTIL_TraceLine( eye, eye + forward * abaddon::MountRange, MASK_SHOT, this, COLLISION_GROUP_NONE, &aim );
 +	const Vector aimPoint = eye + forward * MAX( aim.fraction * abaddon::MountRange, 96.0f );
-+	const float now = gpGlobals->curtime;
++	const AbaddonBoltSpec kinetic = {ABADDON_BOLT_KINETIC, abaddon::MountDamage, 0.0f, 0.0f, 3.0f, abaddon::MountRange, 5.0f};
++	const AbaddonBoltSpec plasmaBolt = {ABADDON_BOLT_PLASMA, 45.0f, 25.0f, 120.0f, 8.0f, abaddon::MountRange, 5.0f};
++	const Vector drift = GetAbsVelocity();
 +
-+	// Damage and presentation come from the same server shot, with no predicted stock shot.
++	// The server publishes the muzzle event only after allocating a physical bolt.
 +	CDisablePredictionFiltering sendToOwner;
 +	for ( int i = 0; i < abaddon::MountCount; ++i )
 +	{
 +		abaddon::MountCycle &cycle = m_abaddonMounts[i];
-+		if ( !( buttons & mountButtons[i] ) || !cycle.BeginAttempt( now ) )
++		const bool plasma = i == m_nAbaddonPlasmaMount.Get();
++		if ( !( buttons & mountButtons[i] ) || ( plasma && !feed.Ready( now ) ) || !cycle.BeginAttempt( now ) )
 +			continue;
 +
-+		const int socket = cycle.socket;
-+		const abaddon::MountGeometry geometry = abaddon::GetMountGeometry( AbaddonOffset( center ), basis, i, socket );
++		const AbaddonBoltSpec &spec = plasma ? plasmaBolt : kinetic;
++		const int socket = plasma ? 0 : cycle.socket;
++		const abaddon::MountGeometry geometry = abaddon::GetMountGeometry( AbaddonOffset( center ), basis, i, socket, plasma );
 +		const Vector mount( geometry.mount.x, geometry.mount.y, geometry.mount.z );
 +		const Vector muzzle( geometry.muzzle.x, geometry.muzzle.y, geometry.muzzle.z );
-+		if ( !AbaddonClearance( center, mount, this ) || !AbaddonClearance( mount, muzzle, this ) )
++		if ( !AbaddonClearance( center, mount, spec.hullRadius, this ) || !AbaddonClearance( mount, muzzle, spec.hullRadius, this ) )
 +		{
 +			if ( abaddon_mount_trace.GetBool() )
 +				Msg( "ABADDON_MOUNT blocked mount=%d socket=%d time=%.3f\n", i + 1, socket + 1, now );
@@ -366,43 +468,36 @@ index e7583f5..be2854b 100644
 +
 +		Vector direction = aimPoint - muzzle;
 +		VectorNormalize( direction );
-+		trace_t hit;
-+		UTIL_TraceLine( muzzle, muzzle + direction * abaddon::MountRange, MASK_SHOT, this, COLLISION_GROUP_NONE, &hit );
-+		if ( hit.startsolid || hit.allsolid )
++		const Vector velocity = direction * ( plasma ? abaddon::PlasmaSpeed : abaddon::PulseSpeed ) + drift;
++		const unsigned int sequence = m_nAbaddonShotSequence + 1;
++		if ( !AbaddonLaunchBolt( this, muzzle, velocity, spec, sequence ) )
 +			continue;
 +
-+		cycle.Fired();
-+		const unsigned int sequence = ++m_nAbaddonShotSequence;
-+		if ( hit.DidHit() )
++		m_nAbaddonShotSequence = sequence;
++		if ( plasma )
 +		{
-+			UTIL_ImpactTrace( &hit, DMG_BULLET );
-+			if ( hit.m_pEnt && !hit.DidHitWorld() )
-+			{
-+				ClearMultiDamage();
-+				CTakeDamageInfo damage( this, this, abaddon::MountDamage, DMG_BULLET | DMG_NEVERGIB );
-+				damage.SetDamageForce( direction * 1500.0f );
-+				damage.SetDamagePosition( hit.endpos );
-+				hit.m_pEnt->DispatchTraceAttack( damage, direction, &hit );
-+				ApplyMultiDamage();
-+			}
++			feed.Fired( now );
++			WriteAbaddonPlasma( feed );
++		}
++		else
++		{
++			cycle.Fired();
 +		}
 +
-+		// This named effect represents weapon_d6_mg/hitscan. The client uses the
-+		// same world line for flash and tracer without a viewmodel attachment.
 +		CEffectData shot;
 +		shot.m_vStart = muzzle;
-+		shot.m_vOrigin = hit.endpos;
++		shot.m_vOrigin = muzzle;
 +		shot.m_vNormal = direction;
-+		shot.m_fFlags = i + 1;
++		shot.m_fFlags = (i + 1) | (plasma ? abaddon::PlasmaShotFlag : 0);
 +		shot.m_nHitBox = socket + 1;
 +		shot.m_nDamageType = sequence;
 +		shot.m_flScale = now;
 +		CSingleUserRecipientFilter owner( this );
-+		DispatchEffect( "AbaddonMGShot", shot, owner );
-+		EmitSound( owner, SOUND_FROM_WORLD, "Weapon_SMG1.Single", &muzzle );
++		DispatchEffect( "AbaddonMountShot", shot, owner );
++		EmitSound( owner, SOUND_FROM_WORLD, plasma ? "Weapon_AR2.Single" : "Weapon_SMG1.Single", &muzzle );
 +		if ( abaddon_mount_trace.GetBool() )
-+			Msg( "ABADDON_MOUNT shot mount=%d socket=%d seq=%u time=%.3f muzzle=%.2f,%.2f,%.2f hit=%d\n",
-+				i + 1, socket + 1, sequence, now, muzzle.x, muzzle.y, muzzle.z, hit.DidHit() );
++			Msg( "ABADDON_MOUNT shot mount=%d socket=%d seq=%u kind=%s time=%.3f muzzle=%.2f,%.2f,%.2f\n",
++				i + 1, socket + 1, sequence, plasma ? "plasma" : "kinetic", now, muzzle.x, muzzle.y, muzzle.z );
 +	}
 +}
 +
@@ -424,7 +519,7 @@ index e7583f5..be2854b 100644
  	if ( m_bPlayUseDenySound )
  	{
 diff --git a/src/game/server/hl2/hl2_player.h b/src/game/server/hl2/hl2_player.h
-index 6e72bb9..b03377c 100644
+index 6e72bb9..07c8e8d 100644
 --- a/src/game/server/hl2/hl2_player.h
 +++ b/src/game/server/hl2/hl2_player.h
 @@ -14,6 +14,7 @@
@@ -435,25 +530,34 @@ index 6e72bb9..b03377c 100644
  
  class CAI_Squad;
  class CPropCombineBall;
-@@ -92,6 +93,10 @@ public:
+@@ -92,6 +93,12 @@ public:
  	DECLARE_SERVERCLASS();
  	DECLARE_DATADESC();
  
 +	bool IsAbaddonFlightEnabled() const { return m_bAbaddonFlight.Get(); }
 +	bool CanAbaddonFly();
 +	void SetAbaddonFlightEnabled( bool enabled );
++	void RefitAbaddonMount( int mount, bool plasma );
++	void PrintAbaddonArsenal();
 +
  	virtual void		CreateCorpse( void ) { CopyToBodyQue( this ); };
  
  	virtual void		Precache( void );
-@@ -311,6 +316,11 @@ private:
+@@ -311,6 +318,18 @@ private:
  	float				m_fAutoSprintMinTime;	// Minimum time to maintain autosprint regardless of player speed. 
  
  	CNetworkVar( bool, m_fIsSprinting );
 +	CNetworkVar( bool, m_bAbaddonFlight );
++	CNetworkVar( int, m_nAbaddonPlasmaMount );
++	CNetworkVar( float, m_flAbaddonEnergy );
++	CNetworkVar( int, m_nAbaddonPlasmaRounds );
++	float m_flAbaddonPlasmaReady;
 +	abaddon::MountCycle m_abaddonMounts[abaddon::MountCount];
 +	unsigned int m_nAbaddonShotSequence;
 +	void ResetAbaddonMounts();
++	void ResetAbaddonArsenal();
++	abaddon::PlasmaFeed ReadAbaddonPlasma() const;
++	void WriteAbaddonPlasma( const abaddon::PlasmaFeed &feed );
 +	void FireAbaddonMounts( int buttons );
  	CNetworkVarForDerived( bool, m_fIsWalking );
  

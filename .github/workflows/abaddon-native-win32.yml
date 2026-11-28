@@ -1,0 +1,190 @@
+name: Abaddon native Win32 SDK experiment
+
+on:
+  pull_request:
+    paths:
+      - 'DRMD-6DOF/native/hl2/**'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.*'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.*'
+      - 'DRMD-6DOF/descent_scanner/materials/**'
+      - '.github/workflows/abaddon-native-win32.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-win32:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      ABADDON_SDK_REVISION: 77567eb4bce8d7b6b7f73e929fcde3a331c0216e
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: ValveSoftware/source-sdk-2013
+          ref: ${{ env.ABADDON_SDK_REVISION }}
+          path: source-sdk-2013
+          persist-credentials: false
+      - name: Apply native overlay to the pinned Valve SDK
+        shell: pwsh
+        run: |
+          $sdk = Join-Path $env:GITHUB_WORKSPACE 'source-sdk-2013'
+          if ((git -C $sdk rev-parse HEAD) -ne $env:ABADDON_SDK_REVISION) {
+            throw 'The Source SDK checkout differs from the pinned singleplayer revision.'
+          }
+          python DRMD-6DOF/native/hl2/setup_hl2.py patch $sdk
+          if ($LASTEXITCODE -ne 0) { throw 'Source SDK overlay failed.' }
+      - name: Generate the HL2 Win32 projects with Valve VPC
+        shell: pwsh
+        working-directory: source-sdk-2013/src
+        run: |
+          # Stock VPC queries the VS2013 project-extension key to write the solution.
+          reg.exe add 'HKLM\SOFTWARE\Microsoft\VisualStudio\12.0\Projects\{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}' /v DefaultProjectExtension /t REG_SZ /d vcxproj /f /reg:32
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to register the VPC solution extension.' }
+          # The v143 target uses kernel32's EncodePointer and DecodePointer.
+          # Omit Valve's XP SP1 compatibility object before VPC emits link inputs.
+          $vpc = Join-Path (Get-Location) 'vpc_scripts/source_dll_win32_base.vpc'
+          $dllProject = [IO.File]::ReadAllText($vpc)
+          $xpObject = [regex]'(?ms)^\t\t\$File[ \t]+"\$SRCDIR\\public\\tier0\\pointeroverride\.asm" \[\$WIN32\]\s*\{.*?^\t\t\}[ \t]*\r?$'
+          if ($xpObject.Matches($dllProject).Count -ne 1) { throw 'Unexpected XP pointer shim definition.' }
+          [IO.File]::WriteAllText($vpc, $xpObject.Replace($dllProject, ''))
+          & .\devtools\bin\vpc.exe /win32 /hl2 /2013 +game /mksln abaddon.sln
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path abaddon.sln)) {
+            throw 'Valve VPC did not generate the HL2 solution.'
+          }
+      - name: Build the SDK with MSBuild Release Win32
+        shell: pwsh
+        working-directory: source-sdk-2013/src
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $msbuild = & $vswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\Current\Bin\MSBuild.exe'
+          if (-not $msbuild) { throw 'MSBuild was not found.' }
+
+          # VS2013 used typeinfo.h and these CRT annotation names. Keep a
+          # temporary MSVC header shim outside the pinned SDK checkout.
+          $compat = Join-Path $env:RUNNER_TEMP 'abaddon-vc143-headers'
+          New-Item -ItemType Directory -Path $compat | Out-Null
+          Set-Content -Path (Join-Path $compat 'typeinfo.h') -Value '#include <typeinfo>' -Encoding ascii
+          $annotations = Join-Path $compat 'legacy_annotations.h'
+          @'
+          #ifndef _CRTNOALIAS
+          #define _CRTNOALIAS __declspec(noalias)
+          #endif
+          #ifndef _CRTRESTRICT
+          #define _CRTRESTRICT __declspec(restrict)
+          #endif
+          #pragma comment(lib, "legacy_stdio_definitions.lib")
+          '@ | Set-Content -Path $annotations -Encoding ascii
+          $env:CL = ('/I"{0}" /FI"{1}"' -f $compat, $annotations)
+          $env:_CL_ = '/WX- /Zc:implicitNoexcept-'
+          # Modern MSVC needs derived VGUI panels to access the virtual
+          # layout marker when it synthesizes constructors and destructors.
+          $panel = Join-Path (Get-Location) 'public/vgui_controls/Panel.h'
+          $old = 'class Panel : public IClientPanel, virtual IForceVirtualInheritancePanel'
+          $new = 'class Panel : public IClientPanel, public virtual IForceVirtualInheritancePanel'
+          $panelText = [IO.File]::ReadAllText($panel)
+          if (-not $panelText.Contains($old)) { throw 'Unexpected Valve Panel declaration.' }
+          [IO.File]::WriteAllText($panel, $panelText.Replace($old, $new))
+          # Use Valve's UCRT allocator adapter with the SP tier0 headers and
+          # libraries. Sharing the engine allocator across DLLs is essential.
+          $allocator = Join-Path (Get-Location) 'public/tier0/memoverride.cpp'
+          $adapterRev = '3e957b70b167929f120360115d359d1ecb4c1699'
+          $adapterURL = "https://raw.githubusercontent.com/ValveSoftware/source-sdk-2013/$adapterRev/src/public/tier0/memoverride.cpp"
+          Invoke-WebRequest -Uri $adapterURL -OutFile $allocator
+          if ((Get-FileHash $allocator).Hash -ne '95937d20eb4995245346f02ccdd192c457c9e53181a50075446d337a2a696d43') {
+            throw 'The Valve UCRT adapter does not match the pinned file.'
+          }
+          # The old x86 particles archive exports its own inline C99 hypot
+          # wrapper. Keep its calls to the CRT _hypot implementation intact.
+          $objcopy = Get-Command llvm-objcopy.exe -ErrorAction SilentlyContinue
+          if (-not $objcopy) { $objcopy = Get-Item "${env:ProgramFiles}\LLVM\bin\llvm-objcopy.exe" }
+          $particles = Join-Path (Get-Location) 'lib/public/particles.lib'
+          $adapted = Join-Path $compat 'particles.lib'
+          & $objcopy --redefine-sym '_hypot=_AbaddonLegacyParticleHypot' $particles $adapted
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to isolate the legacy particles CRT wrapper.' }
+          Copy-Item $adapted $particles -Force
+          # Hosted images supply v143, while VPC generates v120_xp. This is
+          # an explicit compatibility build and must pass linking to publish.
+          $build = @('/m', '/v:minimal', '/p:Configuration=Release', '/p:Platform=Win32',
+            '/p:PlatformToolset=v143', '/p:WindowsTargetPlatformVersion=10.0')
+          $libraries = @('tier1/tier1.vcxproj', 'mathlib/mathlib.vcxproj',
+            'raytrace/raytrace.vcxproj', 'vgui2/vgui_controls/vgui_controls.vcxproj')
+          $modules = @('game/client/client_hl2.vcxproj', 'game/server/server_hl2.vcxproj')
+          $bin = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32-bin'
+          New-Item -ItemType Directory -Path $bin | Out-Null
+          # An older VPC solution can return success with no projects selected.
+          # Build the generated VCXPROJs directly and use an empty module output directory.
+          foreach ($project in $libraries + $modules) {
+            if (-not (Test-Path $project -PathType Leaf)) { throw "VPC did not generate $project." }
+            [xml]$definition = Get-Content -LiteralPath $project -Raw
+            $configs = $definition.SelectNodes("//*[local-name()='ProjectConfiguration']/@Include")
+            if ($configs.Value -notcontains 'Release|Win32') {
+              throw "$project lacks Release|Win32. Generated configurations: $($configs.Value -join ', ')"
+            }
+            Write-Host "Building $project Release|Win32"
+            $output = @()
+            if ($modules -contains $project) {
+              # The stock post-build copies output into a developer game
+              # install. This job stages the already linked DLLs below.
+              $output = @("/p:OutDir=$bin/", '/p:PostBuildEventUseInBuild=false')
+            }
+            & $msbuild $project @build @output
+            if ($LASTEXITCODE -ne 0) { throw "MSBuild failed for $project." }
+          }
+          foreach ($name in 'client.dll', 'server.dll') {
+            if (-not (Test-Path (Join-Path $bin $name) -PathType Leaf)) {
+              throw "MSBuild did not link $name into $bin."
+            }
+          }
+      - name: Validate and stage the two game DLLs
+        shell: pwsh
+        run: |
+          $bin = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32-bin'
+          $artifact = Join-Path $env:RUNNER_TEMP 'abaddon-native-win32'
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $vsPath = & $vswhere -latest -products '*' -property installationPath
+          $dumpbin = Get-ChildItem (Join-Path $vsPath 'VC/Tools/MSVC/*/bin/Hostx64/x86/dumpbin.exe') |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $dumpbin) { throw 'dumpbin was not found.' }
+          foreach ($name in 'client.dll', 'server.dll') {
+            $dll = Join-Path $bin $name
+            if (-not (Test-Path $dll)) { throw "Missing built ${name}." }
+            $image = [System.IO.File]::ReadAllBytes($dll)
+            $pe = [BitConverter]::ToInt32($image, 0x3c)
+            if ([BitConverter]::ToUInt32($image, $pe) -ne 0x4550 -or
+                [BitConverter]::ToUInt16($image, $pe + 4) -ne 0x14c -or
+                [BitConverter]::ToUInt16($image, $pe + 24) -ne 0x10b -or
+                ([BitConverter]::ToUInt16($image, $pe + 22) -band 0x2000) -eq 0) {
+              throw "${name} is not a PE32 i386 DLL."
+            }
+            if (-not [Text.Encoding]::ASCII.GetString($image).Contains('AbaddonMountShot')) {
+              throw "${name} does not contain the native arsenal event."
+            }
+            $exports = & $dumpbin.FullName /nologo /exports $dll
+            if ($LASTEXITCODE -ne 0 -or -not ($exports -match '\bCreateInterface\b')) {
+              throw "${name} does not export CreateInterface."
+            }
+          }
+          python DRMD-6DOF/native/hl2/setup_hl2.py deploy $bin (Join-Path $artifact 'abaddon_native')
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to stage the native mod.' }
+          @{
+            revision = (git rev-parse HEAD)
+            source_sdk_revision = $env:ABADDON_SDK_REVISION
+            platform = 'windows-i386'
+            toolset = 'v143'
+            checks = @('PE32 DLL', 'i386', 'CreateInterface export', 'AbaddonMountShot')
+            live_client = 'not-run'
+          } | ConvertTo-Json | Set-Content -Path (Join-Path $artifact 'BUILD_INFO.json') -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Abaddon-Native-Win32
+          path: ${{ runner.temp }}/abaddon-native-win32
+          if-no-files-found: error
+          retention-days: 14
