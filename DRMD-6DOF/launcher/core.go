@@ -20,8 +20,9 @@ import (
 type Target string
 
 const (
-	TargetGMod Target = "gmod"
-	TargetHL2  Target = "hl2-content"
+	TargetGMod      Target = "gmod"
+	TargetHL2       Target = "hl2-content"
+	TargetHL2Native Target = "hl2-native"
 )
 
 type Installation struct {
@@ -30,6 +31,7 @@ type Installation struct {
 	GameDir    string
 	Executable string
 	SteamRoot  string
+	NativeRoot string
 }
 
 type LaunchOptions struct {
@@ -142,7 +144,7 @@ func regularFile(name string) error {
 // ValidateInstallation accepts the install root, game directory, or an actual
 // executable, including Garry's Mod's bin/win64/gmod.exe.
 func ValidateInstallation(selected string, target Target) (Installation, error) {
-	if target != TargetGMod && target != TargetHL2 {
+	if target != TargetGMod && target != TargetHL2 && target != TargetHL2Native {
 		return Installation{}, fmt.Errorf("unknown target %q", target)
 	}
 	if strings.TrimSpace(selected) == "" {
@@ -165,12 +167,16 @@ func ValidateInstallation(selected string, target Target) (Installation, error) 
 	}
 	game := "garrysmod"
 	exes := []string{"bin/win64/gmod.exe", "gmod.exe", "hl2.exe"}
-	if target == TargetHL2 {
+	if target == TargetHL2 || target == TargetHL2Native {
 		game, exes = "hl2", []string{"hl2.exe"}
 	}
 	for depth, candidate := 0, abs; depth < 5; depth, candidate = depth+1, filepath.Dir(candidate) {
 		gameDir := filepath.Join(candidate, game)
-		if regularFile(filepath.Join(gameDir, "gameinfo.txt")) == nil {
+		gameInfo := regularFile(filepath.Join(gameDir, "gameinfo.txt")) == nil
+		if target == TargetHL2Native && !gameInfo {
+			gameInfo = regularFile(filepath.Join(candidate, "bin", "engine.dll")) == nil
+		}
+		if gameInfo {
 			for _, exe := range exes {
 				executable := filepath.Join(candidate, filepath.FromSlash(exe))
 				if regularFile(executable) == nil {
@@ -368,7 +374,7 @@ func DiscoverInstallations(steamRoots []string) []Installation {
 		for _, spec := range []struct {
 			app    string
 			target Target
-		}{{"4000", TargetGMod}, {"220", TargetHL2}} {
+		}{{"4000", TargetGMod}, {"220", TargetHL2}, {"243730", TargetHL2Native}} {
 			pairs, err := readVDF(filepath.Join(lib.root, "steamapps", "appmanifest_"+spec.app+".acf"))
 			if err != nil {
 				continue
@@ -389,6 +395,9 @@ func DiscoverInstallations(steamRoots []string) []Installation {
 			key := string(inst.Target) + ":" + strings.ToLower(inst.Root)
 			if !seenGames[key] {
 				inst.SteamRoot = lib.steam
+				if inst.Target == TargetHL2Native {
+					inst.NativeRoot = discoverNativeRoot(inst)
+				}
 				found = append(found, inst)
 				seenGames[key] = true
 			}
@@ -745,6 +754,9 @@ func commitDirectory(state, destination, replacement string, target Target, oper
 }
 
 func InstallBundle(bundleRoot string, inst Installation) (string, error) {
+	if inst.Target == TargetHL2Native {
+		return "", errors.New("Flight Lab uses a separate Source SDK build with Windows client.dll and server.dll")
+	}
 	validated, err := ValidateInstallation(inst.Root, inst.Target)
 	if err != nil {
 		return "", err
@@ -847,6 +859,9 @@ func InstallBundle(bundleRoot string, inst Installation) (string, error) {
 }
 
 func RollbackInstallation(inst Installation) (string, error) {
+	if inst.Target == TargetHL2Native {
+		return "", errors.New("Flight Lab is not managed by the content installer")
+	}
 	validated, err := ValidateInstallation(inst.Root, inst.Target)
 	if err != nil {
 		return "", err
@@ -907,14 +922,20 @@ func ConfigureLaunch(inst Installation, opts LaunchOptions) (string, []string, e
 		return "", nil, err
 	}
 	validated.SteamRoot = inst.SteamRoot
+	validated.NativeRoot = inst.NativeRoot
 	inst = validated
-	switch opts.Map {
-	case "", "d6_city17_drain", "d6_reactor_escape", "d6_relay_vault":
-	default:
+	targetDir := installationDestination(inst)
+	if inst.Target == TargetHL2Native {
+		targetDir, err = validateNativeLaunch(inst)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+	if !targetAllowsMap(inst.Target, opts.Map) {
 		return "", nil, fmt.Errorf("unsupported map %q", opts.Map)
 	}
 	if opts.Map != "" {
-		mapFile := filepath.Join(installationDestination(inst), "maps", opts.Map+".bsp")
+		mapFile := filepath.Join(targetDir, "maps", opts.Map+".bsp")
 		if err := regularFile(mapFile); err != nil {
 			return "", nil, fmt.Errorf("карта %s не установлена; сначала установите пакет Abaddon: %w", opts.Map, err)
 		}
@@ -938,7 +959,11 @@ func ConfigureLaunch(inst Installation, opts LaunchOptions) (string, []string, e
 			return "", nil, fmt.Errorf("unknown graphics profile %q", profile)
 		}
 		cfg := configMarker + "// Source lighting/shadow settings; not a PBR shader or a reset of previous engine settings.\n" + commands
-		if err := writeAtomic(filepath.Join(inst.GameDir, "cfg", configName), []byte(cfg), configMarker); err != nil {
+		cfgDir := inst.GameDir
+		if inst.Target == TargetHL2Native {
+			cfgDir = targetDir
+		}
+		if err := writeAtomic(filepath.Join(cfgDir, "cfg", configName), []byte(cfg), configMarker); err != nil {
 			return "", nil, err
 		}
 	}
@@ -950,8 +975,13 @@ func ConfigureLaunch(inst Installation, opts LaunchOptions) (string, []string, e
 		app := "4000"
 		if inst.Target == TargetHL2 {
 			app = "220"
+		} else if inst.Target == TargetHL2Native {
+			app = "243730"
 		}
 		args = append(args, "-applaunch", app)
+		if inst.Target == TargetHL2Native {
+			args = append(args, "-game", targetDir)
+		}
 	} else {
 		game := "garrysmod"
 		if inst.Target == TargetHL2 {

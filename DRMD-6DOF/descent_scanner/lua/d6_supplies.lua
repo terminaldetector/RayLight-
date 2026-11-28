@@ -63,7 +63,7 @@ hook.Add("InitPostEntity","D6_PlaceSupplies",populate)
 hook.Add("PostCleanupMap","D6_ReplaceSupplies",populate)
 
 function S.VaultReserve(ply,wave)
-    if game.GetMap()~=S.Vault then return end
+    if game.GetMap()~=S.Vault and game.GetMap()~=D6_Reactor.RogueMap then return end
     if IsValid(ply.D6_VaultReserve) then ply.D6_VaultReserve:Remove() end
     local mark=ents.FindByName("d6_supply_reload_"..((wave-1)%3+1))[1]
     if not IsValid(mark) then return end

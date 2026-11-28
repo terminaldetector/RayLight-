@@ -35,7 +35,7 @@ func get(t *testing.T, name string) string {
 func gameAt(t *testing.T, root string, target Target) Installation {
 	t.Helper()
 	game, exe := "garrysmod", "bin/win64/gmod.exe"
-	if target == TargetHL2 {
+	if target == TargetHL2 || target == TargetHL2Native {
 		game, exe = "hl2", "hl2.exe"
 	}
 	put(t, filepath.Join(root, game, "gameinfo.txt"), "\"GameInfo\" { \"game\" \"Fixture\" }")

@@ -119,6 +119,7 @@ end
 
 function D6_Wep.Targetable(owner, target)
     if not IsValid(target) or target == owner or target:Health() <= 0 then return false end
+    if SERVER and target.D6_ReactorState then return D6_Reactor.Hittable(target, owner) end
     if target:IsPlayer() then return target:Alive() end
     if target:IsNPC() then return target:Disposition(owner) ~= D_LI end
     return target:IsNextBot()
@@ -546,7 +547,7 @@ if SERVER then
     function D6_Wep.SplashDamage(attacker, inflictor, center, baseDmg, splashDmg, radius, dmgType, forceScale, ignore)
         for _, e in ipairs(ents.FindInSphere(center, radius)) do
             if IsValid(e) and e ~= ignore and (e:IsNPC() or e:IsPlayer() or e:IsNextBot()
-            or e:GetClass() == "func_breakable" or e:GetClass() == "func_breakable_surf") then
+            or e.D6_EpisodeTarget or e:GetClass() == "func_breakable" or e:GetClass() == "func_breakable_surf") then
                 local toward = e:WorldSpaceCenter() - center
                 local tr = util.TraceLine({start = center + toward:GetNormalized()*2, endpos = e:WorldSpaceCenter(),
                     filter = inflictor, mask = MASK_SHOT})

@@ -15,7 +15,7 @@ end
 
 function A.IsCombat(ent)
     if not IsValid(ent) then return false end
-    if SERVER then return members[ent] == true end
+    if SERVER then return members[ent] == true and not ent:IsMarkedForDeletion() end
     return ent:GetClass() == A.Class or ent:GetNW2Bool("D6_CombatActor", false)
 end
 
@@ -54,7 +54,7 @@ function A.GetAll()
     for ent in pairs(members) do
         if not IsValid(ent) then
             members[ent] = nil
-        elseif not ent.D6_Dead and ent:Health() > 0 then
+        elseif not ent:IsMarkedForDeletion() and not ent.D6_Dead and ent:Health() > 0 then
             result[#result + 1] = ent
         end
     end
@@ -82,8 +82,8 @@ function A.FindTarget(ent, range, requireFlight)
     return best
 end
 
--- Base AI owns damage, health and the native death event. Do not synthesize a
--- second OnNPCKilled from OnTakeDamage/OnRemove: cleanup must never award a kill.
+-- Shared cleanup for a dedicated chassis's kill notification and native
+-- Workshop NPC deaths. Removing a live actor only unregisters it.
 hook.Add("OnNPCKilled", "D6_ActorDied", function(ent)
     if not members[ent] then return end
     ent.D6_Dead = true

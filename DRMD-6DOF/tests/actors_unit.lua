@@ -23,8 +23,10 @@ local function entity(class, isNPC)
         origin = point(0), relations = {}, spawnCalls = 0}
     function ent:GetClass() return self.class end
     function ent:IsNPC() return self.npc end
+    function ent:IsMarkedForDeletion() return self.removing == true end
     function ent:IsPlayer() return self.player == true end
     function ent:Health() return self.hp end
+    function ent:SetHealth(hp) self.hp = hp end
     function ent:Alive() return self.hp > 0 end
     function ent:GetNWBool() return self.flight == true end
     function ent:SetNW2Bool(key, value)
@@ -149,6 +151,14 @@ ENT = {}
 function AddCSLuaFile() end
 function include(path) dofile(root .. "entities/d6_combat_drone/" .. path) end
 dofile(root .. "entities/d6_combat_drone/init.lua")
-check("combat body is an AI NPC without engine schedules or a duplicate damage handler",
-    ENT.Type == "ai" and ENT.Base == "base_ai" and ENT.RunAI({}) == false and ENT.OnTakeDamage == nil)
+check("combat body is an AI NPC with its own flight and damage",
+    ENT.Type == "ai" and ENT.Base == "base_ai" and ENT.RunAI({}) == false and type(ENT.OnTakeDamage) == "function")
+
+SERVER, CLIENT = true, false
+local testBody = A.Create()
+local lethal = {GetDamage=function() return 1000 end,
+    GetAttacker=function() return near end, GetInflictor=function() return near end}
+ENT.OnTakeDamage(testBody, lethal)
+ENT.OnTakeDamage(testBody, lethal)
+check("dedicated lethal damage publishes exactly one common kill event", testBody.hp == 0 and deathEvents == 3)
 print(string.format("COMPLETE | %d registry/session checks; native GMod test still required", passed))

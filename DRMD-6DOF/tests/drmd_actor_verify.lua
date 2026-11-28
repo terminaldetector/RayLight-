@@ -58,15 +58,18 @@ concommand.Add("d6_verify_combat_actor", function(ply)
         and actor:GetMoveType() == MOVETYPE_VPHYSICS)
     check("modular builder is available", isfunction(D6_BuildDrone))
     if not isfunction(D6_BuildDrone) then finish(); return end
-    -- MASK_SOLID excludes studio hitboxes: these probes measure the new physics
-    -- box rather than the scanner model's separately scaled hitbox.
+    -- Validate both the VPhysics collision body and the authored shot trace.
     local small = track(D6_BuildDrone({scale=1, collisionScale=1}, origin + Vector(600, -150, 0)))
     local large = track(D6_BuildDrone({scale=1, collisionScale=2}, origin + Vector(600, 150, 0)))
     local function boxFace(ent, expected)
         if not IsValid(ent) then return false end
         ent:SetAngles(angle_zero)
         local center = ent:GetPos() + Vector(0, 0, 3)
-        local trace = util.TraceLine({start=center+Vector(80,0,0), endpos=center,
+        local body = ent:GetPhysicsObject()
+        if not IsValid(body) then return false end
+        local mins, maxs = body:GetAABB()
+        if math.abs(maxs.x-expected) > .01 or math.abs(mins.x+expected) > .01 then return false end
+        local trace = D6_Wep.CombatTrace({start=center+Vector(80,0,0), endpos=center,
             mask=MASK_SOLID, ignoreworld=true, filter=function(hit) return hit == ent end})
         return trace.Entity == ent and math.abs(trace.HitPos.x - center.x - expected) < 1.5
     end
@@ -81,6 +84,8 @@ concommand.Add("d6_verify_combat_actor", function(ply)
             actor:GetPos().y > start.y + 1 and actor:GetPos().z > start.z + 1)
         cleanup:Remove()
         check("cleanup emits no native kill event", kills[cleanup] == 0 and not D6_Actors.IsCombat(cleanup))
+        actor:TakeDamage(10, game.GetWorld(), game.GetWorld())
+        check("ordinary damage lowers hull without reporting a kill", actor:Health() == 90 and kills[actor] == 0)
         local damage = DamageInfo()
         damage:SetDamage(actor:GetMaxHealth() + 10000)
         damage:SetDamageType(DMG_GENERIC)

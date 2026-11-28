@@ -111,6 +111,7 @@ local function reset()
         cue("Сити 17 · Площадь у станции",5)
     elseif map == M.Reactor then
         D6_ReactorBoss.Reset()
+        D6_Reactor.Prepare(false)
         advance(1,"Найти реактор · зарядить корпус")
     end
 end
@@ -143,7 +144,10 @@ local function startGuard(ply)
     local pos=marker("d6_charge_2")
     if pos then M.NewCloud(pos,52,35) end
     track(D6_ReactorBoss.Start(2,ply,function(order) advance(3,order) end,function()
-        advance(3,"Охрана уничтожена · разрушить реакторное ядро")
+        advance(3,"Охрана уничтожена · вывести реактор из строя")
+        if not D6_Reactor.StartStory() then
+            advance(3,"Не найдены узлы реактора · проверьте версию карты")
+        end
         local charge=marker("d6_arc_boss")
         if charge then M.NewCloud(charge,62,44) end
     end))
@@ -195,8 +199,8 @@ hook.Add("AcceptInput","D6_EpisodeEvents",function(ent,input,activator)
         else pendingGuard=activator end
     elseif event == "d6_regulator_1_broken" or event == "d6_regulator_2_broken" then
         D6_ReactorBoss.RegulatorBroken(string.sub(event,1,-8))
-    elseif event == "d6_core_failure" and stage < 4 then
-        advance(4,"РАСПАД · Эвакуационный шлюз",CurTime()+58)
+    elseif event == "d6_core_failure" and stage == 3 and D6_Reactor.NativeCoreCanBreak() then
+        advance(4,"РАСПАД · Эвакуационный шлюз",CurTime()+D6_Reactor.StorySeconds)
         cargo(4670,88)
         for _, pos in ipairs({Vector(5132,-242,245),Vector(5545,280,535),Vector(5940,-198,286)}) do
             local ent=D6_Wep.Ordnance("mine_air",pos,nil,{mobile=true,mass=15,group=COLLISION_GROUP_PROJECTILE})
@@ -207,12 +211,14 @@ hook.Add("AcceptInput","D6_EpisodeEvents",function(ent,input,activator)
             missionUnits[#missionUnits+1]=ent
         end
     elseif event == "d6_escape_complete" and stage == 4 then
+        D6_Reactor.FinishStory()
         advance(5,"ВЫХОД НАЙДЕН · Приоритеты сохранены")
     end
 end)
 
 timer.Create("D6_EpisodeDeadline",.25,0,function()
     if game.GetMap() ~= M.Reactor or stage ~= 4 or expires > CurTime() then return end
+    D6_Reactor.FinishStory()
     advance(6,"ОТСЕК ПОТЕРЯН · d6_episode_restart")
     for _,ply in ipairs(player.GetAll()) do if ply:Alive() then ply:Kill() end end
 end)

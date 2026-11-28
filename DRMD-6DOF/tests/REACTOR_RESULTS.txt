@@ -1,0 +1,236 @@
+Half-Life: Abaddon · Проверка ветки реактора
+21.11.2026 · Garry’s Mod x64, выделенный сервер Sandbox
+Основа из ветки feat/abaddon-combat-foundation, коммит 6cb7848.
+119 из 119 проверок арены и карт. Ещё 15 из 15 для жизненного цикла боевой сущности.
+153 узкие проверки через texlua и 36 воспроизведений интерфейса на трёх разрешениях.
+В проверке карт боты выполняли заданные действия и перемещения. Кадры собраны в Blender.
+Клиентский визуальный прогон и нативный режим Half-Life 2 требуют отдельных запусков.
+
+АРЕНА · gm_flatgrass
+PASS | 01 · Sandbox server boot | gm_flatgrass
+PASS | 02 · arena profile
+PASS | 03 · Half-Life 2 map detection
+PASS | 04 · all 12 curated classes and the explicit SCK tool registered | 12
+PASS | 32 · scanner optic matches muzzle axis with pitch and roll
+PASS | 33 · eight mipmapped finishes, including all three elite textures, mount in Garry's Mod
+PASS | 05 · flight, scanner and active first mount
+PASS | 06 · no workshop and stock tools auto-granted
+PASS | 102 · normal activation gives exactly five starters and no retired or earned modules | 5
+PASS | 103 · starter ordnance is finite and no advanced ammunition is gifted
+PASS | 104 · explicit debug give supplies all 12 curated classes but no retired weapons
+PASS | 23 · control panel can disable stabilization on the first press
+PASS | 07 · mount migration and swap
+PASS | 08 · fifth mount rejects reassignment
+PASS | 34 · all three Resistance variants spawn with their own art and armor
+PASS | 09 · a rocket trigger cycle spends finite stock and energy and publishes recoil
+PASS | 10 · rocket cooldown denies a duplicate energy and ammunition charge
+PASS | 24 · dash impulse publishes its cooldown and consumes reserve
+PASS | 11 · swept projectile hits world exactly once at 5200 u/s | 1
+PASS | 12 · phase weapon places a linked pair on real brush surfaces | 2
+PASS | 13 · phase traversal preserves speed and exits the linked portal
+PASS | 28 · phase traversal respects an obstruction on the entry side
+PASS | 25 · phase gates transport a full player hull and rotate momentum
+PASS | 26 · warp reaches a clear destination and preserves a flight impulse
+PASS | 14 · Rocket Strider initialized and publishes its custom appearance
+PASS | 15 · gravity unit initialized with its own mesh tag
+PASS | 16 · Strider telegraph precedes projectile wave
+PASS | 17 · trial starts with first group
+PASS | 18 · trial cleanup releases tracked entities
+PASS | 19 · actual Strider projectiles spawned | 16
+PASS | 29 · gravity drone captures real VPhysics debris into orbit
+PASS | 30 · deleting a gravity drone restores the debris physics
+PASS | 31 · clearing a group advances to the next encounter wave
+PASS | 35 · trial wave three brings all three Resistance hulls | 3 / 3
+PASS | 47 · elite enforcement drone deploys in the final wave
+PASS | 48 · a hit on the giant hull reaches the boss shield | NPC [108][d6_combat_drone] / 4.2
+PASS | 49 · the boss telegraphs and fires physical projectiles | 9
+PASS | 50 · swept projectiles also hit the extended weapon pods
+PASS | 36 · rolled dash follows local up and keeps a tangential impulse
+PASS | 37 · movement retains boosted speed beyond the dash window | 2532 u/s
+PASS | 38 · airbrake reduces speed through ordinary game movement | 771 u/s
+PASS | 39 · use attaches to a brush and keeps lateral momentum | Y 300 · Z -1244
+PASS | 40 · releasing use clears the field and carries flight momentum
+PASS | 41 · a free VPhysics anchor exchanges momentum with the scanner | ship 19 · prop -430
+PASS | 42 · deleting an anchor automatically releases adhesion
+PASS | 43 · Hyperbeam charges from the normal attack action
+PASS | 44 · fired segment starts at the model lens under roll
+PASS | 45 · a released optical burst damages both targets and cools down | 174 / 223
+PASS | 46 · solid geometry occludes targets behind the optical beam
+PASS | 51 · 79 native Source model files mount and validate | 79
+PASS | 52 · all four deployables use scripted entities with distinct models and physics | 4
+PASS | 53 · a live physics bomb carries its detailed Source mesh
+PASS | 82 · all 12 curated classes are classified into three active damage tiers
+PASS | 54 · all three campaign profiles resolve safe exhibit positions on real test geometry
+PASS | 55 · the physics bomb reports a single world impact | 1 | Entity [0][worldspawn] at -612.000000 -967.000000 -12287.750000
+PASS | 56 · plasma mine arms on its timer
+PASS | 57 · a recovery cloud charges and heals the player on contact
+PASS | 58 · gravity carrier holds physical cargo above and below its spherical field | 7 props, Z -122 to 141
+PASS | 59 · escort plans separate factions, reserve 3D slots and stagger fire | escort
+PASS | 60 · losing the leader promotes an escort and frees cargo
+PASS | 65 · arc elite has a separate chassis and extended pod hitboxes
+PASS | 97 · the gimbals carry the emission sockets through reverse yaw and positive elevation
+PASS | 69 · older workshop weapons preserve their explicit projectile model and scale
+PASS | 93 · weapon recoil moves the same bank used by the shot socket
+PASS | 66 · thermal warning precedes the five-bolt gap pattern | 5
+PASS | 67 · twin discharge traces can drain the pilot shield | 56
+PASS | 70 · the workshop homing module launches the authored rocket as a scripted projectile
+PASS | 99 · the upper rack launches a pair of blue plasma rockets | 2
+PASS | 100 · the blue-to-red optic windup precedes the high-energy eye beam | 43
+PASS | 101 · the rotary group changes its muzzle pose and the belly rail actually fires
+PASS | 61 · seeded roguelike starts actual enemies and excludes a concurrent trial
+PASS | 62 · a wave offers one eligible new module and two distinct nonweapon upgrades
+PASS | 63 · choosing the temporary module grants it and starts exactly one next wave
+PASS | 64 · death clears the run and restores the baseline integrity
+PASS | 68 · the same inventory and seed repeat the draft and five waves finish with the new elite | 5
+PASS | 20 · campaign spawn preserves stock player
+PASS | 21 · campaign suppresses auto kit and removes portals
+PASS | 22 · campaign leaves stock engine physics cap | 3500
+PASS | 27 · native GLua compiler accepts client HUD, models and effects
+
+СЮЖЕТ · d6_city17_drain → d6_reactor_escape
+PASS | 71 · city BSP loads with native ground opponents
+PASS | 72 · city chapter starts grounded with a stock firearm
+PASS | 73 · the real Hammer trigger records the EMP on entering
+PASS | 83 · station protest runs before the EMP flips the patrol relationship
+PASS | 74 · all stair steps and the sewer floor have BSP collision
+PASS | 75 · Hammer exit contains the native landmark and the Sandbox transfer volume
+PASS | 84 · both distinct elite models travel on their Hammer rails along the opening route | true / true
+PASS | 76 · reactor BSP runs in 6DOF with native personnel and traps
+PASS | 96 · the legacy Hyperbeam cache unlocks BFG with one finite starting cell
+PASS | 77 · flight through the entry volume starts the gravity swarm
+PASS | 85 · the first officer brings repair support and arriving early cannot destroy the core | NPC [190][d6_combat_drone] / NPC [191][d6_combat_drone] / Entity [108][func_breakable] / stage 2
+PASS | 86 · the heavyweight actually dashes along a tilted 6DOF vector | 601.966675 -1127.462280 -385.603149
+PASS | 87 · the warned shock hits a flight target inside its radius | 81.869070053101
+PASS | 78 · guard section deploys rocket and plasma Striders | 2
+PASS | 88 · the final officer is linked to two regulators and has repair support
+PASS | 89 · an equipped arena weapon can break a shield regulator through normal fire
+PASS | 90 · destroying both regulators disengages the shield
+PASS | 91 · overheat fires three staggered rings of actual projectiles with gaps | 29
+PASS | 92 · defeating both officers unlocks the core and removes the boss HUD
+PASS | 102 · three live coolant assemblies protect the dormant core
+PASS | 103 · the reactor telegraphs and launches live attacks while cooled
+PASS | 104 · an ordinary scanner projectile damages a coolant assembly | 52
+PASS | 105 · coolant loss starts heating before the core opens
+PASS | 106 · critical mass exposes the core and publishes a full heat gauge
+PASS | 107 · a critical ring fires nine real plasma slots with three omitted directions
+PASS | 79 · lethal core damage activates the native OnBreak collapse relay
+PASS | 80 · collapse opens the evacuation door and places live airborne mines
+PASS | 81 · reaching the native exit cancels both failure clocks
+
+ШАХТА · d6_rogue_reactor
+PASS | 108 · dedicated BSP has a dormant core, a physical gate and a separate exit
+PASS | 109 · four seeded waves and drafts lead to two live coolant nodes instead of a fifth troop wave
+PASS | 110 · a second pilot cannot damage another player's coolant or start an overlapping run
+PASS | 111 · rogue coolant cut raises the core to critical before the countdown
+PASS | 112 · critical core breach opens the real door and starts a 40-second escape
+PASS | 113 · victory requires reaching the exit and clears reactor state
+PASS | 114 · same seed restores the same pair of coolant targets in a fresh run
+PASS | 115 · missing the exit loses and resets the run
+PASS | 116 · map cleanup stops an active run and restores one dormant core
+
+ПОЛИГОН · d6_relay_vault
+PASS | 94 · the vault BSP mounts pickups across distinct elevations and has a real raised entrance frame
+PASS | 95 · a live bank recharges the weapons reserve and a seeded vault run stages the next cache
+PASS | 98 · the elevated ammunition cache adds four finite mortar shells
+
+ИЗОЛИРОВАННАЯ ПРОВЕРКА БОЕВОЙ СУЩНОСТИ
+PASS | both native and combat entities spawn
+PASS | native scanner stays native and rejects D6 tagging
+PASS | legacy combat profile spawns a real independent NPC
+PASS | combat body has gravity-free VPhysics
+PASS | modular builder is available
+PASS | ordinary owned hull has 12-unit half-width
+PASS | collisionScale doubles physical hull half-width
+PASS | VPhysics changes both horizontal and vertical position
+PASS | cleanup emits no native kill event
+PASS | ordinary damage lowers hull without reporting a kill
+PASS | lethal engine damage emits exactly one OnNPCKilled
+PASS | dead actor leaves active registry
+PASS | dedicated dead body retires without manual cleanup
+PASS | post-death cleanup does not emit a duplicate event
+PASS | ordinary scanner remains outside D6 dispatchers
+
+HUD И ОРУЖЕЙНЫЙ ОТСЕК
+PASS intro 1600:900
+PASS cockpit 1600:900
+PASS beam 1600:900
+PASS flight 1600:900
+PASS campaign 1600:900
+PASS episode 1600:900
+PASS rogue 1600:900
+PASS boss 1600:900
+PASS hangar 1600:900
+PASS coolant 1600:900
+PASS critical 1600:900
+PASS shaft_escape 1600:900
+PASS intro 1024:768
+PASS cockpit 1024:768
+PASS beam 1024:768
+PASS flight 1024:768
+PASS campaign 1024:768
+PASS episode 1024:768
+PASS rogue 1024:768
+PASS boss 1024:768
+PASS hangar 1024:768
+PASS coolant 1024:768
+PASS critical 1024:768
+PASS shaft_escape 1024:768
+PASS intro 640:480
+PASS cockpit 640:480
+PASS beam 640:480
+PASS flight 640:480
+PASS campaign 640:480
+PASS episode 640:480
+PASS rogue 640:480
+PASS boss 640:480
+PASS hangar 640:480
+PASS coolant 640:480
+PASS critical 640:480
+PASS shaft_escape 640:480
+
+КАРТЫ · VBSP++, VVIS++, VRAD++ в LDR
+PASS | d6_reactor_escape.vmf → d6_reactor_escape.bsp | SHA-256 f5b7d139fb56c30a51f4cd3b4fac0e28a84c3a2272b3a61f6c71d9fa1a092028
+PASS | d6_rogue_reactor.vmf → d6_rogue_reactor.bsp | SHA-256 81e14417da8b75018d0ec16b00d868c547e5798d3e88434b1a15c1ff5e27991e
+
+КОЛЛИЗИИ И МАРШРУТЫ В BSP
+d6_reactor_escape 145 world solid brushes
+d6_reactor_center 3944 0 420 clear
+d6_reactor_coolant_1 3456 -704 260 clear
+d6_reactor_coolant_2 4512 712 1102 clear
+d6_reactor_coolant_3 4320 -625 718 clear
+d6_reactor_escape_goal 6310 0 430 clear
+d6_reactor_hazard_1 3624 -936 625 clear to 1200
+d6_reactor_hazard_2 4534 939 493 clear to 1200
+d6_reactor_hazard_3 3298 221 1136 clear to 1200
+d6_reactor_hazard_escape_1 5568 -543 402 clear to 1200
+d6_reactor_hazard_escape_2 5940 582 669 clear to 1200
+low coolant clear
+high coolant clear
+third coolant clear
+fast egress clear
+low egress clear
+d6_rogue_reactor 134 world solid brushes
+d6_reactor_center 1888 0 1024 clear
+d6_reactor_coolant_1 1344 -435 550 clear
+d6_reactor_coolant_2 2210 514 939 clear
+d6_reactor_coolant_3 1616 -490 1482 clear
+d6_reactor_escape_goal 3456 520 1888 clear
+d6_reactor_hazard_1 1290 -916 683 clear to 1200
+d6_reactor_hazard_2 2434 910 863 clear to 1200
+d6_reactor_hazard_3 978 144 1310 clear to 1200
+d6_reactor_hazard_escape_1 2548 -740 1737 clear to 1200
+d6_reactor_hazard_escape_2 3330 873 1905 clear to 1200
+d6_rogue_reactor_wave_1 1220 -341 522 clear
+d6_rogue_reactor_wave_2 1204 382 719 clear
+d6_rogue_reactor_wave_3 1560 -497 996 clear
+d6_rogue_reactor_wave_4 1800 656 1348 clear
+d6_rogue_reactor_wave_5 2312 394 570 clear
+d6_rogue_reactor_wave_6 2388 -408 1235 clear
+d6_rogue_reactor_wave_7 2080 574 1627 clear
+d6_rogue_reactor_wave_8 2604 -385 1760 clear
+lower entrance clear
+high entrance clear
+high coolant clear
+fast egress clear
+covered egress clear
+rogue gate 2958 312 1648 2998 716 2112 544 -1

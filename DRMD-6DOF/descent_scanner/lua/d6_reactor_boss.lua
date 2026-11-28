@@ -179,8 +179,7 @@ end
 
 hook.Add("OnNPCKilled","D6_ReactorBossDefeated",defeated)
 hook.Add("EntityTakeDamage","D6_CoreLock",function(target,damage)
-    if game.GetMap()==D6_Mission.Reactor and completed<2 and target.D6_EpisodeTarget
-        and target:GetName()=="d6_reactor_core" then
+    if game.GetMap()==D6_Mission.Reactor and target.D6_EpisodeTarget and target:GetName()=="d6_reactor_core" then
         damage:SetDamage(0)
         return true
     end

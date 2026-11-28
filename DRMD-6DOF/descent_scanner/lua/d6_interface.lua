@@ -175,10 +175,19 @@ function U.PaintHUD(w, h, state)
         U.Text(state.order,"label",w/2,78*scale,danger and C.orange or C.text,TEXT_ALIGN_CENTER)
         if danger then
             U.Text(string.format("ДО РАСПАДА  %02d",math.ceil(state.deadline)),"small",w/2,99*scale,C.orange,TEXT_ALIGN_CENTER)
-            U.Bar(w/2-76*scale,118*scale,152*scale,2*scale,state.deadline/58,C.orange)
+            U.Bar(w/2-76*scale,118*scale,152*scale,2*scale,state.deadline/(state.deadlineSpan or 58),C.orange)
         end
     end
-    if state.boss and state.boss~="" then
+    if state.reactorPhase == 1 then
+        local hue = state.reactorDown == state.reactorTotal and C.warn or C.aqua
+        local label = string.format("КОНТУРЫ  %d/%d    ·    КРИТИЧНОСТЬ  %d%%",
+            state.reactorDown,state.reactorTotal,math.floor(state.reactorHeat*100))
+        U.Text(label,"small",w/2,102*scale,hue,TEXT_ALIGN_CENTER)
+        U.Bar(w/2-114*scale,121*scale,228*scale,3*scale,state.reactorHeat,hue)
+    elseif state.reactorPhase == 2 then
+        U.Text("ЦЕЛОСТНОСТЬ ЯДРА","small",w/2,102*scale,C.warn,TEXT_ALIGN_CENTER)
+        U.Bar(w/2-114*scale,121*scale,228*scale,3*scale,state.reactorHP,C.warn)
+    elseif state.boss and state.boss~="" then
         local hue=state.phase==1 and C.aqua or (state.phase==3 and C.warn or C.orange)
         U.Text(state.boss,"small",w/2,102*scale,hue,TEXT_ALIGN_CENTER)
         U.Bar(w/2-114*scale,121*scale,228*scale,3*scale,state.bossHP or 1,hue)
@@ -298,9 +307,22 @@ function U.Snapshot(ply)
     if wave == 0 and run ~= "" then trial = run end
     local shot = valid and weapon:GetNWFloat("D6_ShotAt", -1) or -1
     local drift = speed > 80 and vel:GetNormalized() or nil
+    local reactor = ply:GetNW2Int("D6_ReactorPhase",0)
+    local order = ply:GetNW2String("D6_EpisodeOrder","")
+    local deadline = ply:GetNW2Float("D6_EpisodeDeadline",0)
+    if reactor > 0 then
+        order = ply:GetNW2String("D6_ReactorOrder",order)
+        deadline = ply:GetNW2Float("D6_ReactorDeadline",deadline)
+    end
     return {
-        order = ply:GetNW2String("D6_EpisodeOrder",""),
-        deadline = math.max(0,ply:GetNW2Float("D6_EpisodeDeadline",0)-now),
+        order = order,
+        deadline = math.max(0,deadline-now),
+        deadlineSpan = game.GetMap()==D6_Reactor.RogueMap and D6_Reactor.RogueSeconds or D6_Reactor.StorySeconds,
+        reactorPhase = reactor,
+        reactorHeat = ply:GetNW2Float("D6_ReactorHeat",0),
+        reactorHP = ply:GetNW2Float("D6_ReactorIntegrity",0),
+        reactorDown = ply:GetNW2Int("D6_ReactorCoolantDown",0),
+        reactorTotal = ply:GetNW2Int("D6_ReactorCoolantTotal",0),
         boss = ply:GetNW2String("D6_BossName",""),
         bossHP = ply:GetNW2Float("D6_BossIntegrity",0),
         phase = ply:GetNW2Int("D6_BossPhase",0),
@@ -323,6 +345,38 @@ local function cockpit(ply)
         and GetViewEntity() == ply
 end
 
+local function paintReactorTarget(ply, state, w, h)
+    if state.reactorPhase == 0 then return end
+    local pos = ply:GetNW2Vector("D6_ReactorWaypoint",vector_origin)
+    local label = state.reactorPhase == 3 and "ВЫХОД" or "ЯДРО"
+    local hue = state.reactorPhase == 3 and C.lime or C.warn
+    if state.reactorPhase == 1 then
+        local nearest
+        for i=1,3 do
+            local target = ply:GetNW2Entity("D6_ReactorNode"..i)
+            if IsValid(target) then
+                local point = target:GetPos()
+                local distance = point:DistToSqr(EyePos())
+                if not nearest or distance < nearest then
+                    pos,nearest,label = point,distance,"КОНТУР "..i
+                end
+            end
+        end
+        if not nearest then return end
+        hue=C.aqua
+    end
+    local point=pos:ToScreen()
+    local scale=U.Scale(w,h)
+    if not point.visible or point.x<18*scale or point.x>w-18*scale or point.y<151*scale or point.y>h-150*scale then return end
+    local x,y=point.x,point.y
+    local a,b=6*scale,10*scale
+    U.Line(x-a,y,x,y-a,hue)
+    U.Line(x,y-a,x+a,y,hue)
+    U.Line(x+a,y,x,y+a,hue)
+    U.Line(x,y+a,x-a,y,hue)
+    U.Text(string.format("%s · %.0f м",label,EyePos():Distance(pos)*.0254),"tiny",x,y+b,hue,TEXT_ALIGN_CENTER)
+end
+
 function U.PaintGround(w,h,order,caption,remaining)
     local s=U.Scale(w,h)
     U.Box(30*s,30*s,3*s,34*s,C.orange)
@@ -337,7 +391,12 @@ end
 
 hook.Add("HUDPaint", "D6_Cockpit", function()
     local ply = LocalPlayer()
-    if cockpit(ply) then U.PaintHUD(ScrW(), ScrH(), U.Snapshot(ply)); return end
+    if cockpit(ply) then
+        local state=U.Snapshot(ply)
+        U.PaintHUD(ScrW(),ScrH(),state)
+        paintReactorTarget(ply,state,ScrW(),ScrH())
+        return
+    end
     if not IsValid(ply) or not ply:Alive() or game.GetMap()~=D6_Mission.City then return end
     local order=ply:GetNW2String("D6_EpisodeOrder","")
     if order=="" then return end

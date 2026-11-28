@@ -602,6 +602,9 @@ function D6_BuildDrone(loadout, pos, targetPly)
             npc:SetMoveType(MOVETYPE_VPHYSICS)
             npc:SetSolid(SOLID_VPHYSICS)
             npc:SetCollisionBounds(mins/(loadout.scale or 1), maxs/(loadout.scale or 1))
+            -- Scripted weapon traces also use the physical hull. The native
+            -- point trace can hit the narrower fallback model on a Lua NPC.
+            D6_Wep.RegisterEnforcerHull(npc, {scale=1, parts={{{mins:Unpack()},{maxs:Unpack()}}}})
         else
             npc:SetCollisionBounds(mins, maxs)
         end

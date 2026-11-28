@@ -46,36 +46,29 @@ var (
 )
 
 const (
-	idTarget      = 101
-	idPath        = 102
-	idDetect      = 103
-	idBrowse      = 104
-	idMap         = 105
-	idGraphics    = 106
-	idResolution  = 107
-	idWindowed    = 108
-	idConsole     = 109
-	idStatus      = 110
-	idModeInfo    = 111
-	idInstallRun  = 201
-	idInstall     = 202
-	idRun         = 203
-	idRollback    = 204
-	idOpen        = 205
-	idDiagnostics = 206
-	wmFinished    = 0x8001
+	idTarget       = 101
+	idPath         = 102
+	idDetect       = 103
+	idBrowse       = 104
+	idMap          = 105
+	idGraphics     = 106
+	idResolution   = 107
+	idWindowed     = 108
+	idConsole      = 109
+	idStatus       = 110
+	idModeInfo     = 111
+	idMaterial     = 112
+	idNativeLabel  = 113
+	idNativePath   = 114
+	idBrowseNative = 115
+	idInstallRun   = 201
+	idInstall      = 202
+	idRun          = 203
+	idRollback     = 204
+	idOpen         = 205
+	idDiagnostics  = 206
+	wmFinished     = 0x8001
 )
-
-type preferences struct {
-	Target          Target `json:"target"`
-	GModPath        string `json:"gmod_path"`
-	HL2Path         string `json:"hl2_path"`
-	MapIndex        int    `json:"map_index"`
-	GraphicsIndex   int    `json:"graphics_index"`
-	ResolutionIndex int    `json:"resolution_index"`
-	Windowed        bool   `json:"windowed"`
-	Console         bool   `json:"console"`
-}
 
 type point struct{ X, Y int32 }
 type winMessage struct {
@@ -153,13 +146,16 @@ func combo(id, x, y, w int, items []string, editable bool) {
 func label(s string, x, y, w, h int) { control("STATIC", s, 0, x, y, w, h, 0) }
 
 func selectedTarget() Target {
-	if choice(idTarget) == 1 {
+	switch choice(idTarget) {
+	case 1:
 		return TargetHL2
+	case 2:
+		return TargetHL2Native
 	}
 	return TargetGMod
 }
 func selectedOptions() LaunchOptions {
-	maps := []string{"", "d6_city17_drain", "d6_reactor_escape", "d6_relay_vault"}
+	maps := targetMaps(selectedTarget())
 	graphics := []string{"default", "balanced", "high"}
 	mi, gi := choice(idMap), choice(idGraphics)
 	if mi < 0 || mi >= len(maps) {
@@ -168,7 +164,7 @@ func selectedOptions() LaunchOptions {
 	if gi < 0 || gi >= len(graphics) {
 		gi = 0
 	}
-	o := LaunchOptions{Map: maps[mi], Graphics: graphics[gi], Windowed: checked(idWindowed), Console: checked(idConsole)}
+	o := LaunchOptions{Map: maps[mi].name, Graphics: graphics[gi], Windowed: checked(idWindowed), Console: checked(idConsole)}
 	switch choice(idResolution) {
 	case 1:
 		o.Width, o.Height = 1280, 720
@@ -179,12 +175,60 @@ func selectedOptions() LaunchOptions {
 	}
 	return o
 }
-func rememberPath() {
-	if prefs.Target == TargetHL2 {
+func rememberTarget() {
+	switch prefs.Target {
+	case TargetHL2:
 		prefs.HL2Path = textOf(controls[idPath])
-	} else {
+	case TargetHL2Native:
+		prefs.SDKPath = textOf(controls[idPath])
+		prefs.NativeModPath = textOf(controls[idNativePath])
+	default:
 		prefs.GModPath = textOf(controls[idPath])
 	}
+	saved := targetPreferences{
+		MapIndex: choice(idMap), GraphicsIndex: choice(idGraphics), ResolutionIndex: choice(idResolution),
+		Windowed: checked(idWindowed), Console: checked(idConsole),
+	}
+	prefs.Profiles[prefs.Target] = saved
+	prefs.targetPreferences = saved
+}
+
+func setTargetControls() {
+	native := prefs.Target == TargetHL2Native
+	showNative, showMaterial, install := uintptr(0), uintptr(5), uintptr(1)
+	if native {
+		showNative, showMaterial, install = 5, 0, 0
+	}
+	showWindow := user32.NewProc("ShowWindow")
+	showWindow.Call(controls[idMaterial], showMaterial)
+	for _, id := range []int{idNativeLabel, idNativePath, idBrowseNative} {
+		showWindow.Call(controls[id], showNative)
+	}
+	for _, id := range []int{idInstallRun, idInstall, idRollback} {
+		user32.NewProc("EnableWindow").Call(controls[id], install)
+	}
+	if native {
+		refreshNativeAvailability()
+	} else {
+		user32.NewProc("EnableWindow").Call(controls[idRun], 1)
+	}
+}
+func refreshNativeAvailability() {
+	if busy || prefs.Target != TargetHL2Native || controls[idRun] == 0 {
+		return
+	}
+	i, err := resolveInstallation()
+	if err == nil {
+		_, err = validateNativeLaunch(i)
+	}
+	var enabled uintptr
+	statusLine := "Экспериментальный Flight Lab. Требуются Steam SDK Base 2013 SP и Win32-мод. См. «Диагностика»."
+	if err == nil {
+		enabled = 1
+		statusLine = "Экспериментальный Flight Lab. SDK, модули Win32 и карта полигона найдены."
+	}
+	user32.NewProc("EnableWindow").Call(controls[idRun], enabled)
+	setText(controls[idModeInfo], statusLine)
 }
 func chooseTarget() {
 	t := selectedTarget()
@@ -198,17 +242,43 @@ func chooseTarget() {
 	path := prefs.GModPath
 	if t == TargetHL2 {
 		path = prefs.HL2Path
+	} else if t == TargetHL2Native {
+		path = prefs.SDKPath
 	}
 	if path != "" {
 		setText(controls[idPath], path)
 	} else if send(controls[idPath], 0x0146, 0, 0) > 0 {
 		setChoice(idPath, 0)
 	}
+	modPath := prefs.NativeModPath
+	if t == TargetHL2Native && modPath == "" {
+		for _, i := range detected {
+			if i.Target == t && strings.EqualFold(i.Root, textOf(controls[idPath])) {
+				modPath = i.NativeRoot
+				break
+			}
+		}
+	}
+	setText(controls[idNativePath], modPath)
+	send(controls[idMap], 0x014B, 0, 0)
+	for _, option := range targetMaps(t) {
+		send(controls[idMap], 0x0143, 0, uintptr(unsafe.Pointer(wide(option.label))))
+	}
+	saved := prefs.Profiles[t]
+	for id, value := range map[int]int{idMap: saved.MapIndex, idGraphics: saved.GraphicsIndex, idResolution: saved.ResolutionIndex} {
+		if n := int(send(controls[id], 0x0146, 0, 0)); value < 0 || value >= n {
+			value = 0
+		}
+		setChoice(id, value)
+	}
+	check(idWindowed, saved.Windowed)
+	check(idConsole, saved.Console)
 	info := "GMod: 6DOF, оружие, мины и 3 саппорта Granada. Запуск через установленный клиент."
 	if t == TargetHL2 {
-		info = "HL2: просмотр карт и моделей. GLua, 6DOF-бой и саппорты здесь не исполняются."
+		info = "HL2 · content-only: просмотр карт и моделей через клиент Half-Life 2."
 	}
 	setText(controls[idModeInfo], info)
+	setTargetControls()
 }
 func detect() {
 	steamRoots = windowsSteamRoots()
@@ -220,19 +290,26 @@ func detect() {
 		status(fmt.Sprintf("Найдено установок: %d. Проверьте выбранный путь. Если библиотек несколько, пути доступны в списке.", len(detected)))
 	}
 }
-func browse() {
+func browse(id int) {
 	display := make([]uint16, 32768)
-	bi := browseInfo{Owner: mainWindow, DisplayName: &display[0], Title: wide("Выберите папку GarrysMod или Half-Life 2 (можно garrysmod / hl2)"), Flags: 0x0041}
-	id, _, _ := shell32.NewProc("SHBrowseForFolderW").Call(uintptr(unsafe.Pointer(&bi)))
-	if id == 0 {
+	field := idPath
+	label := "Выберите папку GarrysMod или Half-Life 2"
+	if id == idBrowseNative {
+		field, label = idNativePath, "Выберите папку мода abaddon_native"
+	} else if selectedTarget() == TargetHL2Native {
+		label = "Выберите папку Source SDK Base 2013 Singleplayer"
+	}
+	bi := browseInfo{Owner: mainWindow, DisplayName: &display[0], Title: wide(label), Flags: 0x0041}
+	item, _, _ := shell32.NewProc("SHBrowseForFolderW").Call(uintptr(unsafe.Pointer(&bi)))
+	if item == 0 {
 		return
 	}
-	defer ole32.NewProc("CoTaskMemFree").Call(id)
+	defer ole32.NewProc("CoTaskMemFree").Call(item)
 	buf := make([]uint16, 32768)
-	ok, _, _ := shell32.NewProc("SHGetPathFromIDListW").Call(id, uintptr(unsafe.Pointer(&buf[0])))
+	ok, _, _ := shell32.NewProc("SHGetPathFromIDListW").Call(item, uintptr(unsafe.Pointer(&buf[0])))
 	if ok != 0 {
-		setText(controls[idPath], syscall.UTF16ToString(buf))
-		rememberPath()
+		setText(controls[field], syscall.UTF16ToString(buf))
+		rememberTarget()
 	}
 }
 func prefsDir() string {
@@ -243,22 +320,13 @@ func prefsDir() string {
 	return filepath.Join(p, "AbaddonLauncher")
 }
 func loadPreferences() {
-	prefs = preferences{Target: TargetGMod, MapIndex: 3, Windowed: true}
+	prefs = defaultPreferences()
 	if b, e := os.ReadFile(filepath.Join(prefsDir(), "settings.json")); e == nil {
-		_ = json.Unmarshal(b, &prefs)
-	}
-	if prefs.Target != TargetHL2 {
-		prefs.Target = TargetGMod
+		prefs = decodePreferences(b)
 	}
 }
 func savePreferences() error {
-	rememberPath()
-	prefs.Target = selectedTarget()
-	prefs.MapIndex = choice(idMap)
-	prefs.GraphicsIndex = choice(idGraphics)
-	prefs.ResolutionIndex = choice(idResolution)
-	prefs.Windowed = checked(idWindowed)
-	prefs.Console = checked(idConsole)
+	rememberTarget()
 	if smokeUI {
 		return nil
 	}
@@ -282,6 +350,9 @@ func setBusy(v bool) {
 			user32.NewProc("EnableWindow").Call(h, enabled)
 		}
 	}
+	if !v {
+		setTargetControls()
+	}
 }
 func resolveInstallation() (Installation, error) {
 	i, e := ValidateInstallation(strings.TrimSpace(textOf(controls[idPath])), selectedTarget())
@@ -293,6 +364,9 @@ func resolveInstallation() (Installation, error) {
 			i.SteamRoot = d.SteamRoot
 			break
 		}
+	}
+	if i.Target == TargetHL2Native {
+		i.NativeRoot = strings.TrimSpace(textOf(controls[idNativePath]))
 	}
 	// A manually selected copy must not silently launch a different Steam copy.
 	// Only a matching appmanifest discovered above can establish SteamRoot.
@@ -326,6 +400,13 @@ func action(id int) {
 			msg += "\nУстановка: " + e.Error()
 		} else {
 			msg += "\nУстановка подтверждена: " + i.Root
+			if i.Target == TargetHL2Native {
+				if modRoot, nativeErr := validateNativeLaunch(i); nativeErr != nil {
+					msg += "\nFlight Lab: " + nativeErr.Error()
+				} else {
+					msg += "\nFlight Lab: модули Win32 и карта найдены в " + modRoot
+				}
+			}
 		}
 		if err != nil {
 			msg += "\nПакет: " + err.Error()
@@ -412,17 +493,21 @@ func wndProc(hwnd uintptr, msg uint32, w, l uintptr) uintptr {
 	case 0x0111: // WM_COMMAND
 		id, event := int(w&0xffff), int((w>>16)&0xffff)
 		if id == idTarget && event == 1 {
-			rememberPath()
+			rememberTarget()
 			chooseTarget()
 			return 0
+		}
+		if (id == idPath && (event == 1 || event == 5)) || (id == idNativePath && event == 0x0300) {
+			refreshNativeAvailability()
 		}
 		if event == 0 {
 			switch id {
 			case idDetect:
-				rememberPath()
+				rememberTarget()
 				detect()
-			case idBrowse:
-				browse()
+			case idBrowse, idBrowseNative:
+				browse(id)
+				refreshNativeAvailability()
 			case idInstallRun, idInstall, idRun, idRollback, idOpen, idDiagnostics:
 				action(id)
 			}
@@ -492,17 +577,20 @@ func buildUI() error {
 	label("HALF-LIFE: ABADDON", 20, 16, 750, 26)
 	label("Локальная установка и запуск · "+buildRevision, 20, 45, 750, 24)
 	label("Клиент", 20, 84, 120, 24)
-	combo(idTarget, 145, 80, 425, []string{"Garry’s Mod — игровая сборка", "Half-Life 2 — карты и модели"}, false)
+	combo(idTarget, 145, 80, 425, []string{"Garry’s Mod — игровая сборка", "Half-Life 2 — карты и модели", "HL2 · Flight Lab (эксперимент)"}, false)
 	control("BUTTON", "Найти игры", idDetect, 585, 79, 175, 29, 0x00010000)
 	control("STATIC", "", idModeInfo, 20, 116, 740, 34, 0)
 	label("Папка игры", 20, 160, 120, 24)
 	combo(idPath, 145, 156, 485, nil, true)
 	control("BUTTON", "Обзор…", idBrowse, 640, 155, 120, 29, 0x00010000)
 	label("Старт", 20, 203, 120, 24)
-	combo(idMap, 145, 199, 615, []string{"Меню игры", "Эпизод — City 17", "Реактор — Escape", "Арена — Relay Vault"}, false)
+	combo(idMap, 145, 199, 615, nil, false)
 	label("Графика", 20, 246, 120, 24)
 	combo(idGraphics, 145, 242, 615, []string{"Настройки игры — не менять", "Сбалансированный — тени 1024, фильтрация 8×", "Высокий — тени 2048, фильтрация 16×"}, false)
-	label("Материалы: штатные Source. PBR отсутствует. Профиль не добавляет недостающие тени или отражения.", 20, 278, 740, 40)
+	control("STATIC", "Материалы: штатные Source. PBR отсутствует. Профиль не добавляет недостающие тени или отражения.", idMaterial, 20, 278, 740, 40, 0)
+	control("STATIC", "Папка мода", idNativeLabel, 20, 282, 120, 24, 0)
+	control("EDIT", "", idNativePath, 145, 277, 485, 29, 0x00810080)
+	control("BUTTON", "Обзор…", idBrowseNative, 640, 276, 120, 29, 0x00010000)
 	label("Разрешение", 20, 326, 120, 24)
 	combo(idResolution, 145, 322, 250, []string{"Из настроек игры", "1280 × 720", "1920 × 1080", "2560 × 1440"}, false)
 	control("BUTTON", "В окне", idWindowed, 420, 321, 145, 29, 0x00010003)
@@ -514,30 +602,30 @@ func buildUI() error {
 	control("BUTTON", "Папка игры", idOpen, 273, 417, 240, 32, 0x00010000)
 	control("BUTTON", "Диагностика", idDiagnostics, 526, 417, 234, 32, 0x00010000)
 	control("EDIT", "", idStatus, 20, 465, 740, 130, 0x00800000|0x00200000|0x00000804|0x00000040)
-	if prefs.Target == TargetHL2 {
+	switch prefs.Target {
+	case TargetHL2:
 		setChoice(idTarget, 1)
+	case TargetHL2Native:
+		setChoice(idTarget, 2)
 	}
-	for id, value := range map[int]int{idMap: prefs.MapIndex, idGraphics: prefs.GraphicsIndex, idResolution: prefs.ResolutionIndex} {
-		count := int(send(controls[id], 0x0146, 0, 0))
-		if value < 0 || value >= count {
-			value = 0
-		}
-		setChoice(id, value)
-	}
-	check(idWindowed, prefs.Windowed)
-	check(idConsole, prefs.Console)
 	detect()
 	if smokeUI {
-		for _, id := range []int{idInstallRun, idInstall, idRun, idRollback, idOpen} {
-			user32.NewProc("EnableWindow").Call(controls[id], 0)
-		}
-		for _, id := range []int{idTarget, idPath, idMap, idGraphics, idResolution, idStatus, idInstallRun, idRollback} {
+		for _, id := range []int{idTarget, idPath, idNativePath, idBrowseNative, idMap, idGraphics, idResolution, idStatus, idInstallRun, idRollback} {
 			if controls[id] == 0 {
 				return fmt.Errorf("missing control %d", id)
 			}
 		}
-		if choice(idGraphics) < 0 || choice(idMap) < 0 {
-			return fmt.Errorf("invalid combo selection")
+		for index, target := range []Target{TargetGMod, TargetHL2, TargetHL2Native} {
+			setChoice(idTarget, index)
+			chooseTarget()
+			if selectedTarget() != target || choice(idGraphics) < 0 || choice(idMap) < 0 {
+				return fmt.Errorf("invalid profile controls for %s", target)
+			}
+		}
+		setChoice(idTarget, 0)
+		chooseTarget()
+		for _, id := range []int{idInstallRun, idInstall, idRun, idRollback, idOpen} {
+			user32.NewProc("EnableWindow").Call(controls[id], 0)
 		}
 		user32.NewProc("SetTimer").Call(mainWindow, 1, 300, 0)
 	}
