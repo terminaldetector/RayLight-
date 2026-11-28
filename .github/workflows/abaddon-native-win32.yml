@@ -17,6 +17,18 @@ permissions:
   contents: read
 
 jobs:
+  flight-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise flight, mounts, mines and recovery
+        working-directory: DRMD-6DOF/native/hl2/tests
+        run: |
+          for suite in flight_math mounts mine_bay recovery; do
+            g++ -std=c++11 -Wall -Wextra -Werror -fsanitize=undefined -fno-sanitize-recover=all "${suite}_test.cpp" -o "$RUNNER_TEMP/$suite"
+            "$RUNNER_TEMP/$suite"
+          done
+
   native-win32:
     runs-on: windows-2022
     timeout-minutes: 40
@@ -173,7 +185,7 @@ jobs:
             $data = [Text.Encoding]::ASCII.GetString($image)
             if (-not $data.Contains('m_nAbaddonMines')) { throw "${name} lacks the mine bay network property." }
             if ($name -eq 'server.dll') {
-              foreach ($factory in 'abaddon_flight_mine', 'abaddon_mine_supply') {
+              foreach ($factory in 'abaddon_flight_mine', 'abaddon_mine_supply', 'abaddon_energy_cloud', 'abaddon_charge_station') {
                 if (-not $data.Contains($factory)) { throw "Missing $factory in server.dll." }
               }
             }

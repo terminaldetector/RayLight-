@@ -23,8 +23,9 @@ int main( int argc, char **argv )
 	if ( !tools || status != 0 )
 		return 3;
 	IEntityFactoryDictionary *dictionary = tools->GetEntityFactoryDictionary();
-	const char *const classes[] = {"abaddon_flight_bolt", "abaddon_flight_mine", "abaddon_mine_supply"};
-	for ( int i = 0; i < 3; ++i )
+	const char *const classes[] = {"abaddon_flight_bolt", "abaddon_flight_mine", "abaddon_mine_supply",
+		"abaddon_energy_cloud", "abaddon_charge_station"};
+	for ( int i = 0; i < ARRAYSIZE( classes ); ++i )
 	{
 		if ( !dictionary || !dictionary->FindFactory( classes[i] ) )
 		{

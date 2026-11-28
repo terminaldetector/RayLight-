@@ -76,6 +76,22 @@ def mine_range(map_):
                   'MINE BAY // RELOAD TO DEPLOY // USE PANEL FOR MANHACK')
 
 
+def service_bay(map_):
+    center = (1496, -450, 480)
+    map_.ent('abaddon_charge_station', center, 'd6_lab_service')
+    map_.endpoint('d6_lab_service_center', center)
+    # Keep the approach and overhead exit open. The rear shield gives the
+    # field a physical line-of-sight boundary within its spherical reach.
+    map_.box((1440, -503, 432), (1552, -495, 528), METAL)
+    for x in (1422, 1558):
+        map_.box((x, -511, 403), (x + 12, -474, 537), METAL)
+        map_.box((x + 2, -474, 429), (x + 10, -470, 510), COOL_STRIP)
+        map_.box((x - 4, -510, 533), (x + 16, -443, 540), METAL)
+    map_.light((1496, -457, 500), '124 213 210 365')
+    marker_volume(map_, 'd6_lab_service_zone', ((1432, -484, 435), (1556, -392, 528)),
+                  'SERVICE CELL // HOLD POSITION TO RECHARGE AND REPAIR')
+
+
 def flightlab():
     map_ = Map(NAME)
     map_.shell((-128, -576, 0), (2048, 576, 784))
@@ -158,6 +174,7 @@ def flightlab():
                   'LANDING PAD // RETURN TO NORMAL MOVEMENT')
     ballistic_range(map_)
     mine_range(map_)
+    service_bay(map_)
     return map_
 
 
