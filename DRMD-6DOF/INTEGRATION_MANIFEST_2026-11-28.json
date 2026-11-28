@@ -1,0 +1,35 @@
+{
+  "name": "Half-Life: Abaddon",
+  "date": "2026-11-28",
+  "gameplay_source_commit": "f5f5ea7441bbcccf2fe7769daf28031ef8ad23a8",
+  "gameplay_source_tree": "f6672d71854e3529ec103541fe771c127ebd2219",
+  "agent_final_head": "e5fdd9ce661d21abca0980d596bae0d079ca932d",
+  "equal_trees": true,
+  "merged_prs": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "merge_commits": [
+    "54fcf562616731681fd8857b835c8b94fb1cd941",
+    "08fb7c4084898ab1a50bcbb36f184e35671d8015",
+    "c5a6e352e03508c1e0576fe769287172c426315f",
+    "34b4f458f051538bd999dcc713e8e173017f4441",
+    "b82288f0548ac841d7e23bb423c21ac864f5d854",
+    "f5f5ea7441bbcccf2fe7769daf28031ef8ad23a8"
+  ],
+  "ci_windows_launcher": {
+    "run": 46126216442,
+    "result": "success"
+  },
+  "ci_native_win32_last": {
+    "run": 46018487410,
+    "result": "success"
+  },
+  "live_gmod_client": "not_verified_this_session",
+  "live_native_hl2_client": "not_verified",
+  "native_parity": "partial"
+}
