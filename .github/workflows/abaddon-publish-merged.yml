@@ -1,0 +1,110 @@
+name: Publish merged Abaddon build
+on:
+  push:
+    branches: ['publish/abaddon-merged-2026-11-28']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-abaddon-merged-2026-11-28
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'terminaldetector/RayLight-' && github.ref == 'refs/heads/publish/abaddon-merged-2026-11-28'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: b71e658e5ea6f5d755f7520e3d5cadfe7e834eb6
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Build full GMod and native-source Windows ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 source/DRMD-6DOF/tools/package_windows.py --go go --out "$RUNNER_TEMP/release"
+          cp source/DRMD-6DOF/ABADDON_MASTER_TZ_RU.md "$RUNNER_TEMP/release/ABADDON_MASTER_TZ_RU.md"
+          cp source/DRMD-6DOF/INTEGRATION_STATUS_2026-11-28_RU.md "$RUNNER_TEMP/release/INTEGRATION_STATUS_2026-11-28_RU.md"
+      - name: Attach exact native Win32 DLL artifact from #7
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git -C source diff --exit-code cf20cf3be5e064d3264221cceb0c8f05d815b9aa b71e658e5ea6f5d755f7520e3d5cadfe7e834eb6 -- DRMD-6DOF/native/hl2/ DRMD-6DOF/tools/build_native_flightlab.py
+          mkdir -p "$RUNNER_TEMP/native"
+          gh run download 46018487410 -R "$GITHUB_REPOSITORY" -n Abaddon-Native-Win32 -D "$RUNNER_TEMP/native"
+          test -s "$RUNNER_TEMP/native/abaddon_native/bin/client.dll"
+          test -s "$RUNNER_TEMP/native/abaddon_native/bin/server.dll"
+          test -s "$RUNNER_TEMP/native/abaddon_native/gameinfo.txt"
+          test -s "$RUNNER_TEMP/native/abaddon_native/LICENSE"
+          (cd "$RUNNER_TEMP/native" && zip -q -r "$RUNNER_TEMP/release/Abaddon-Native-FlightLab-Win32.zip" .)
+      - name: Verify the exact archive revision and create checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/release" <<'PY'
+          import hashlib,json,pathlib,sys,zipfile
+          root=pathlib.Path(sys.argv[1])
+          sha='b71e658e5ea6f5d755f7520e3d5cadfe7e834eb6'
+          meta=json.loads((root/'abaddon-build.json').read_text())
+          if meta['revision']!=sha: raise SystemExit('Revision mismatch')
+          game=root/'Half-Life-Abaddon-Full-Windows.zip'
+          with zipfile.ZipFile(game) as z:
+              if z.testzip(): raise SystemExit('Invalid GMod archive')
+              names=set(z.namelist())
+              for item in ['Half-Life-Abaddon/AbaddonLauncher.exe','Half-Life-Abaddon/DRMD-6DOF/ABADDON_MASTER_TZ_RU.md','Half-Life-Abaddon/DRMD-6DOF/native/hl2/source-2013-sp.patch','Half-Life-Abaddon/DRMD-6DOF/swep_construction_kit/lua/weapons/swep_construction_kit/shared.lua']:
+                  if item not in names: raise SystemExit('Missing '+item)
+          with zipfile.ZipFile(root/'Abaddon-Native-FlightLab-Win32.zip') as z:
+              if z.testzip(): raise SystemExit('Invalid native archive')
+          files=['Half-Life-Abaddon-Full-Windows.zip','AbaddonLauncher.exe','Abaddon-Native-FlightLab-Win32.zip','ABADDON_MASTER_TZ_RU.md','INTEGRATION_STATUS_2026-11-28_RU.md','abaddon-build.json']
+          (root/'SHA256SUMS-MERGED.txt').write_text(''.join(hashlib.sha256((root/n).read_bytes()).hexdigest()+'  '+n+'\n' for n in files))
+          print('VERIFIED',len(meta['files']),'payload files')
+          PY
+      - name: Publish and verify the full release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/release"
+          TAG=abaddon-2026-11-28-merged
+          if ! gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              "$OUT/Half-Life-Abaddon-Full-Windows.zip" "$OUT/AbaddonLauncher.exe" \
+              "$OUT/Abaddon-Native-FlightLab-Win32.zip" "$OUT/ABADDON_MASTER_TZ_RU.md" \
+              "$OUT/INTEGRATION_STATUS_2026-11-28_RU.md" "$OUT/abaddon-build.json" \
+              "$OUT/SHA256SUMS-MERGED.txt" \
+              -R "$GITHUB_REPOSITORY" \
+              --target b71e658e5ea6f5d755f7520e3d5cadfe7e834eb6 \
+              --title "Half-Life: Abaddon — merged GMod and native Flight Lab" \
+              --notes-file RELEASE_NOTES_2026-11-28_RU.md --latest
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$RUNNER_TEMP/release.json"
+          python3 - "$OUT" "$RUNNER_TEMP/release.json" <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); data=json.loads(pathlib.Path(sys.argv[2]).read_text())
+          files=['Half-Life-Abaddon-Full-Windows.zip','AbaddonLauncher.exe','Abaddon-Native-FlightLab-Win32.zip','ABADDON_MASTER_TZ_RU.md','INTEGRATION_STATUS_2026-11-28_RU.md','abaddon-build.json','SHA256SUMS-MERGED.txt']
+          remote={a['name']:a for a in data['assets']}
+          if data['draft'] or set(remote)!=set(files):raise SystemExit('Incomplete release')
+          for n in files:
+              blob=(root/n).read_bytes()
+              if remote[n]['size']!=len(blob) or remote[n].get('digest')!='sha256:'+hashlib.sha256(blob).hexdigest():
+                  raise SystemExit('Asset mismatch '+n)
+          print('PUBLISHED',data['html_url'])
+          PY
