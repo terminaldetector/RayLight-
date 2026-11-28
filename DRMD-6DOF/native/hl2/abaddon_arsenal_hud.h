@@ -57,7 +57,7 @@ protected:
 		vgui::surface()->GetTextSize( m_font, L"W PLASMA", labelWidth, textHeight );
 		m_cellWidth = labelWidth + Scale( 12 );
 		m_lineHeight = MAX( textHeight, vgui::surface()->GetFontTall( m_font ) );
-		const int width = 4 * m_cellWidth;
+		const int width = 5 * m_cellWidth;
 		const int height = 2 * m_lineHeight + Scale( 17 );
 		int hudWidth, hudHeight;
 		GetHudSize( hudWidth, hudHeight );
@@ -88,6 +88,10 @@ protected:
 			DrawText( pad + mount * m_cellWidth, pad, plasma ? plasmaLabels[mount] : kineticLabels[mount],
 				plasma ? plasmaColor : m_textColor );
 		}
+
+		wchar_t bay[24];
+		V_snwprintf( bay, ARRAYSIZE( bay ), pilot->HasAbaddonGravityMine() ? L"5 GRV %d" : L"5 PLS %d", pilot->GetAbaddonMines() );
+		DrawText( pad + 4 * m_cellWidth, pad, bay, pilot->GetAbaddonMines() > 0 ? Color(180,215,150,255) : Color(232,154,101,255) );
 
 		const float charge = clamp( pilot->GetAbaddonEnergy(), 0.0f, 100.0f );
 		wchar_t energy[24];

@@ -23,11 +23,15 @@ int main( int argc, char **argv )
 	if ( !tools || status != 0 )
 		return 3;
 	IEntityFactoryDictionary *dictionary = tools->GetEntityFactoryDictionary();
-	if ( !dictionary || !dictionary->FindFactory( "abaddon_flight_bolt" ) )
+	const char *const classes[] = {"abaddon_flight_bolt", "abaddon_flight_mine", "abaddon_mine_supply"};
+	for ( int i = 0; i < 3; ++i )
 	{
-		fprintf( stderr, "missing factory: abaddon_flight_bolt\n" );
-		return 4;
+		if ( !dictionary || !dictionary->FindFactory( classes[i] ) )
+		{
+			fprintf( stderr, "missing factory: %s\n", classes[i] );
+			return 4;
+		}
+		printf( "PASS | %s registers %s\n", VSERVERTOOLS_INTERFACE_VERSION, classes[i] );
 	}
-	printf( "PASS | %s registers abaddon_flight_bolt\n", VSERVERTOOLS_INTERFACE_VERSION );
 	return 0;
 }

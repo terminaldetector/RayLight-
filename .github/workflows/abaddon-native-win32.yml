@@ -6,6 +6,9 @@ on:
       - 'DRMD-6DOF/native/hl2/**'
       - 'DRMD-6DOF/descent_scanner/models/drmd/shot_kinetic.*'
       - 'DRMD-6DOF/descent_scanner/models/drmd/shot_arcpulse.*'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/mine_plasma.*'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/mine_gravity.*'
+      - 'DRMD-6DOF/descent_scanner/models/drmd/supply.*'
       - 'DRMD-6DOF/descent_scanner/materials/**'
       - '.github/workflows/abaddon-native-win32.yml'
   workflow_dispatch:
@@ -166,6 +169,13 @@ jobs:
             }
             if (-not [Text.Encoding]::ASCII.GetString($image).Contains('AbaddonMountShot')) {
               throw "${name} does not contain the native arsenal event."
+            }
+            $data = [Text.Encoding]::ASCII.GetString($image)
+            if (-not $data.Contains('m_nAbaddonMines')) { throw "${name} lacks the mine bay network property." }
+            if ($name -eq 'server.dll') {
+              foreach ($factory in 'abaddon_flight_mine', 'abaddon_mine_supply') {
+                if (-not $data.Contains($factory)) { throw "Missing $factory in server.dll." }
+              }
             }
             $exports = & $dumpbin.FullName /nologo /exports $dll
             if ($LASTEXITCODE -ne 0 -or -not ($exports -match '\bCreateInterface\b')) {

@@ -14,6 +14,8 @@ HEADERS = {
     "abaddon_flight_math.h": "src/game/shared/hl2/abaddon_flight_math.h",
     "abaddon_mounts.h": "src/game/shared/hl2/abaddon_mounts.h",
     "abaddon_projectile_server.h": "src/game/server/hl2/abaddon_projectile_server.h",
+    "abaddon_mine_bay.h": "src/game/shared/hl2/abaddon_mine_bay.h",
+    "abaddon_mine_server.h": "src/game/server/hl2/abaddon_mine_server.h",
     "abaddon_arsenal_hud.h": "src/game/client/hl2/abaddon_arsenal_hud.h",
 }
 
@@ -67,14 +69,14 @@ def deploy(bins, destination):
     }
     # Both engines load the same compiled models and surface finishes.
     art = HERE.parents[1] / "descent_scanner"
-    for model in ("shot_kinetic", "shot_arcpulse"):
+    for model in ("shot_kinetic", "shot_arcpulse", "mine_plasma", "mine_gravity", "supply"):
         for suffix in (".mdl", ".vvd", ".dx80.vtx", ".dx90.vtx"):
             path = Path("models/drmd") / (model + suffix)
             payload[path] = art / path
-    for material in ("copper", "emit", "glass", "hot", "steel"):
+    for material in ("armor", "canvas", "copper", "dark", "edge", "emit", "frame", "glass", "hazard", "hot", "steel"):
         path = Path("materials/models/drmd") / (material + ".vmt")
         payload[path] = art / path
-    for texture in ("alloy", "glass"):
+    for texture in ("alloy", "coating", "glass", "polymer"):
         path = Path("materials/drmd") / ("drmd_finish_" + texture + ".vtf")
         payload[path] = art / path
     available = {}
