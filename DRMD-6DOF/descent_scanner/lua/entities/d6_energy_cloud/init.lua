@@ -19,15 +19,21 @@ function ENT:Think()
         local center=ply:WorldSpaceCenter()
         if center:DistToSqr(origin) > 112^2 then continue end
         if util.TraceLine({start=origin,endpos=center,filter=ply,mask=MASK_SOLID_BRUSHONLY}).Hit then continue end
-        local energy=D6_Energy.Get(ply)
+        local energy,maxEnergy=D6_Energy.Get(ply),D6_Energy.GetMax(ply)
         local hp,maxHP=ply:Health(),ply:GetMaxHealth()
         local shield,maxShield=ply:GetNWFloat("D6_Shield",0),ply:GetNWFloat("D6_ShieldMax",100)
-        if energy >= D6_Energy.GetMax(ply) and hp >= maxHP and shield >= maxShield then continue end
-        D6_Energy.Add(ply,self.D6_Charge or 22)
-        ply:SetHealth(math.min(maxHP,hp+(self.D6_Healing or 12)))
-        local repaired=math.min(maxShield,shield+9)
-        ply:SetNWFloat("D6_Shield",repaired)
-        if ply.D6_Shield then ply.D6_Shield=repaired end
+        if energy >= maxEnergy and hp >= maxHP and shield >= maxShield then continue end
+        if energy < maxEnergy then
+            D6_Energy.Add(ply,self.D6_Charge or 22)
+        end
+        if hp < maxHP then
+            ply:SetHealth(math.min(maxHP,hp+(self.D6_Healing or 12)))
+        end
+        if shield < maxShield then
+            local repaired=math.min(maxShield,shield+9)
+            ply:SetNWFloat("D6_Shield",repaired)
+            if ply.D6_Shield then ply.D6_Shield=repaired end
+        end
         ply:SetNW2Float("D6_CloudPickup",now)
         ply:EmitSound("items/suitchargeok1.wav",60,113)
         self:Remove()
